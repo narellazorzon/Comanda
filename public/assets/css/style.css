@@ -1,0 +1,233 @@
+/* ==== variables de color ==== */
+:root {
+  --background: #F7F1E1;      /* beige muy claro */
+  --surface:    #FFFFFF;      /* blanco para cartas y tablas */
+  --primary:    #D8CBB6;      /* beige medio */
+  --secondary:  #A1866F;      /* marrón suave */
+  --accent:     #ECDCCF;      /* tonalidad intermedia */
+  --text:       #3F3F3F;      /* gris oscuro para texto */
+  --text-light: #FFFFFF;      /* texto claro sobre fondo oscuro */
+}
+
+/* ==== reset básico ==== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+}
+
+/* ==== layout ==== */
+main {
+  max-width: 960px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+h1, h2 {
+  margin-bottom: 1rem;
+  color: var(--secondary);
+}
+
+/* ==== navegación ==== */
+nav {
+  background-color: var(--primary);
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--secondary);
+}
+
+nav a {
+  color: var(--text);
+  text-decoration: none;
+  margin-right: 1rem;
+  font-weight: 600;
+}
+
+nav a:hover {
+  color: var(--secondary);
+}
+
+/* ==== formularios generales (excluyendo form.action-form) ==== */
+form:not(.action-form) {
+  background-color: var(--surface);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+
+form label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+form input[type="text"],
+form input[type="email"],
+form input[type="number"],
+form input[type="password"],
+form select,
+form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+form button {
+  margin-top: 1.5rem;
+  background-color: var(--secondary);
+  color: var(--text-light);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+form button:hover {
+  background-color: #8B5E46;
+}
+
+/* ==== tablas ==== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--accent);
+}
+
+th {
+  background-color: var(--secondary);
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+tr:hover td {
+  background-color: var(--accent);
+}
+
+/* ==== botones de acción ==== */
+a.button {
+  display: inline-block;
+  background-color: var(--secondary);
+  color: var(--text-light);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+}
+
+a.button:hover {
+  background-color: #8B5E46;
+}
+
+/* ==== pie de página ==== */
+footer {
+  background-color: var(--secondary);
+  color: var(--text-light);
+  text-align: center;
+  padding: 1rem 0;
+  font-size: 0.9rem;
+  margin-top: auto;
+}
+
+/* ==== adaptabilidad ==== */
+@media (max-width: 600px) {
+  nav a {
+    display: block;
+    margin: 0.5rem 0;
+  }
+}
+/* Botones de acción en tabla de pedidos */
+.btn-action {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  border-radius: 0.25rem;
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  margin: 0 auto;
+}
+
+/* Asegura que el formulario no estire la celda */
+.table td form {
+  display: inline-block;
+}
+/* Reducir padding blanco y centrar el botón en la celda */
+.table td.action-cell {
+  padding: 0.5rem;       /* Menos espacio alrededor */
+  text-align: center;    /* Centra horizontalmente */
+}
+
+.table td.action-cell .action-form {
+  display: inline-block; /* Para ajustar al tamaño del contenido */
+  margin: 0;             /* Eliminar márgenes extra */
+}
+
+.btn-action {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  border-radius: 0.25rem;
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+/* ---------- Acción: quitar “card” en la celda del botón ---------- */
+.table td.no-card {
+  background-color: transparent !important;
+  box-shadow: none         !important;
+  border-radius: 0         !important;
+  padding: 0.25rem         !important;
+}
+
+/* Reducimos aún más el padding interno del form si hiciera falta */
+.table td.no-card .action-form {
+  margin: 0;
+  padding: 0;
+}
+
+/* excluir el form de acción de la tabla de los estilos de form general */
+table td.action-cell form.action-form {
+  background: transparent !important;
+  box-shadow: none         !important;
+  padding: 0               !important;
+  margin: 0                !important;
+  border: none             !important;
+}
+
+/* ==== anular por completo estilos para el pequeño form de acción ==== */
+form.action-form {
+  background: transparent !important;
+  box-shadow: none       !important;
+  padding: 0             !important;
+  margin: 0              !important;
+  border: none           !important;
+  border-radius: 0       !important;
+}
