@@ -19,10 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-  <main style="max-width: 400px; margin: 3rem auto; padding: 1rem;">
+  <main class="login-container">
     <h2>Iniciar sesión</h2>
     <?php if (!empty($_GET['error'])): ?>
-      <p class="error" style="color:red;"><?= htmlspecialchars($_GET['error']) ?></p>
+      <p class="error"><?= htmlspecialchars($_GET['error']) ?></p>
     <?php endif; ?>
     <form method="post" action="login.php">
       <label>Email:</label>
