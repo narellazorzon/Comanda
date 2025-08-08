@@ -96,4 +96,17 @@ class Pedido {
         $stmt = $db->prepare("DELETE FROM pedidos WHERE id_pedido = ?");
         return $stmt->execute([$id]);
     }
+
+    /**
+     * Actualiza el total de un pedido.
+     */
+    public static function updateTotal(int $id, float $total): bool {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            UPDATE pedidos 
+            SET total = ? 
+            WHERE id_pedido = ?
+        ");
+        return $stmt->execute([$total, $id]);
+    }
 }

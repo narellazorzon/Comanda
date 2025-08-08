@@ -5,24 +5,36 @@ use App\Config\Database;
 use PDO;
 
 class DetallePedido {
-    public static function create(int $idPedido, int $idItem): bool {
+    /**
+     * Crea un nuevo detalle de pedido.
+     */
+    public static function create(array $data): bool {
         $db = (new Database)->getConnection();
-        // Obtener precio unitario
-        $precio = $db
-            ->prepare("SELECT precio FROM carta WHERE id_item = ?")
-            ->execute([$idItem]);
-        $row = $db
-            ->query("SELECT precio FROM carta WHERE id_item = $idItem")
-            ->fetch(PDO::FETCH_ASSOC);
-
         $stmt = $db->prepare("
             INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario)
-            VALUES (?,?,1,?)
+            VALUES (?, ?, ?, ?)
         ");
         return $stmt->execute([
-            $idPedido,
-            $idItem,
-            $row['precio']
+            $data['id_pedido'],
+            $data['id_item'],
+            $data['cantidad'],
+            $data['precio_unitario']
         ]);
+    }
+
+    /**
+     * Obtiene todos los detalles de un pedido.
+     */
+    public static function allByPedido(int $idPedido): array {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT dp.*, c.nombre, c.descripcion
+            FROM detalle_pedido dp
+            JOIN carta c ON dp.id_item = c.id_item
+            WHERE dp.id_pedido = ?
+            ORDER BY dp.id_detalle
+        ");
+        $stmt->execute([$idPedido]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
