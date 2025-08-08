@@ -17,22 +17,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>Iniciar sesión — Comanda</title>
   <!-- Incluimos tu CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/login.css">
 </head>
 <body>
-  <main style="max-width: 400px; margin: 3rem auto; padding: 1rem;">
-    <h2>Iniciar sesión</h2>
-    <?php if (!empty($_GET['error'])): ?>
-      <p class="error" style="color:red;"><?= htmlspecialchars($_GET['error']) ?></p>
-    <?php endif; ?>
-    <form method="post" action="login.php">
-      <label>Email:</label>
-      <input type="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+<main class="login-container">
+  <div class="logo">
+  <img class="logo-img" src="assets/img/logo.png" alt="Logo Comanda">
+  </div>
+  <h2>Bienvenido</h2>
 
-      <label>Contraseña:</label>
-      <input type="password" name="password" required>
+  <form method="post" action="login.php">
+    <label>Email:</label>
+    <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
 
-      <button type="submit">Entrar</button>
-    </form>
-  </main>
+
+
+    <label>Contraseña:</label>
+    <input type="password" id="password" name="password" required>
+
+    <button type="submit">Ingresar</button>
+  </form>
+
+  <div class="recovery">
+    ¿Has olvidado tu contraseña?<br>
+    Haz <a href="#">click</a> aquí para recuperarla
+  </div>
+</main>
 </body>
 </html>

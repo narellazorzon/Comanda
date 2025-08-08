@@ -1,12 +1,12 @@
 /* ==== variables de color ==== */
 :root {
-  --background: #F7F1E1;      /* beige muy claro */
-  --surface:    #FFFFFF;      /* blanco para cartas y tablas */
-  --primary:    #D8CBB6;      /* beige medio */
-  --secondary:  #A1866F;      /* marrón suave */
-  --accent:     #ECDCCF;      /* tonalidad intermedia */
-  --text:       #3F3F3F;      /* gris oscuro para texto */
-  --text-light: #FFFFFF;      /* texto claro sobre fondo oscuro */
+  --background: #f7f1e1; /* beige muy claro */
+  --surface: #eee0be; /* blanco para cartas y tablas */
+  --primary: #a5a4a1; /* beige medio */
+  --secondary: #a1866f; /* marrón suave */
+  --accent: #eee0be; /* tonalidad intermedia */
+  --text: #3f3f3f; /* gris oscuro para texto */
+  --text-light: #ffffff; /* texto claro sobre fondo oscuro */
 }
 
 /* ==== reset básico ==== */
@@ -16,9 +16,10 @@
   box-sizing: border-box;
 }
 
-html, body {
-  height: 100%;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+html,
+body {
+  height: 200%;
+  font-family: "Segoe UI", Tahoma, sans-serif;
   background-color: var(--background);
   color: var(--text);
 }
@@ -30,7 +31,8 @@ main {
   padding: 0 1rem;
 }
 
-h1, h2 {
+h1,
+h2 {
   margin-bottom: 1rem;
   color: var(--secondary);
 }
@@ -58,10 +60,9 @@ form:not(.action-form) {
   background-color: var(--surface);
   padding: 1.5rem;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
 }
-
 
 form label {
   display: block;
@@ -101,7 +102,7 @@ form button {
 }
 
 form button:hover {
-  background-color: #8B5E46;
+  background-color: #8b5e46;
 }
 
 /* ==== tablas ==== */
@@ -111,7 +112,8 @@ table {
   margin-bottom: 2rem;
 }
 
-th, td {
+th,
+td {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--accent);
@@ -140,7 +142,7 @@ a.button {
 }
 
 a.button:hover {
-  background-color: #8B5E46;
+  background-color: #8b5e46;
 }
 
 /* ==== pie de página ==== */
@@ -180,13 +182,13 @@ footer {
 }
 /* Reducir padding blanco y centrar el botón en la celda */
 .table td.action-cell {
-  padding: 0.5rem;       /* Menos espacio alrededor */
-  text-align: center;    /* Centra horizontalmente */
+  padding: 0.5rem; /* Menos espacio alrededor */
+  text-align: center; /* Centra horizontalmente */
 }
 
 .table td.action-cell .action-form {
   display: inline-block; /* Para ajustar al tamaño del contenido */
-  margin: 0;             /* Eliminar márgenes extra */
+  margin: 0; /* Eliminar márgenes extra */
 }
 
 .btn-action {
@@ -202,9 +204,9 @@ footer {
 /* ---------- Acción: quitar “card” en la celda del botón ---------- */
 .table td.no-card {
   background-color: transparent !important;
-  box-shadow: none         !important;
-  border-radius: 0         !important;
-  padding: 0.25rem         !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0.25rem !important;
 }
 
 /* Reducimos aún más el padding interno del form si hiciera falta */
@@ -216,18 +218,149 @@ footer {
 /* excluir el form de acción de la tabla de los estilos de form general */
 table td.action-cell form.action-form {
   background: transparent !important;
-  box-shadow: none         !important;
-  padding: 0               !important;
-  margin: 0                !important;
-  border: none             !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
 }
 
 /* ==== anular por completo estilos para el pequeño form de acción ==== */
 form.action-form {
   background: transparent !important;
-  box-shadow: none       !important;
-  padding: 0             !important;
-  margin: 0              !important;
-  border: none           !important;
-  border-radius: 0       !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+body {
+  background-color: #eee0be;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+main {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  margin: 5rem auto;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+}
+
+label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: bold;
+}
+
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  margin-top: 1.5rem;
+  padding: 0.75rem;
+  width: 100%;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+/* Fondo general */
+body {
+  background-color: #f7f1e1;
+  font-family: "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor principal */
+main {
+  max-width: 400px;
+  margin: 4rem auto;
+  background-color: #eee0be;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  text-align: center;
+}
+
+/* Título */
+h2 {
+  background-color: #f08787;
+  padding: 1rem;
+  border-radius: 8px;
+  color: #4b3c1c;
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+
+/* Etiquetas */
+label {
+  display: block;
+  margin: 1rem 0 0.5rem;
+  font-weight: bold;
+  color: #4b3c1c;
+  text-align: left;
+}
+
+/* Inputs */
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+/* Botón */
+button {
+  background-color: #4b3c1c;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #362c15;
+}
+
+/* Link de recuperación */
+.recovery {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #4b3c1c;
+}
+
+.recovery a {
+  font-weight: bold;
+  color: #4b3c1c;
+  text-decoration: none;
+}
+
+.recovery a:hover {
+  text-decoration: underline;
 }

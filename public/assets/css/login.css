@@ -1,0 +1,89 @@
+/* ==== LOGIN personalizado ==== */
+.login-container {
+  max-width: 420px;
+  margin: 4rem auto;
+  background-color: var(--surface);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(215, 29, 29, 0.1);
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.login-container .logo img {
+  max-width: 150px;
+  height: auto;
+}
+
+.login-container h2 {
+  background-color: #e6aa55;
+  color: var(--text);
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin: 1.5rem 0 2rem;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.login-container form {
+  background: none;
+  padding: 0;
+  box-shadow: none;
+  margin: 0;
+}
+
+.login-container label {
+  text-align: left;
+  display: block;
+  margin: 1rem 0 0.5rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.login-container input[type="email"],
+.login-container input[type="password"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+/* ==== VALIDACIÓN VISUAL DEL EMAIL ==== */
+input[type="email"]:not(:placeholder-shown):invalid {
+  border: 2px solid #d9534f;
+  background-color: #fff5f5;
+}
+
+input:valid {
+  border: 1px solid var(--primary);
+  background-color: white;
+}
+
+.login-container button {
+  margin-top: 1.5rem;
+  background-color: var(--secondary);
+  color: var(--text-light);
+  border: none;
+  padding: 0.75rem;
+  font-size: 1rem;
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-container button:hover {
+  background-color: #8b5e46;
+}
+
+.login-container .recovery {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.login-container .recovery a {
+  font-weight: bold;
+  color: var(--secondary);
+  text-decoration: none;
+  text-decoration: underline;
+}
