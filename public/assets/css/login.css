@@ -4,7 +4,7 @@
   margin: 4rem auto;
   background-color: var(--surface);
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(215, 29, 29, 0.1);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   padding: 2.5rem 2rem;
   text-align: center;
 }
@@ -71,9 +71,7 @@ input:valid {
   transition: background-color 0.3s ease;
 }
 
-.login-container button:hover {
-  background-color: #8b5e46;
-}
+.login-container button:hover { background-color: #8b5e46; }
 
 .login-container .recovery {
   margin-top: 1rem;
@@ -84,6 +82,12 @@ input:valid {
 .login-container .recovery a {
   font-weight: bold;
   color: var(--secondary);
-  text-decoration: none;
   text-decoration: underline;
+}
+
+/* Accesibilidad */
+.login-container input:focus-visible,
+.login-container button:focus-visible {
+  outline: 2px solid var(--secondary);
+  outline-offset: 2px;
 }

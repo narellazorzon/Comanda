@@ -182,26 +182,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <style>
-.estado-pendiente { background: #fff3cd; color: #856404; }
-.estado-en_preparacion { background: #cce5ff; color: #004085; }
-.estado-listo { background: #d4edda; color: #155724; }
-.estado-pagado { background: #d1ecf1; color: #0c5460; }
-
-.btn-action {
-    display: inline-block;
-    padding: 4px 8px;
-    margin: 2px;
-    background: var(--secondary);
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 0.8em;
-}
-
-.btn-action:hover {
-    background: var(--accent);
-    color: var(--text);
-}
+/* Reservado intencionalmente vacío: estilos movidos a assets/css/style.css */
 </style>
 
 <script>
