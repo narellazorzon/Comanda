@@ -19,6 +19,19 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <h2>Gestión de Mozos</h2>
+
+<?php if (isset($_GET['success'])): ?>
+  <div style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
+    <?= htmlspecialchars($_GET['success']) ?>
+  </div>
+<?php endif; ?>
+
+<?php if (isset($_GET['error'])): ?>
+  <div style="color: red; background: #ffe6e6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
+    <?= htmlspecialchars($_GET['error']) ?>
+  </div>
+<?php endif; ?>
+
 <a class="button" href="alta_mozo.php">Nuevo Mozo</a>
 
 <table>

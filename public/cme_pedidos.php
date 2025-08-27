@@ -27,7 +27,7 @@ if (isset($_POST['cambiar_estado'])) {
         // Si el pedido se marca como pagado, liberar la mesa
         if ($nuevoEstado === 'pagado') {
             $pedido = Pedido::find($pedidoId);
-            if ($pedido && $pedido['id_mesa']) {
+            if ($pedido && isset($pedido['id_mesa']) && $pedido['id_mesa']) {
                 Mesa::update($pedido['id_mesa'], ['estado' => 'libre']);
             }
         }
@@ -101,12 +101,12 @@ require_once __DIR__ . '/includes/header.php';
                 <tr>
                     <td>
                         <strong>#<?= $pedido['id_pedido'] ?></strong>
-                        <?php if ($pedido['observaciones']): ?>
+                        <?php if (isset($pedido['observaciones']) && $pedido['observaciones']): ?>
                             <br><small style="color: #666;"><?= htmlspecialchars($pedido['observaciones']) ?></small>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?php if ($pedido['id_mesa']): ?>
+                        <?php if (isset($pedido['id_mesa']) && $pedido['id_mesa']): ?>
                             Mesa <?= $mesasIndex[$pedido['id_mesa']]['numero'] ?? 'N/A' ?>
                             <br><small><?= $mesasIndex[$pedido['id_mesa']]['ubicacion'] ?? '' ?></small>
                         <?php else: ?>
@@ -114,7 +114,7 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?php if ($pedido['id_mozo']): ?>
+                        <?php if (isset($pedido['id_mozo']) && $pedido['id_mozo']): ?>
                             <?= htmlspecialchars($mozosIndex[$pedido['id_mozo']]['nombre'] ?? 'N/A') ?>
                             <?= htmlspecialchars($mozosIndex[$pedido['id_mozo']]['apellido'] ?? '') ?>
                         <?php else: ?>
@@ -138,7 +138,7 @@ require_once __DIR__ . '/includes/header.php';
                             Ver Detalle
                         </a>
                         
-                        <?php if ($rol === 'administrador' || $pedido['id_mozo'] == $userId): ?>
+                        <?php if ($rol === 'administrador' || (isset($pedido['id_mozo']) && $pedido['id_mozo'] == $userId)): ?>
                             <form method="post" class="action-form" style="display: inline;">
                                 <input type="hidden" name="pedido_id" value="<?= $pedido['id_pedido'] ?>">
                                 <select name="nuevo_estado" onchange="this.form.submit()" style="font-size: 0.8em;">
@@ -182,26 +182,7 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <style>
-.estado-pendiente { background: #fff3cd; color: #856404; }
-.estado-en_preparacion { background: #cce5ff; color: #004085; }
-.estado-listo { background: #d4edda; color: #155724; }
-.estado-pagado { background: #d1ecf1; color: #0c5460; }
-
-.btn-action {
-    display: inline-block;
-    padding: 4px 8px;
-    margin: 2px;
-    background: var(--secondary);
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 0.8em;
-}
-
-.btn-action:hover {
-    background: var(--accent);
-    color: var(--text);
-}
+/* Reservado intencionalmente vacío: estilos movidos a assets/css/style.css */
 </style>
 
 <script>

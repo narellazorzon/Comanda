@@ -5,14 +5,16 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use App\Models\Mesa;
 
 session_start();
-// Solo administradores pueden ver esta página
-if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+// Mozos y administradores pueden ver esta página
+if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: login.php');
     exit;
 }
 
-// Si viene ?delete=ID, borramos esa mesa y redirigimos
-if (isset($_GET['delete'])) {
+$rol = $_SESSION['user']['rol'];
+
+// Solo administradores pueden eliminar mesas
+if (isset($_GET['delete']) && $rol === 'administrador') {
     $id = (int) $_GET['delete'];
     if ($id > 0) {
         Mesa::delete($id);
@@ -27,8 +29,15 @@ $mesas = Mesa::all();
 include __DIR__ . '/includes/header.php';
 ?>
 
-<h2>Gestión de Mesas</h2>
-<a href="alta_mesa.php" class="button">Nueva Mesa</a>
+<h2><?= $rol === 'administrador' ? 'Gestión de Mesas' : 'Consulta de Mesas' ?></h2>
+
+<?php if ($rol === 'administrador'): ?>
+  <a href="alta_mesa.php" class="button">Nueva Mesa</a>
+<?php else: ?>
+  <div style="background: #d1ecf1; padding: 10px; border-radius: 4px; margin-bottom: 1rem; color: #0c5460;">
+    👁️ Vista de solo lectura - Consulta las mesas disponibles
+  </div>
+<?php endif; ?>
 
 <table class="table">
   <thead>
@@ -37,7 +46,9 @@ include __DIR__ . '/includes/header.php';
       <th>Número</th>
       <th>Ubicación</th>
       <th>Estado</th>
-      <th>Acciones</th>
+      <?php if ($rol === 'administrador'): ?>
+        <th>Acciones</th>
+      <?php endif; ?>
     </tr>
   </thead>
   <tbody>
@@ -46,14 +57,22 @@ include __DIR__ . '/includes/header.php';
         <td><?= htmlspecialchars($m['id_mesa']) ?></td>
         <td><?= htmlspecialchars($m['numero']) ?></td>
         <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
-        <td><?= htmlspecialchars(ucfirst($m['estado'])) ?></td>
         <td>
-          <a href="alta_mesa.php?id=<?= $m['id_mesa'] ?>">Editar</a> |
-          <a href="?delete=<?= $m['id_mesa'] ?>"
-             onclick="return confirm('¿Borrar mesa <?= $m['numero'] ?>?')">
-            Borrar
-          </a>
+          <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; 
+                       background: <?= $m['estado'] === 'libre' ? '#d4edda' : '#f8d7da' ?>; 
+                       color: <?= $m['estado'] === 'libre' ? '#155724' : '#721c24' ?>;">
+            <?= htmlspecialchars(ucfirst($m['estado'])) ?>
+          </span>
         </td>
+        <?php if ($rol === 'administrador'): ?>
+          <td>
+            <a href="alta_mesa.php?id=<?= $m['id_mesa'] ?>" class="btn-action">Editar</a>
+            <a href="?delete=<?= $m['id_mesa'] ?>" class="btn-action" style="background: #dc3545;"
+               onclick="return confirm('¿Borrar mesa <?= $m['numero'] ?>?')">
+              Borrar
+            </a>
+          </td>
+        <?php endif; ?>
       </tr>
     <?php endforeach; ?>
   </tbody>

@@ -23,14 +23,50 @@ class MozoController {
 
     public static function create() {
         self::authorize();
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        
+        $id = (int) ($_POST['id'] ?? 0);
+        
+        if ($id > 0) {
+            // Es una actualización
+            self::update($id);
+        } else {
+            // Es una creación nueva
             $_POST['rol'] = 'mozo';
             $_POST['contrasenia'] = password_hash($_POST['contrasenia'], PASSWORD_DEFAULT);
             Usuario::create($_POST);
-            header('Location: cme_mozos.php');
+            header('Location: cme_mozos.php?success=' . urlencode('Mozo creado exitosamente'));
             exit;
         }
-        include __DIR__ . '/../../public/alta_mozo.php';
+    }
+
+    public static function update(int $id) {
+        self::authorize();
+        
+        $mozo = Usuario::find($id);
+        if (!$mozo || $mozo['rol'] !== 'mozo') {
+            header('Location: cme_mozos.php?error=' . urlencode('Mozo no encontrado'));
+            exit;
+        }
+
+        // Preparar datos para actualización
+        $data = [
+            'nombre' => $_POST['nombre'],
+            'apellido' => $_POST['apellido'],
+            'email' => $_POST['email'],
+            'estado' => $_POST['estado'] ?? 'activo'
+        ];
+
+        // Solo incluir contraseña si se proporcionó
+        if (!empty($_POST['contrasenia'])) {
+            $data['contrasenia'] = $_POST['contrasenia'];
+        }
+
+        if (Usuario::update($id, $data)) {
+            header('Location: cme_mozos.php?success=' . urlencode('Mozo actualizado exitosamente'));
+        } else {
+            header('Location: cme_mozos.php?error=' . urlencode('Error al actualizar el mozo'));
+        }
+        exit;
     }
 
     public static function delete() {
