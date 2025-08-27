@@ -18,7 +18,7 @@
 
 html,
 body {
-  height: 200%;
+  min-height: 100%;
   font-family: "Segoe UI", Tahoma, sans-serif;
   background-color: var(--background);
   color: var(--text);
@@ -145,6 +145,21 @@ a.button:hover {
   background-color: #8b5e46;
 }
 
+/* Accesibilidad: estados de foco visibles */
+a.button:focus-visible,
+.btn-action:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--secondary);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--secondary);
+  outline-offset: 2px;
+}
+
 /* ==== pie de página ==== */
 footer {
   background-color: var(--secondary);
@@ -168,8 +183,8 @@ footer {
   font-size: 0.9rem;
   line-height: 1.2;
   border-radius: 0.25rem;
-  background-color: var(--primary);
-  color: #fff;
+  background-color: var(--secondary);
+  color: var(--text-light);
   border: none;
   cursor: pointer;
   display: inline-block;
@@ -191,15 +206,8 @@ footer {
   margin: 0; /* Eliminar márgenes extra */
 }
 
-.btn-action {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.9rem;
-  line-height: 1.2;
-  border-radius: 0.25rem;
-  background-color: var(--primary);
-  color: #fff;
-  border: none;
-  cursor: pointer;
+.btn-action:hover {
+  background-color: #8b5e46;
 }
 /* ---------- Acción: quitar “card” en la celda del botón ---------- */
 .table td.no-card {
@@ -233,134 +241,9 @@ form.action-form {
   border: none !important;
   border-radius: 0 !important;
 }
-body {
-  background-color: #eee0be;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
 
-main {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  max-width: 400px;
-  margin: 5rem auto;
-}
-
-h2 {
-  text-align: center;
-  color: #333;
-}
-
-label {
-  display: block;
-  margin-top: 1rem;
-  font-weight: bold;
-}
-
-input[type="email"],
-input[type="password"] {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-button {
-  margin-top: 1.5rem;
-  padding: 0.75rem;
-  width: 100%;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-/* Fondo general */
-body {
-  background-color: #f7f1e1;
-  font-family: "Segoe UI", sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-/* Contenedor principal */
-main {
-  max-width: 400px;
-  margin: 4rem auto;
-  background-color: #eee0be;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  text-align: center;
-}
-
-/* Título */
-h2 {
-  background-color: #f08787;
-  padding: 1rem;
-  border-radius: 8px;
-  color: #4b3c1c;
-  font-weight: bold;
-  font-size: 1.4rem;
-}
-
-/* Etiquetas */
-label {
-  display: block;
-  margin: 1rem 0 0.5rem;
-  font-weight: bold;
-  color: #4b3c1c;
-  text-align: left;
-}
-
-/* Inputs */
-input[type="email"],
-input[type="password"] {
-  width: 100%;
-  padding: 0.5rem;
-  border: 2px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box;
-}
-
-/* Botón */
-button {
-  background-color: #4b3c1c;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  width: 100%;
-  margin-top: 1.5rem;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #362c15;
-}
-
-/* Link de recuperación */
-.recovery {
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  color: #4b3c1c;
-}
-
-.recovery a {
-  font-weight: bold;
-  color: #4b3c1c;
-  text-decoration: none;
-}
-
-.recovery a:hover {
-  text-decoration: underline;
-}
+/* Badges de estado (pedidos) */
+.estado-pendiente { background: #fff3cd; color: #856404; }
+.estado-en_preparacion { background: #cce5ff; color: #004085; }
+.estado-listo { background: #d4edda; color: #155724; }
+.estado-pagado { background: #d1ecf1; color: #0c5460; }
