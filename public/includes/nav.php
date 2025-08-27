@@ -30,7 +30,10 @@ $base_path = $is_in_reportes ? '../' : '';
         <a href="<?= $base_path ?>cme_carta.php" class="nav-link">📋 Carta</a>
         <a href="<?= $base_path ?>reportes/index.php" class="nav-link">📊 Reportes</a>
       <?php elseif ($rol === 'mozo'): ?>
-        <a href="<?= $base_path ?>estado_pedidos.php" class="nav-link">🍽️ Mis Pedidos</a>
+        <a href="<?= $base_path ?>index.php" class="nav-link">🏠 Inicio</a>
+        <a href="<?= $base_path ?>cme_mesas.php" class="nav-link">🪑 Ver Mesas</a>
+        <a href="<?= $base_path ?>cme_carta.php" class="nav-link">📋 Ver Carta</a>
+        <a href="<?= $base_path ?>cme_pedidos.php" class="nav-link">🍽️ Ver Pedidos</a>
         <a href="<?= $base_path ?>llamados.php" class="nav-link">🔔 Llamados Mesa</a>
       <?php endif; ?>
       <a href="<?= $base_path ?>logout.php" class="nav-link logout">🚪 Cerrar sesión</a>
