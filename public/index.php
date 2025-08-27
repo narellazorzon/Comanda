@@ -90,21 +90,6 @@ require_once __DIR__ . '/includes/header.php';
 
 </div>
 
-<div style="margin-top: 3rem; padding: 1rem; background: var(--primary); border-radius: 8px;">
-    <h3 style="color: var(--secondary); margin-bottom: 1rem;">📋 Resumen de Módulos Implementados</h3>
-    <p style="color: #666; margin-bottom: 1rem;">
-        <strong>Los siguientes 3 módulos han sido completamente implementados:</strong>
-    </p>
-    <ul style="color: #666; margin-left: 1.5rem;">
-        <li><strong>Módulo 1:</strong> Gestión de Mesas - CRUD completo con validaciones</li>
-        <li><strong>Módulo 2:</strong> Gestión de Carta - CRUD completo con categorías</li>
-        <li><strong>Módulo 3:</strong> Gestión de Pedidos - Creación y gestión de estados</li>
-    </ul>
-    <p style="margin-top: 1rem;">
-        <a href="test_modulos.php" class="button" style="background: var(--accent); color: var(--text);">
-            🧪 Probar Módulos
-        </a>
-    </p>
-</div>
+
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
