@@ -17,7 +17,14 @@ $rol = $_SESSION['user']['rol'];
 if (isset($_GET['delete']) && $rol === 'administrador') {
     $id = (int) $_GET['delete'];
     if ($id > 0) {
-        Mesa::delete($id);
+        $mesa = Mesa::find($id);
+        if ($mesa && $mesa['estado'] === 'libre') {
+            Mesa::delete($id);
+            header('Location: cme_mesas.php?success=1');
+        } else {
+            header('Location: cme_mesas.php?error=1');
+        }
+        exit;
     }
     header('Location: cme_mesas.php');
     exit;
@@ -30,6 +37,18 @@ include __DIR__ . '/includes/header.php';
 ?>
 
 <h2><?= $rol === 'administrador' ? 'Gestión de Mesas' : 'Consulta de Mesas' ?></h2>
+
+<?php if (isset($_GET['success'])): ?>
+    <div class="success" style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
+        Mesa eliminada correctamente.
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_GET['error'])): ?>
+    <div class="error" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
+        No se puede eliminar una mesa que está ocupada.
+    </div>
+<?php endif; ?>
 
 <?php if ($rol === 'administrador'): ?>
   <a href="alta_mesa.php" class="button">Nueva Mesa</a>
@@ -67,10 +86,17 @@ include __DIR__ . '/includes/header.php';
         <?php if ($rol === 'administrador'): ?>
           <td>
             <a href="alta_mesa.php?id=<?= $m['id_mesa'] ?>" class="btn-action">Editar</a>
-            <a href="?delete=<?= $m['id_mesa'] ?>" class="btn-action" style="background: #dc3545;"
-               onclick="return confirm('¿Borrar mesa <?= $m['numero'] ?>?')">
-              Borrar
-            </a>
+            <?php if ($m['estado'] === 'libre'): ?>
+              <a href="?delete=<?= $m['id_mesa'] ?>" class="btn-action" style="background: #dc3545;"
+                 onclick="return confirm('¿Borrar mesa <?= $m['numero'] ?>?')">
+                Borrar
+              </a>
+            <?php else: ?>
+              <span class="btn-action" style="background: #6c757d; cursor: not-allowed; opacity: 0.6;" 
+                    title="No se puede borrar una mesa ocupada">
+                Borrar
+              </span>
+            <?php endif; ?>
           </td>
         <?php endif; ?>
       </tr>

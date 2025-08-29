@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Si es pedido en mesa, marcar mesa como ocupada
                 if ($id_mesa) {
-                    Mesa::update($id_mesa, ['estado' => 'ocupada']);
+                    Mesa::updateEstado($id_mesa, 'ocupada');
                 }
                 
                 $success = "Pedido #$id_pedido creado correctamente";

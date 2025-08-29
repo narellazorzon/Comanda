@@ -26,9 +26,16 @@ if (isset($_GET['id'])) {
 
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Debugging temporal
+    error_log("POST data: " . print_r($_POST, true));
+    
     $numero = (int) $_POST['numero'];
     $ubicacion = trim($_POST['ubicacion']);
     $estado = $_POST['estado'] ?? 'libre';
+    
+    // Debugging temporal
+    error_log("Numero procesado: " . $numero);
+    error_log("Ubicacion procesada: " . $ubicacion);
     
     // Validaciones
     if ($numero <= 0) {
