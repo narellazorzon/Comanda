@@ -21,7 +21,6 @@ class CartaController {
     public static function index() {
         self::authorize();
         $items = CartaItem::all();
-        include __DIR__ . '/../../public/cme_carta.php';
         include __DIR__ . '/../views/carta/index.php';
     }
 
