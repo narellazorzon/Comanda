@@ -21,16 +21,17 @@ class CartaItem {
     public static function create(array $data): bool {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
-            INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad, imagen_url)
-            VALUES (?,?,?,?,?,?)
+            INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad, imagen_url, descuento)
+            VALUES (?,?,?,?,?,?,?)
         ");
         return $stmt->execute([
             $data['nombre'],
             $data['descripcion'],
             $data['precio'],
             $data['categoria'] ?? null,
-            isset($data['disponibilidad']) ? 1 : 0,
-            $data['imagen_url'] ?? null
+            $data['disponibilidad'] ?? 1,
+            $data['imagen_url'] ?? null,
+            $data['descuento'] ?? 0.00
         ]);
     }
 
@@ -38,7 +39,7 @@ class CartaItem {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
             UPDATE carta
-            SET nombre = ?, descripcion = ?, precio = ?, categoria = ?, disponibilidad = ?, imagen_url = ?
+            SET nombre = ?, descripcion = ?, precio = ?, categoria = ?, disponibilidad = ?, imagen_url = ?, descuento = ?
             WHERE id_item = ?
         ");
         return $stmt->execute([
@@ -46,8 +47,9 @@ class CartaItem {
             $data['descripcion'],
             $data['precio'],
             $data['categoria'] ?? null,
-            isset($data['disponibilidad']) ? 1 : 0,
+            $data['disponibilidad'] ?? 1,
             $data['imagen_url'] ?? null,
+            $data['descuento'] ?? 0.00,
             $id
         ]);
     }

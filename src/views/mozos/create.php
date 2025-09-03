@@ -1,6 +1,8 @@
 <?php
 // src/views/mozos/create.php
 require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/helpers.php';
+
 use App\Controllers\MozoController;
 use App\Models\Usuario;
 
@@ -10,7 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 // Solo administradores pueden acceder
 if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
-    header('Location: ../../public/index.php?route=login');
+    header('Location: ' . url('login'));
     exit;
 }
 
@@ -27,12 +29,11 @@ if (isset($_GET['id'])) {
     if ($id > 0) {
         $mozo = Usuario::find($id);
         if (!$mozo || $mozo['rol'] !== 'mozo') {
-            header('Location: ../../public/index.php?route=mozos&error=' . urlencode('Mozo no encontrado'));
+            header('Location: ' . url('mozos', ['error' => 'Mozo no encontrado']));
             exit;
         }
     }
 }
-require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <h2><?= isset($mozo) ? 'Modificar Mozo' : 'Alta de Mozo' ?></h2>
@@ -49,44 +50,48 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 <?php endif; ?>
 
-<form method="post" action="../../public/index.php?route=mozos/create">
+<form method="post" action="<?= url('mozos/create') ?>" autocomplete="off">
   <?php if (isset($mozo)): ?>
     <input type="hidden" name="id" value="<?= $mozo['id_usuario'] ?>">
   <?php endif; ?>
   
+  <?php 
+  // Solo usar datos del POST si hay error de validación (no para creación exitosa)
+  $usePostData = isset($_GET['error']) && !isset($mozo);
+  ?>
+  
   <label>Nombre:</label>
-  <input type="text" name="nombre" required value="<?= htmlspecialchars($mozo['nombre'] ?? '') ?>">
+  <input type="text" name="nombre" required value="<?= htmlspecialchars($mozo['nombre'] ?? ($usePostData ? $_POST['nombre'] : '') ?? '') ?>" autocomplete="off">
 
   <label>Apellido:</label>
-  <input type="text" name="apellido" required value="<?= htmlspecialchars($mozo['apellido'] ?? '') ?>">
+  <input type="text" name="apellido" required value="<?= htmlspecialchars($mozo['apellido'] ?? ($usePostData ? $_POST['apellido'] : '') ?? '') ?>" autocomplete="off">
 
   <label>Email:</label>
-  <input type="email" name="email" required value="<?= htmlspecialchars($mozo['email'] ?? '') ?>">
+  <input type="email" name="email" required value="<?= htmlspecialchars($mozo['email'] ?? ($usePostData ? $_POST['email'] : '') ?? '') ?>" autocomplete="off">
 
   <?php if (isset($mozo)): ?>
     <label>Estado:</label>
     <select name="estado" required>
-      <option value="activo" <?= ($mozo['estado'] ?? '') === 'activo' ? 'selected' : '' ?>>Activo</option>
-      <option value="inactivo" <?= ($mozo['estado'] ?? '') === 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
+      <?php $estado = $mozo['estado'] ?? $_POST['estado'] ?? 'activo'; ?>
+      <option value="activo" <?= $estado === 'activo' ? 'selected' : '' ?>>Activo</option>
+      <option value="inactivo" <?= $estado === 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
     </select>
 
     <label>Nueva Contraseña (opcional):</label>
-    <input type="password" name="contrasenia" placeholder="Dejar vacío para mantener la actual">
+    <input type="password" name="contrasenia" placeholder="Dejar vacío para mantener la actual" autocomplete="new-password">
     <small style="color: #666; display: block; margin-top: 0.25rem;">
       Solo completa este campo si deseas cambiar la contraseña
     </small>
   <?php else: ?>
     <label>Contraseña:</label>
-    <input type="password" name="contrasenia" required>
+    <input type="password" name="contrasenia" required autocomplete="new-password">
   <?php endif; ?>
 
   <button type="submit"><?= isset($mozo) ? 'Guardar cambios' : 'Crear Mozo' ?></button>
 </form>
 
-<a href="../../public/index.php?route=mozos" class="button" style="background-color: #6c757d; margin-top: 1rem;">
+<a href="<?= url('mozos') ?>" class="button" style="background-color: #6c757d; margin-top: 1rem;">
   ← Volver a la lista
 </a>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+

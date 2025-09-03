@@ -4,13 +4,16 @@ namespace App\Controllers;
 
 use App\Models\Usuario;
 
+// Incluir helpers para las URLs
+require_once __DIR__ . '/../config/helpers.php';
+
 class MozoController {
     protected static function authorize() {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
         if (($_SESSION['user']['rol'] ?? '') !== 'administrador') {
-            header('Location: unauthorized.php');
+            header('Location: ' . url('unauthorized'));
             exit;
         }
     }
@@ -18,7 +21,7 @@ class MozoController {
     public static function index() {
         self::authorize();
         $mozos = Usuario::allByRole('mozo');
-        include __DIR__ . '/../../public/cme_mozos.php';
+        include __DIR__ . '/../views/mozos/index.php';
     }
 
     public static function create() {
@@ -31,10 +34,19 @@ class MozoController {
             self::update($id);
         } else {
             // Es una creación nueva
-            $_POST['rol'] = 'mozo';
-            $_POST['contrasenia'] = password_hash($_POST['contrasenia'], PASSWORD_DEFAULT);
-            Usuario::create($_POST);
-            header('Location: cme_mozos.php?success=' . urlencode('Mozo creado exitosamente'));
+            // Validar que el email no esté duplicado
+            if (Usuario::emailExists($_POST['email'])) {
+                header('Location: ' . url('mozos/create', ['error' => 'El email ya está en uso por otro usuario']));
+                exit;
+            }
+            
+            $data = $_POST;
+            $data['rol'] = 'mozo';
+            $data['contrasenia'] = password_hash($data['contrasenia'], PASSWORD_DEFAULT);
+            Usuario::create($data);
+            
+            // Redirección POST-REDIRECT-GET para evitar reenvío de formulario
+            header('Location: ' . url('mozos', ['success' => 'Mozo creado exitosamente']));
             exit;
         }
     }
@@ -44,7 +56,13 @@ class MozoController {
         
         $mozo = Usuario::find($id);
         if (!$mozo || $mozo['rol'] !== 'mozo') {
-            header('Location: cme_mozos.php?error=' . urlencode('Mozo no encontrado'));
+            header('Location: ' . url('mozos', ['error' => 'Mozo no encontrado']));
+            exit;
+        }
+
+        // Validar que el email no esté duplicado
+        if (Usuario::emailExists($_POST['email'], $id)) {
+            header('Location: ' . url('mozos/edit', ['id' => $id, 'error' => 'El email ya está en uso por otro usuario']));
             exit;
         }
 
@@ -62,9 +80,9 @@ class MozoController {
         }
 
         if (Usuario::update($id, $data)) {
-            header('Location: cme_mozos.php?success=' . urlencode('Mozo actualizado exitosamente'));
+            header('Location: ' . url('mozos', ['success' => 'Mozo actualizado exitosamente']));
         } else {
-            header('Location: cme_mozos.php?error=' . urlencode('Error al actualizar el mozo'));
+            header('Location: ' . url('mozos', ['error' => 'Error al actualizar el mozo']));
         }
         exit;
     }
@@ -75,7 +93,7 @@ class MozoController {
         if ($id > 0) {
             Usuario::delete($id);
         }
-        header('Location: cme_mozos.php');
+        header('Location: ' . url('mozos'));
         exit;
     }
 }
