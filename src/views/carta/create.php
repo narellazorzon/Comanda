@@ -1,14 +1,6 @@
 <?php
 // src/views/carta/create.php
-require_once __DIR__ . '/../../../vendor/autoload.php';
-use App\Models\CartaItem;
-
-session_start();
-// Solo administradores pueden acceder
-if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
-    header('Location: ../../public/index.php?route=login');
-    exit;
-}
+require_once __DIR__ . '/../../config/helpers.php';
 
 $item = null;
 $error = '';
@@ -17,120 +9,122 @@ $success = '';
 // Si viene id por GET, estamos en modo edición
 if (isset($_GET['id'])) {
     $id = (int) $_GET['id'];
-    $item = CartaItem::find($id);
+    $item = \App\Models\CartaItem::find($id);
     if (!$item) {
-        header('Location: ../../public/index.php?route=carta');
+        header('Location: ' . url('carta', ['error' => 'Ítem no encontrado']));
         exit;
     }
 }
 
-// Procesar formulario
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre = trim($_POST['nombre'] ?? '');
-    $descripcion = trim($_POST['descripcion'] ?? '');
-    $precio = (float) ($_POST['precio'] ?? 0);
-    $categoria = trim($_POST['categoria'] ?? '');
-    $disponibilidad = (int) ($_POST['disponibilidad'] ?? 1);
-    $imagen_url = trim($_POST['imagen_url'] ?? '');
-
-    // Validaciones
-    if (empty($nombre)) {
-        $error = 'El nombre del ítem es obligatorio';
-    } elseif ($precio <= 0) {
-        $error = 'El precio debe ser mayor a 0';
-    } elseif (empty($categoria)) {
-        $error = 'La categoría es obligatoria';
-    } else {
-        try {
-            $data = [
-                'nombre' => $nombre,
-                'descripcion' => $descripcion,
-                'precio' => $precio,
-                'categoria' => $categoria,
-                'disponibilidad' => $disponibilidad,
-                'imagen_url' => $imagen_url ?: null,
-            ];
-
-            if (isset($item)) {
-                // Modificar ítem existente
-                if (CartaItem::update($item['id_item'], $data)) {
-                    $success = 'Ítem modificado correctamente';
-                    $item = CartaItem::find($item['id_item']); // Recargar datos
-                } else {
-                    $error = 'Error al modificar el ítem';
-                }
-            } else {
-                // Crear nuevo ítem
-                if (CartaItem::create($data)) {
-                    $success = 'Ítem creado correctamente';
-                    // Limpiar formulario
-                    $_POST = [];
-                } else {
-                    $error = 'Error al crear el ítem';
-                }
-            }
-        } catch (Exception $e) {
-            $error = 'Error: ' . $e->getMessage();
-        }
-    }
+// Mostrar mensajes de éxito/error
+if (isset($_GET['success'])) {
+    $success = $_GET['success'];
 }
-
-include __DIR__ . '/../includes/header.php';
+if (isset($_GET['error'])) {
+    $error = $_GET['error'];
+}
 ?>
 
 <h2><?= isset($item) ? 'Editar Ítem' : 'Nuevo Ítem' ?></h2>
 
-<?php if ($error): ?>
-    <div class="error" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-        <?= htmlspecialchars($error) ?>
-    </div>
-<?php endif; ?>
-
 <?php if ($success): ?>
-    <div class="success" style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-        <?= htmlspecialchars($success) ?>
-    </div>
+  <div style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
+    <?= htmlspecialchars($success) ?>
+  </div>
 <?php endif; ?>
 
-<form method="post">
-    <label>Nombre del Ítem:</label>
-    <input type="text" name="nombre" required 
-           value="<?= htmlspecialchars($item['nombre'] ?? $_POST['nombre'] ?? '') ?>"
-           placeholder="Ej: Hamburguesa Clásica">
+<?php if ($error): ?>
+  <div style="color: red; background: #ffe6e6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
+    <?= htmlspecialchars($error) ?>
+  </div>
+<?php endif; ?>
 
-    <label>Descripción:</label>
-    <textarea name="descripcion" placeholder="Descripción detallada del ítem..."><?= htmlspecialchars($item['descripcion'] ?? $_POST['descripcion'] ?? '') ?></textarea>
+<form method="post" action="<?= url('carta/create') ?>" autocomplete="off">
+  <?php if (isset($item)): ?>
+    <input type="hidden" name="id" value="<?= $item['id_item'] ?>">
+  <?php endif; ?>
+  
+  <?php 
+  // Solo usar datos del POST si hay error de validación (no para creación exitosa)
+  $usePostData = isset($_GET['error']) && !isset($item);
+  ?>
+  
+  <label>Categoría:</label>
+  <select name="categoria" required>
+    <option value="">Seleccionar categoría</option>
+    <?php 
+    $categorias = ['Entradas', 'Platos Principales', 'Postres', 'Bebidas', 'Acompañamientos'];
+    $categoriaSeleccionada = $item['categoria'] ?? ($usePostData ? $_POST['categoria'] : '') ?? '';
+    foreach ($categorias as $categoria): 
+    ?>
+      <option value="<?= $categoria ?>" <?= $categoriaSeleccionada === $categoria ? 'selected' : '' ?>>
+        <?= $categoria ?>
+      </option>
+    <?php endforeach; ?>
+  </select>
 
-    <label>Precio ($):</label>
-    <input type="number" name="precio" step="0.01" min="0.01" required 
-           value="<?= htmlspecialchars($item['precio'] ?? $_POST['precio'] ?? '') ?>">
+  <label>Nombre del Ítem:</label>
+  <input type="text" name="nombre" required 
+         value="<?= htmlspecialchars($item['nombre'] ?? ($usePostData ? $_POST['nombre'] : '') ?? '') ?>"
+         placeholder="Ej: Hamburguesa Clásica" autocomplete="off">
 
-    <label>Categoría:</label>
-    <select name="categoria" required>
-        <option value="">Seleccionar categoría</option>
-        <option value="Entradas" <?= ($item['categoria'] ?? $_POST['categoria'] ?? '') == 'Entradas' ? 'selected' : '' ?>>Entradas</option>
-        <option value="Platos Principales" <?= ($item['categoria'] ?? $_POST['categoria'] ?? '') == 'Platos Principales' ? 'selected' : '' ?>>Platos Principales</option>
-        <option value="Postres" <?= ($item['categoria'] ?? $_POST['categoria'] ?? '') == 'Postres' ? 'selected' : '' ?>>Postres</option>
-        <option value="Bebidas" <?= ($item['categoria'] ?? $_POST['categoria'] ?? '') == 'Bebidas' ? 'selected' : '' ?>>Bebidas</option>
-        <option value="Acompañamientos" <?= ($item['categoria'] ?? $_POST['categoria'] ?? '') == 'Acompañamientos' ? 'selected' : '' ?>>Acompañamientos</option>
-    </select>
+  <label>Descripción:</label>
+  <textarea name="descripcion" placeholder="Descripción detallada del ítem..." autocomplete="off" 
+            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; line-height: 1.5; font-weight: 400; letter-spacing: 0.3px;"><?= htmlspecialchars($item['descripcion'] ?? ($usePostData ? $_POST['descripcion'] : '') ?? '') ?></textarea>
 
-    <label>Disponible:</label>
-    <select name="disponibilidad">
-        <option value="1" <?= ($item['disponibilidad'] ?? $_POST['disponibilidad'] ?? 1) == 1 ? 'selected' : '' ?>>Sí</option>
-        <option value="0" <?= ($item['disponibilidad'] ?? $_POST['disponibilidad'] ?? 1) == 0 ? 'selected' : '' ?>>No</option>
-    </select>
+  <label>Precio Base ($):</label>
+  <input type="number" name="precio" id="precio" step="0.01" min="0.01" required 
+         value="<?= htmlspecialchars($item['precio'] ?? ($usePostData ? $_POST['precio'] : '') ?? '') ?>" autocomplete="off">
 
-    <label>URL de Imagen (opcional):</label>
-    <input type="url" name="imagen_url" 
-           value="<?= htmlspecialchars($item['imagen_url'] ?? $_POST['imagen_url'] ?? '') ?>"
-           placeholder="https://ejemplo.com/imagen.jpg">
+  <label>Descuento (%):</label>
+  <input type="number" name="descuento" id="descuento" step="0.01" min="0" max="100" 
+         value="<?= htmlspecialchars($item['descuento'] ?? ($usePostData ? $_POST['descuento'] : '') ?? '0') ?>" autocomplete="off"
+         placeholder="0">
 
-    <button type="submit">
-        <?= isset($item) ? 'Actualizar Ítem' : 'Crear Ítem' ?>
-    </button>
-    
-    <a href="../../public/index.php?route=carta" class="button" style="margin-left: 10px;">Volver</a>
+  <label>Precio Final ($):</label>
+  <input type="text" id="precio_final" readonly 
+         value="<?= htmlspecialchars($item['precio'] ?? ($usePostData ? $_POST['precio'] : '') ?? '0') ?>" 
+         style="background: #f8f9fa; color: #495057; font-weight: bold;">
+
+  <label>Disponible:</label>
+  <select name="disponibilidad">
+    <?php $disponibilidad = $item['disponibilidad'] ?? ($usePostData ? $_POST['disponibilidad'] : 1) ?? 1; ?>
+    <option value="1" <?= $disponibilidad == 1 ? 'selected' : '' ?>>Sí</option>
+    <option value="0" <?= $disponibilidad == 0 ? 'selected' : '' ?>>No</option>
+  </select>
+
+  <label>URL de Imagen (opcional):</label>
+  <input type="url" name="imagen_url" 
+         value="<?= htmlspecialchars($item['imagen_url'] ?? ($usePostData ? $_POST['imagen_url'] : '') ?? '') ?>"
+         placeholder="https://ejemplo.com/imagen.jpg" autocomplete="off">
+
+  <button type="submit">
+    <?= isset($item) ? 'Actualizar Ítem' : 'Crear Ítem' ?>
+  </button>
+  
+  <a href="<?= url('carta') ?>" class="button" style="margin-left: 10px;">← Volver a la lista</a>
 </form>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<script>
+function calcularPrecioFinal() {
+    const precio = parseFloat(document.getElementById('precio').value) || 0;
+    const descuento = parseFloat(document.getElementById('descuento').value) || 0;
+    
+    if (descuento > 0) {
+        const descuentoCalculado = precio * (descuento / 100);
+        const precioFinal = precio - descuentoCalculado;
+        document.getElementById('precio_final').value = precioFinal.toFixed(2);
+    } else {
+        document.getElementById('precio_final').value = precio.toFixed(2);
+    }
+}
+
+// Event listeners para calcular automáticamente
+document.getElementById('precio').addEventListener('input', calcularPrecioFinal);
+document.getElementById('descuento').addEventListener('input', calcularPrecioFinal);
+
+// Calcular precio inicial al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    calcularPrecioFinal();
+});
+</script>

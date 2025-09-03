@@ -112,17 +112,22 @@ switch ($route) {
     // Rutas de Carta
     case 'carta':
         requireMozoOrAdmin();
-        include __DIR__ . '/../src/views/carta/index.php';
+        \App\Controllers\CartaController::index();
         break;
 
     case 'carta/create':
         requireAdmin();
-        include __DIR__ . '/../src/views/carta/create.php';
+        \App\Controllers\CartaController::create();
         break;
 
     case 'carta/edit':
         requireAdmin();
-        include __DIR__ . '/../src/views/carta/create.php';
+        \App\Controllers\CartaController::edit();
+        break;
+
+    case 'carta/delete':
+        requireAdmin();
+        \App\Controllers\CartaController::delete();
         break;
 
     // Rutas de Pedidos
