@@ -42,14 +42,17 @@ $mozos = Usuario::allByRole('mozo');
 
 <a class="button" href="<?= url('mozos/create') ?>">Nuevo Mozo</a>
 
-<table>
-  <tr>
-    <th>ID</th>
-    <th>Nombre</th>
-    <th>Email</th>
-    <th>Estado</th>
-    <th>Acciones</th>
-  </tr>
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Email</th>
+      <th>Estado</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
   <?php if (empty($mozos)): ?>
     <tr>
       <td colspan="5">No hay mozos registrados.</td>
@@ -60,15 +63,22 @@ $mozos = Usuario::allByRole('mozo');
         <td><?= $m['id_usuario'] ?></td>
         <td><?= htmlspecialchars($m['nombre'].' '.$m['apellido']) ?></td>
         <td><?= htmlspecialchars($m['email']) ?></td>
-        <td><?= $m['estado'] ?></td>
         <td>
-          <a href="<?= url('mozos/edit') ?>&id=<?= $m['id_usuario'] ?>">Editar</a> |
-          <a href="<?= url('mozos') ?>&delete=<?= $m['id_usuario'] ?>"
-             onclick="return confirm('¿Borrar mozo?')">Borrar</a>
+          <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; 
+                       background: <?= $m['estado'] === 'activo' ? '#d4edda' : '#f8d7da' ?>; 
+                       color: <?= $m['estado'] === 'activo' ? '#155724' : '#721c24' ?>;">
+            <?= $m['estado'] === 'activo' ? '✅ Activo' : '❌ Inactivo' ?>
+          </span>
+        </td>
+        <td>
+          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action">Editar</a>
+          <a href="<?= url('mozos', ['delete' => $m['id_usuario']]) ?>" class="btn-action" style="background: #dc3545;"
+             onclick="return confirm('¿Estás seguro de que quieres borrar este mozo?')">Borrar</a>
         </td>
       </tr>
     <?php endforeach; ?>
   <?php endif; ?>
+  </tbody>
 </table>
 
 

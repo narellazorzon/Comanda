@@ -77,6 +77,11 @@ switch ($route) {
         include __DIR__ . '/../src/views/mesas/create.php';
         break;
 
+    case 'mesas/cambiar-mozo':
+        requireAdmin();
+        include __DIR__ . '/../src/views/mesas/cambiar_mozo.php';
+        break;
+
     // Rutas de Mozos
     case 'mozos':
         requireAdmin();
@@ -91,6 +96,17 @@ switch ($route) {
     case 'mozos/edit':
         requireAdmin();
         include __DIR__ . '/../src/views/mozos/create.php';
+        break;
+
+    case 'mozos/confirmar-inactivacion':
+        requireAdmin();
+        include __DIR__ . '/../src/views/mozos/confirmar_inactivacion.php';
+        break;
+
+    case 'mozos/procesar-inactivacion':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/MozoController.php';
+        \App\Controllers\MozoController::procesarInactivacion();
         break;
 
     // Rutas de Carta
@@ -156,13 +172,19 @@ switch ($route) {
         include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
         break;
 
-    // Rutas de Llamados (solo para mozos)
+    case 'reportes/propina':
+        requireAdmin();
+        include __DIR__ . '/../src/views/reportes/propina.php';
+        break;
+
+    case 'reportes/recaudacion':
+        requireAdmin();
+        include __DIR__ . '/../src/views/reportes/recaudacion_mensual.php';
+        break;
+
+    // Rutas de Llamados (mozos y administradores)
     case 'llamados':
-        requireAuth();
-        if ($_SESSION['user']['rol'] !== 'mozo') {
-            header('Location: index.php?route=unauthorized');
-            exit;
-        }
+        requireMozoOrAdmin();
         include __DIR__ . '/../src/views/llamados/index.php';
         break;
 

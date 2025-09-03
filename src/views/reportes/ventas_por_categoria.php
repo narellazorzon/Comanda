@@ -1,14 +1,13 @@
 <?php 
-session_start();
+require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/helpers.php';
 
+// La sesión ya está iniciada desde public/index.php
 // Verificar autenticación y permisos
 if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
-    header('Location: ../../public/unauthorized.php');
+    header('Location: ' . url('unauthorized'));
     exit;
 }
-
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../../vendor/autoload.php';
 
 use App\Models\Reporte;
 
@@ -327,4 +326,6 @@ function applyFilters() {
 }
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<div style="margin-top: 2rem; text-align: center;">
+    <a href="<?= url('reportes') ?>" class="access-btn">← Volver a Reportes</a>
+</div>

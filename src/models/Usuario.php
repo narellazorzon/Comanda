@@ -19,6 +19,22 @@ class Usuario {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Obtiene todos los mozos activos para asignación a mesas.
+     */
+    public static function getMozosActivos(): array {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT id_usuario, nombre, apellido, 
+                   CONCAT(nombre, ' ', apellido) as nombre_completo
+            FROM usuarios 
+            WHERE rol = 'mozo' AND estado = 'activo'
+            ORDER BY nombre, apellido
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function find(int $id): ?array {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("SELECT * FROM usuarios WHERE id_usuario = ?");

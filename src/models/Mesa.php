@@ -7,20 +7,36 @@ use PDO;
 
 class Mesa {
     /**
-     * Devuelve todas las mesas ordenadas por número.
+     * Devuelve todas las mesas ordenadas por número con información del mozo asignado.
      */
     public static function all(): array {
         $db   = (new Database)->getConnection();
-        $stmt = $db->query("SELECT * FROM mesas ORDER BY numero ASC");
+        $stmt = $db->query("
+            SELECT m.*, 
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
+            FROM mesas m
+            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
+            ORDER BY m.numero ASC
+        ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Busca una mesa por su ID, o devuelve null si no existe.
+     * Busca una mesa por su ID con información del mozo asignado, o devuelve null si no existe.
      */
     public static function find(int $id): ?array {
         $db   = (new Database)->getConnection();
-        $stmt = $db->prepare("SELECT * FROM mesas WHERE id_mesa = ?");
+        $stmt = $db->prepare("
+            SELECT m.*, 
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
+            FROM mesas m
+            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
+            WHERE m.id_mesa = ?
+        ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -55,10 +71,11 @@ class Mesa {
             throw new \InvalidArgumentException('Ya existe una mesa con el número ' . $numero);
         }
         
-        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion) VALUES (?, ?)");
+        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, id_mozo) VALUES (?, ?, ?)");
         return $stmt->execute([
             $numero,
-            $data['ubicacion'] ?? null
+            $data['ubicacion'] ?? null,
+            !empty($data['id_mozo']) ? (int) $data['id_mozo'] : null
         ]);
     }
 
@@ -92,13 +109,15 @@ class Mesa {
             UPDATE mesas
             SET numero   = ?,
                 ubicacion= ?,
-                estado   = ?
+                estado   = ?,
+                id_mozo  = ?
             WHERE id_mesa = ?
         ");
         return $stmt->execute([
             $numero,
             $data['ubicacion'] ?? null,
             $estado,
+            !empty($data['id_mozo']) ? (int) $data['id_mozo'] : null,
             $id
         ]);
     }
@@ -110,6 +129,44 @@ class Mesa {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("UPDATE mesas SET estado = ? WHERE id_mesa = ?");
         return $stmt->execute([$estado, $id]);
+    }
+
+    /**
+     * Asigna o cambia el mozo de una mesa.
+     */
+    public static function asignarMozo(int $id_mesa, ?int $id_mozo): bool {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("UPDATE mesas SET id_mozo = ? WHERE id_mesa = ?");
+        return $stmt->execute([$id_mozo, $id_mesa]);
+    }
+
+    /**
+     * Obtiene todas las mesas asignadas a un mozo específico.
+     */
+    public static function getMesasByMozo(int $id_mozo): array {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT m.*, 
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
+            FROM mesas m
+            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
+            WHERE m.id_mozo = ?
+            ORDER BY m.numero ASC
+        ");
+        $stmt->execute([$id_mozo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Cuenta cuántas mesas tiene asignadas un mozo.
+     */
+    public static function countMesasByMozo(int $id_mozo): int {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("SELECT COUNT(*) FROM mesas WHERE id_mozo = ?");
+        $stmt->execute([$id_mozo]);
+        return (int) $stmt->fetchColumn();
     }
 
     /**

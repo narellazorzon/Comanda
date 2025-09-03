@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\Mesa;
+use App\Models\Usuario;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -18,6 +19,9 @@ if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administra
 $mesa = null;
 $error = '';
 $success = '';
+
+// Obtener todos los mozos activos para el dropdown
+$mozos = Usuario::getMozosActivos();
 
 // Si viene id por GET, estamos en modo edición
 if (isset($_GET['id'])) {
@@ -34,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numero = trim($_POST['numero'] ?? '');
     $ubicacion = trim($_POST['ubicacion'] ?? '');
     $estado = trim($_POST['estado'] ?? 'libre');
+    $id_mozo = !empty($_POST['id_mozo']) ? (int) $_POST['id_mozo'] : null;
     
 
 
@@ -48,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'numero' => $numero,
                 'ubicacion' => $ubicacion ?: null,
                 'estado' => $estado,
+                'id_mozo' => $id_mozo,
             ];
 
             if (isset($mesa)) {
@@ -106,6 +112,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <option value="libre" <?= ($mesa['estado'] ?? $_POST['estado'] ?? 'libre') == 'libre' ? 'selected' : '' ?>>Libre</option>
         <option value="ocupada" <?= ($mesa['estado'] ?? $_POST['estado'] ?? 'libre') == 'ocupada' ? 'selected' : '' ?>>Ocupada</option>
         <option value="reservada" <?= ($mesa['estado'] ?? $_POST['estado'] ?? 'libre') == 'reservada' ? 'selected' : '' ?>>Reservada</option>
+    </select>
+
+    <label>Mozo Asignado (opcional):</label>
+    <select name="id_mozo">
+        <option value="">-- Sin asignar --</option>
+        <?php foreach ($mozos as $mozo): ?>
+            <option value="<?= $mozo['id_usuario'] ?>" 
+                    <?= ($mesa['id_mozo'] ?? $_POST['id_mozo'] ?? '') == $mozo['id_usuario'] ? 'selected' : '' ?>>
+                <?= htmlspecialchars($mozo['nombre_completo']) ?>
+            </option>
+        <?php endforeach; ?>
     </select>
 
     <button type="submit">

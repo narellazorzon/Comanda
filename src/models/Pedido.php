@@ -7,13 +7,23 @@ use PDO;
 
 class Pedido {
     /**
-     * Devuelve todos los pedidos, ordenados por fecha desc.
+     * Devuelve todos los pedidos con información de mesa y mozo, ordenados por fecha desc.
      */
     public static function all(): array {
         $db = (new Database)->getConnection();
-        return $db
-            ->query("SELECT * FROM pedidos ORDER BY fecha_hora DESC")
-            ->fetchAll(PDO::FETCH_ASSOC);
+        return $db->query("
+            SELECT p.*, 
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   p.fecha_hora as fecha_creacion
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            ORDER BY p.fecha_hora DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**

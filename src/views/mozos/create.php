@@ -1,6 +1,8 @@
 <?php
 // src/views/mozos/create.php
 require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/helpers.php';
+
 use App\Controllers\MozoController;
 use App\Models\Usuario;
 
@@ -10,7 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 // Solo administradores pueden acceder
 if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
-    header('Location: ../../public/index.php?route=login');
+    header('Location: ' . url('login'));
     exit;
 }
 
@@ -27,7 +29,7 @@ if (isset($_GET['id'])) {
     if ($id > 0) {
         $mozo = Usuario::find($id);
         if (!$mozo || $mozo['rol'] !== 'mozo') {
-            header('Location: ../../public/index.php?route=mozos&error=' . urlencode('Mozo no encontrado'));
+            header('Location: ' . url('mozos', ['error' => 'Mozo no encontrado']));
             exit;
         }
     }
@@ -49,7 +51,7 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 <?php endif; ?>
 
-<form method="post" action="../../public/index.php?route=mozos/create">
+<form method="post" action="<?= url('mozos/create') ?>">
   <?php if (isset($mozo)): ?>
     <input type="hidden" name="id" value="<?= $mozo['id_usuario'] ?>">
   <?php endif; ?>
@@ -83,7 +85,7 @@ require_once __DIR__ . '/../includes/header.php';
   <button type="submit"><?= isset($mozo) ? 'Guardar cambios' : 'Crear Mozo' ?></button>
 </form>
 
-<a href="../../public/index.php?route=mozos" class="button" style="background-color: #6c757d; margin-top: 1rem;">
+<a href="<?= url('mozos') ?>" class="button" style="background-color: #6c757d; margin-top: 1rem;">
   ← Volver a la lista
 </a>
 

@@ -61,7 +61,12 @@ $mesas = Mesa::all();
 <?php endif; ?>
 
 <?php if ($rol === 'administrador'): ?>
-  <a href="<?= url('mesas/create') ?>" class="button">Nueva Mesa</a>
+  <div style="margin-bottom: 1rem;">
+    <a href="<?= url('mesas/create') ?>" class="button">Nueva Mesa</a>
+    <a href="<?= url('mesas/cambiar-mozo') ?>" class="button" style="background: #ffc107; color: #212529; margin-left: 10px;">
+      🔄 Gestionar Mozos
+    </a>
+  </div>
 <?php else: ?>
   <div style="background: #d1ecf1; padding: 10px; border-radius: 4px; margin-bottom: 1rem; color: #0c5460;">
     👁️ Vista de solo lectura - Consulta las mesas disponibles
@@ -75,6 +80,7 @@ $mesas = Mesa::all();
       <th>Número</th>
       <th>Ubicación</th>
       <th>Estado</th>
+      <th>Mozo Asignado</th>
       <?php if ($rol === 'administrador'): ?>
         <th>Acciones</th>
       <?php endif; ?>
@@ -106,6 +112,16 @@ $mesas = Mesa::all();
                        color: <?= $text_color ?>;">
             <?= htmlspecialchars(ucfirst($m['estado'])) ?>
           </span>
+        </td>
+        <td>
+          <?php if (!empty($m['mozo_nombre_completo'])): ?>
+            <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; 
+                         background: #e2e3e5; color: #383d41;">
+              👤 <?= htmlspecialchars($m['mozo_nombre_completo']) ?>
+            </span>
+          <?php else: ?>
+            <span style="color: #6c757d; font-style: italic;">Sin asignar</span>
+          <?php endif; ?>
         </td>
         <?php if ($rol === 'administrador'): ?>
           <td>

@@ -56,19 +56,54 @@ $pedidos = Pedido::all();
         <tr>
           <td><?= htmlspecialchars($pedido['id_pedido']) ?></td>
           <td><?= htmlspecialchars($pedido['numero_mesa'] ?? 'N/A') ?></td>
-          <td><?= htmlspecialchars($pedido['nombre_mozo'] ?? 'N/A') ?></td>
+          <td><?= htmlspecialchars($pedido['nombre_mozo_completo'] ?? 'N/A') ?></td>
           <td>
+            <?php
+            // Definir colores según el estado del pedido
+            $estado = $pedido['estado'];
+            switch ($estado) {
+                case 'pendiente':
+                    $bg_color = '#fff3cd';
+                    $text_color = '#856404';
+                    $icon = '⏳';
+                    break;
+                case 'en_preparacion':
+                    $bg_color = '#cce5ff';
+                    $text_color = '#004085';
+                    $icon = '👨‍🍳';
+                    break;
+                case 'servido':
+                    $bg_color = '#d4edda';
+                    $text_color = '#155724';
+                    $icon = '✅';
+                    break;
+                case 'cuenta':
+                    $bg_color = '#d1ecf1';
+                    $text_color = '#0c5460';
+                    $icon = '💳';
+                    break;
+                case 'cerrado':
+                    $bg_color = '#e2e3e5';
+                    $text_color = '#383d41';
+                    $icon = '🔒';
+                    break;
+                default:
+                    $bg_color = '#f8d7da';
+                    $text_color = '#721c24';
+                    $icon = '❓';
+            }
+            ?>
             <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; 
-                         background: <?= $pedido['estado'] === 'completado' ? '#d4edda' : '#fff3cd' ?>; 
-                         color: <?= $pedido['estado'] === 'completado' ? '#155724' : '#856404' ?>;">
-              <?= htmlspecialchars(ucfirst($pedido['estado'])) ?>
+                         background: <?= $bg_color ?>; 
+                         color: <?= $text_color ?>;">
+              <?= $icon ?> <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $pedido['estado']))) ?>
             </span>
           </td>
           <td><strong>$<?= number_format($pedido['total'] ?? 0, 2) ?></strong></td>
-          <td><?= date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) ?></td>
+          <td><?= !empty($pedido['fecha_creacion']) ? date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) : 'N/A' ?></td>
           <?php if ($rol === 'administrador'): ?>
             <td>
-              <a href="<?= url('pedidos/edit') ?>&id=<?= $pedido['id_pedido'] ?>" class="btn-action">Editar</a>
+              <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action">Editar</a>
             </td>
           <?php endif; ?>
         </tr>

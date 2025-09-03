@@ -1,14 +1,13 @@
 <?php 
-session_start();
+require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/helpers.php';
 
+// La sesión ya está iniciada desde public/index.php
 // Verificar autenticación y permisos
 if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
-    header('Location: ../../public/unauthorized.php');
+    header('Location: ' . url('unauthorized'));
     exit;
 }
-
-require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../../vendor/autoload.php';
 
 use App\Models\Reporte;
 
@@ -334,7 +333,7 @@ main {
                     <li>Estadísticas de pedidos</li>
                     <li>Filtros personalizables</li>
                 </ul>
-                <a href="platos_mas_vendidos.php" class="access-btn">Ver Reporte</a>
+                <a href="<?= url('reportes/platos-mas-vendidos') ?>" class="access-btn">Ver Reporte</a>
             </div>
         </div>
 
@@ -352,7 +351,7 @@ main {
                     <li>Gráficos visuales de distribución</li>
                     <li>Métricas de rentabilidad</li>
                 </ul>
-                <a href="ventas_por_categoria.php" class="access-btn">Ver Reporte</a>
+                <a href="<?= url('reportes/ventas-categoria') ?>" class="access-btn">Ver Reporte</a>
             </div>
         </div>
 
@@ -370,7 +369,7 @@ main {
                     <li>Sistema de calificación</li>
                     <li>Métricas de rendimiento</li>
                 </ul>
-                <a href="rendimiento_mozos.php" class="access-btn">Ver Reporte</a>
+                <a href="<?= url('reportes/rendimiento-mozos') ?>" class="access-btn">Ver Reporte</a>
             </div>
         </div>
     </div>
@@ -389,4 +388,4 @@ main {
     </div>
 </main>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+

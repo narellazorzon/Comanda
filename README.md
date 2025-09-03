@@ -1,338 +1,324 @@
-# Sistema de Comanda - Restaurante
+# 🍽️ Sistema Comanda - Gestión Integral de Restaurante
 
 <!-- 
-CONTEXTO PARA IA:
-Este es un sistema completo de gestión de pedidos para restaurantes desarrollado en PHP con arquitectura MVC.
-El sistema maneja usuarios (administradores y mozos), mesas, pedidos, carta del menú y reportes.
-Utiliza MySQL como base de datos y sigue patrones de diseño orientados a objetos.
+CONTEXTO COMPLETO PARA IA:
+Este es un sistema completo de gestión de comandas para restaurantes desarrollado en PHP con arquitectura MVC.
+El sistema está diseñado para manejar TODO el flujo operacional de un restaurante desde la llegada del cliente
+hasta el pago y liberación de mesa. Incluye gestión de usuarios, mesas, pedidos, carta, reportes y funcionalidades
+avanzadas como asignación inteligente de mozos y manejo de emergencias.
+
+FUNCIONALIDADES CLAVE IMPLEMENTADAS:
+- Autenticación con roles (Administrador/Mozo)
+- Asignación de mozos a mesas específicas
+- Inactivación inteligente de mozos con reasignación automática de mesas
+- Sistema de llamados filtrado por mozo asignado
+- Estados completos de pedidos con flujo secuencial
+- Reportes avanzados con visualización
+- Interfaz responsive con diseño consistente
+
+ARQUITECTURA:
+- Backend: PHP 8.0+ con POO y namespaces
+- Base de datos: MySQL con InnoDB y relaciones FK
+- Frontend: HTML5, CSS3, JavaScript vanilla
+- Routing: Sistema centralizado en public/index.php
+- Autoloading: Composer PSR-4
+- Seguridad: Prepared statements, validación de roles, sanitización
+
+FLUJO DE NEGOCIO:
+1. Cliente llega → Se asigna mesa con mozo
+2. Cliente pide → Mozo toma pedido (pendiente)
+3. Cocina prepara → Estado "en_preparacion"
+4. Mozo sirve → Estado "servido"
+5. Cliente pide cuenta → Estado "cuenta"
+6. Cliente paga → Estado "cerrado", mesa se libera automáticamente
+
+CASOS DE USO CRÍTICOS:
+- Mozo enfermo: Sistema permite reasignación masiva de mesas a otro mozo
+- Llamados de mesa: Solo aparecen para el mozo asignado a esa mesa
+- Reportes: Análisis completo de ventas, rendimiento y propinas
+- Estados de pedido: Flujo controlado que refleja operación real del restaurante
 -->
 
-Sistema completo de gestión de pedidos para restaurantes con funcionalidades de administración, gestión de mesas, pedidos y reportes.
+## 📖 Descripción del Proyecto
 
-## 🚀 Características Principales
+Sistema web integral para la gestión completa de restaurantes que abarca desde la recepción de clientes hasta el análisis de ventas. Desarrollado específicamente para optimizar las operaciones diarias de un restaurante mediante la automatización de procesos clave y la centralización de información.
 
-### 👥 Gestión de Usuarios
-- **Administradores**: Acceso completo al sistema
-- **Mozos**: Gestión de pedidos y mesas asignadas
-- Sistema de autenticación seguro con sesiones PHP
+### 🎯 Objetivo del Sistema
 
-### 🪑 Gestión de Mesas
-- Crear, editar y eliminar mesas
-- Estados: Libre/Ocupada
-- Protección contra eliminación de mesas ocupadas
-- Liberación automática al cerrar pedidos
+Digitalizar y optimizar la gestión operacional de restaurantes mediante:
+- **Automatización** del flujo de pedidos y estados
+- **Asignación inteligente** de mozos a mesas
+- **Seguimiento en tiempo real** del estado de mesas y pedidos
+- **Análisis de rendimiento** a través de reportes detallados
+- **Gestión de emergencias** (mozos enfermos, cambios de turno)
 
-### 🍽️ Gestión de Pedidos
-- **Estados actualizados**: pendiente → en_preparacion → servido → cuenta → cerrado
-- Creación de pedidos en mesa o para llevar
-- Gestión de detalles de pedido
-- Cálculo automático de totales
-- Liberación automática de mesas al cerrar pedidos
+## 🏗️ Arquitectura Técnica
 
-### 📋 Gestión de Carta
-- Items del menú con categorías
-- Control de disponibilidad
-- Precios y descripciones
+### Stack Tecnológico
+```
+┌─────────────────────────────────────────┐
+│                Frontend                 │
+│  HTML5 + CSS3 + JavaScript Vanilla     │
+│  Responsive Design + Bootstrap Icons    │
+└─────────────────────────────────────────┘
+                     │
+┌─────────────────────────────────────────┐
+│              Backend PHP                │
+│  • Arquitectura MVC Personalizada      │
+│  • PHP 8.0+ con POO y Namespaces      │
+│  • Composer PSR-4 Autoloading         │
+│  • Sistema de Routing Centralizado     │
+└─────────────────────────────────────────┘
+                     │
+┌─────────────────────────────────────────┐
+│            Base de Datos               │
+│  • MySQL 8.0+ con InnoDB              │
+│  • Relaciones FK con integridad       │
+│  • Índices optimizados                │
+│  • Triggers para automatización       │
+└─────────────────────────────────────────┘
+```
 
-### 📊 Reportes
-- Ventas por período
-- Platos más vendidos
-- Rendimiento de mozos
-- Recaudación mensual
-- Propinas
+### Estructura de Directorios
+```
+Comanda/
+├── public/                    # Punto de entrada web
+│   ├── index.php             # Router principal con manejo de rutas
+│   ├── assets/css/           # Estilos del sistema
+│   └── assets/img/           # Imágenes y logos
+├── src/
+│   ├── config/
+│   │   ├── database.php      # Configuración de BD
+│   │   └── helpers.php       # Funciones auxiliares (url(), etc.)
+│   ├── controllers/          # Controladores MVC
+│   │   ├── AuthController.php
+│   │   ├── MesaController.php
+│   │   ├── MozoController.php # Incluye gestión de inactivación
+│   │   ├── PedidoController.php
+│   │   └── ReporteController.php
+│   ├── models/               # Modelos de datos
+│   │   ├── Usuario.php       # Administradores y mozos
+│   │   ├── Mesa.php          # Con asignación de mozos
+│   │   ├── Pedido.php        # Estados completos
+│   │   ├── LlamadoMesa.php   # Filtrado por mozo
+│   │   └── Reporte.php       # Análisis de datos
+│   ├── views/                # Vistas HTML/PHP
+│   │   ├── auth/            # Login y logout
+│   │   ├── home/            # Dashboard principal
+│   │   ├── mesas/           # ABM + asignación de mozos
+│   │   ├── mozos/           # ABM + inactivación inteligente
+│   │   ├── pedidos/         # Gestión con estados
+│   │   ├── llamados/        # Filtrado por mozo asignado
+│   │   ├── reportes/        # Análisis y estadísticas
+│   │   └── includes/        # Header, footer, nav
+│   └── services/            # Lógica de negocio compleja
+├── database/
+│   └── schema.sql           # Schema completo con datos de prueba
+├── vendor/                  # Dependencias de Composer
+└── Artefactos/             # Documentación del proyecto
+```
 
-## 🛠️ Instalación
+## 👥 Sistema de Usuarios y Roles
 
-### Requisitos
-- PHP 7.4 o superior
-- MySQL 5.7 o superior
-- Servidor web (Apache/Nginx)
-- Composer (para gestión de dependencias)
+### Roles Implementados
+
+#### 🔧 Administrador
+**Permisos Completos:**
+- ✅ Gestión de mozos (crear, editar, inactivar con reasignación)
+- ✅ Gestión de mesas (crear, editar, asignar mozos)
+- ✅ Gestión de carta (productos del menú)
+- ✅ Gestión de pedidos (todos los estados)
+- ✅ Visualización de todos los llamados de mesa
+- ✅ Acceso completo a reportes y estadísticas
+- ✅ Funciones de emergencia (reasignación masiva de mesas)
+
+#### 👨‍💼 Mozo
+**Permisos Operacionales:**
+- ✅ Gestión de pedidos (crear, cambiar estado)
+- ✅ Visualización solo de llamados de SUS mesas asignadas
+- ✅ Consulta de mesas (solo lectura)
+- ✅ Consulta de carta
+- ❌ No puede gestionar otros mozos
+- ❌ No puede acceder a reportes administrativos
+
+### Flujo de Autenticación
+```php
+// Ejemplo de verificación de permisos
+function requireAdmin() {
+    if ($_SESSION['user']['rol'] !== 'administrador') {
+        header('Location: index.php?route=unauthorized');
+        exit;
+    }
+}
+
+function requireMozoOrAdmin() {
+    if (!in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
+        header('Location: index.php?route=unauthorized');
+        exit;
+    }
+}
+```
+
+## 🚀 Instalación y Configuración
+
+### Requisitos del Sistema
+- **XAMPP** (Apache + MySQL + PHP 8.0+)
+- **Composer** para dependencias
 
 ### Pasos de Instalación
-
-1. **Clonar el repositorio**
+1. **Clonar repositorio**
    ```bash
-   git clone [url-del-repositorio]
+   git clone [url-del-repo]
    cd Comanda
    ```
 
-2. **Configurar la base de datos**
-   - Crear una base de datos MySQL
-   - Ejecutar el archivo `sql/schema.sql` para crear todas las tablas
-   - Configurar las credenciales en `src/config/database.php`
-
-3. **Instalar dependencias**
+2. **Instalar dependencias**
    ```bash
    composer install
    ```
 
-4. **Configurar el servidor web**
-   - Apuntar el document root a la carpeta `public/`
-   - Asegurar que PHP tenga permisos de escritura
+3. **Configurar base de datos**
+   - Crear base de datos en phpMyAdmin
+   - Importar `database/schema.sql`
+   - Configurar conexión en `src/config/database.php`
 
-5. **Acceder al sistema**
-   - URL: `http://localhost/Comanda/public/`
-   - Usuario por defecto: `admin@comanda.com`
-   - Contraseña: `password`
+4. **Configurar servidor web**
+   - Colocar proyecto en `htdocs` de XAMPP
+   - Acceder via `http://localhost/Comanda/public/`
 
-## 📁 Estructura del Proyecto
+## 🔑 Credenciales de Prueba
 
-<!-- 
-CONTEXTO PARA IA:
-La estructura sigue un patrón MVC simplificado donde:
-- public/ contiene los archivos accesibles desde el navegador
-- src/ contiene la lógica de negocio y modelos
-- sql/ contiene los esquemas de base de datos
--->
+### Administrador
+- **Email**: admin@comanda.com
+- **Contraseña**: admin123
 
-```
-Comanda/
-├── public/                 # Archivos públicos (document root)
-│   ├── assets/            # CSS, JS, imágenes
-│   ├── includes/          # Header, footer, navegación
-│   ├── reportes/          # Módulo de reportes
-│   └── *.php             # Archivos principales
-├── src/                   # Código fuente
-│   ├── config/           # Configuración de base de datos
-│   ├── controllers/      # Controladores
-│   ├── models/          # Modelos de datos
-│   └── services/        # Servicios
-├── sql/                  # Esquemas de base de datos
-│   ├── schema.sql       # Esquema completo actualizado
-│   └── migrate_to_new_schema.sql # Script de migración
-└── vendor/              # Dependencias de Composer
-```
+### Mozos
+- **Juan Pérez**: juan.perez@comanda.com / mozo123
+- **María García**: maria.garcia@comanda.com / mozo123
+- **Carlos López**: carlos.lopez@comanda.com / mozo123
+- **Ana Martínez**: ana.martinez@comanda.com / mozo123
+- **Diego Rodríguez**: diego.rodriguez@comanda.com / mozo123
 
-## 🔧 Configuración
+## 📊 Funcionalidades Principales
 
-### Base de Datos
-Editar `src/config/database.php`:
-```php
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'comanda');
-define('DB_USER', 'tu_usuario');
-define('DB_PASS', 'tu_contraseña');
-```
+### 🪑 Gestión de Mesas con Asignación de Mozos
+- **Asignación inteligente**: Cada mesa tiene un mozo responsable
+- **Gestión de emergencias**: Reasignación automática cuando un mozo se enferma
+- **Estados automatizados**: Libre/Ocupada según pedidos activos
 
-<!-- 
-CONTEXTO PARA IA:
-La configuración de base de datos utiliza constantes PHP para mayor seguridad.
-El sistema usa PDO para las conexiones a la base de datos.
--->
+### 📞 Sistema de Llamados Filtrados
+- **Filtrado por mozo**: Cada mozo solo ve llamados de SUS mesas
+- **Información completa**: Mesa, ubicación, mozo asignado
+- **Estados de atención**: Pendiente, En atención, Completado
 
-## 📊 Estados del Sistema
+### 🍴 Gestión Completa de Pedidos
+- **Estados del flujo real**: Pendiente → En preparación → Servido → Cuenta → Cerrado
+- **Modalidades**: Stay (mesa) / Takeaway (para llevar)
+- **Automatizaciones**: Liberación de mesa al cerrar pedido
 
-### Estados de Pedidos
-- **pendiente**: Pedido recién creado
-- **en_preparacion**: Pedido siendo preparado
-- **servido**: Pedido servido al cliente
-- **cuenta**: Cliente solicita la cuenta
-- **cerrado**: Pedido finalizado, mesa liberada
+### 👥 Gestión Avanzada de Mozos
+- **Inactivación inteligente**: Si un mozo tiene mesas asignadas, sistema solicita reasignación
+- **Opciones de emergencia**: Transferir a otro mozo o liberar mesas
+- **Confirmación visual**: Muestra impacto antes de procesar
 
-### Estados de Mesas
-- **libre**: Mesa disponible
-- **ocupada**: Mesa con clientes activos
+### 📊 Reportes Analíticos
+- **Platos más vendidos** con filtros por período
+- **Ventas por categoría** con visualización
+- **Rendimiento de mozos** con métricas
+- **Propinas y recaudación** por período
 
-<!-- 
-CONTEXTO PARA IA:
-Los estados están definidos como ENUM en la base de datos para mayor integridad.
-La transición de estados es secuencial y automática.
--->
+## 🗄️ Base de Datos
 
-## 🔒 Seguridad
+### Distribución de Mesas de Prueba
+- **Mesas 1-3**: Juan Pérez (Terraza)
+- **Mesas 4-6**: María García (Interior)
+- **Mesas 7-8**: Carlos López (Barra)
+- **Mesas 9-10**: Ana Martínez (Jardín)
+- **Mesas 11-12**: Diego Rodríguez (VIP)
+- **Mesas 13-15**: Sin asignar
 
-- Autenticación por sesiones PHP
-- Validación de roles y permisos
-- Protección contra eliminación de datos en uso
-- Sanitización de datos de entrada
-- Uso de prepared statements para prevenir SQL injection
+### Datos Incluidos
+- **15 mesas** distribuidas entre 5 mozos
+- **30 items** de carta organizados por categorías
+- **8 pedidos** en diferentes estados
+- **Llamados activos** y completados
+- **Propinas y pagos** históricos
 
-<!-- 
-CONTEXTO PARA IA:
-El sistema implementa múltiples capas de seguridad:
-1. Autenticación basada en sesiones
-2. Autorización basada en roles
-3. Validación de datos de entrada
-4. Protección contra ataques comunes
--->
+## 🔧 Tecnologías
 
-## 🐛 Correcciones Implementadas
+- **Backend**: PHP 8.0+ con POO
+- **Base de datos**: MySQL con InnoDB
+- **Frontend**: HTML5, CSS3, JavaScript vanilla
+- **Arquitectura**: MVC personalizado
+- **Autoloading**: Composer PSR-4
+- **Seguridad**: Prepared statements, validación de roles
 
-### ✅ ABM de Pedidos
-- Corregido borrado de pedidos
-- Solucionado error "El número de mesa es obligatorio"
-- Mejorados mensajes de usuario
+## 🎯 Casos de Uso Principales
 
-### ✅ Estados de Pedidos
-- Actualizados estados según requerimientos del negocio
-- Implementada liberación automática de mesas
-- Corregido cambio de estado en gestión de pedidos
-
-### ✅ Protección de Datos
-- No se pueden borrar mesas ocupadas
-- Botones deshabilitados para operaciones no permitidas
-- Validaciones de integridad referencial
-
-<!-- 
-CONTEXTO PARA IA:
-Las correcciones se implementaron siguiendo el principio de menor privilegio
-y manteniendo la integridad referencial de la base de datos.
--->
-
-## 📝 Uso del Sistema
-
-### Para Administradores
-1. **Gestión de Usuarios**: Crear y gestionar mozos
-2. **Gestión de Mesas**: Configurar mesas del restaurante
-3. **Gestión de Carta**: Mantener el menú actualizado
-4. **Reportes**: Analizar ventas y rendimiento
-
-### Para Mozos
-1. **Gestión de Pedidos**: Crear y gestionar pedidos
-2. **Estado de Pedidos**: Seguir el flujo de preparación
-3. **Llamados de Mesa**: Atender solicitudes de clientes
-
-## 🗄️ Esquema de Base de Datos
-
-<!-- 
-CONTEXTO PARA IA:
-La base de datos utiliza MySQL con las siguientes características:
-- InnoDB como motor de almacenamiento
-- Claves foráneas para integridad referencial
-- Índices optimizados para consultas frecuentes
-- ENUM para estados con valores predefinidos
--->
-
-### Tablas Principales
-1. **usuarios** - Administradores y mozos
-2. **mesas** - Gestión de mesas del restaurante
-3. **carta** - Items del menú
-4. **pedidos** - Pedidos con estados actualizados
-5. **detalle_pedido** - Detalles de cada pedido
-6. **llamados_mesa** - Solicitudes de atención
-7. **propinas** - Gestión de propinas
-8. **pagos** - Registro de pagos
-
-### Relaciones Clave
-- `pedidos.id_mesa` → `mesas.id_mesa` (SET NULL)
-- `pedidos.id_mozo` → `usuarios.id_usuario` (SET NULL)
-- `detalle_pedido.id_pedido` → `pedidos.id_pedido` (CASCADE)
-- `detalle_pedido.id_item` → `carta.id_item` (RESTRICT)
+1. **Administrador gestiona mozos**: Crear, editar, inactivar con reasignación inteligente
+2. **Mozo ve sus llamados**: Solo mesas asignadas, información completa
+3. **Gestión de pedidos**: Desde creación hasta cierre con todos los estados
+4. **Emergencia de mozo**: Sistema maneja reasignación automática de mesas
 
 ## 🔄 Flujo de Trabajo
 
-<!-- 
-CONTEXTO PARA IA:
-El flujo de trabajo está diseñado para reflejar el proceso real de un restaurante:
-1. Cliente llega y se asigna mesa
-2. Mozo toma pedido
-3. Cocina prepara pedido
-4. Pedido se sirve
-5. Cliente paga
-6. Mesa se libera
--->
+1. **Cliente llega** → Se asigna mesa con mozo
+2. **Cliente pide** → Mozo toma pedido
+3. **Cocina prepara** → Estado "En preparación"
+4. **Mozo sirve** → Estado "Servido"
+5. **Cliente paga** → Estado "Cerrado", mesa libre
 
-### Flujo de Pedido Completo
-```
-1. Crear pedido (pendiente)
-2. Tomar pedido (en_preparacion)
-3. Marcar servido (servido)
-4. Pedir cuenta (cuenta)
-5. Cerrar pedido (cerrado) → Mesa liberada automáticamente
-```
+## ✨ Mejoras Implementadas
 
-## 🧪 Testing y Verificación
+### 🔧 Correcciones de Bugs
+- ✅ Vista de pedidos corregida (sin errores de campos undefined)
+- ✅ Estados de pedidos con iconos y colores descriptivos
+- ✅ Redirecciones 404 en gestión de mozos solucionadas
+- ✅ Diseño consistente de botones y tablas
+- ✅ Sistema de reportes completamente funcional
 
-<!-- 
-CONTEXTO PARA IA:
-Para verificar que el sistema funciona correctamente, se deben probar:
-1. Creación de pedidos sin errores
-2. Cambio de estados secuencial
-3. Liberación automática de mesas
-4. Protección contra eliminación de datos en uso
--->
+### 🚀 Nuevas Funcionalidades
+- ✅ **Asignación de mozos a mesas** con gestión completa
+- ✅ **Inactivación inteligente de mozos** con reasignación de mesas
+- ✅ **Llamados filtrados por mozo** asignado
+- ✅ **Gestión de emergencias** (mozo enfermo, cambio de turno)
 
-### Funcionalidades a Probar
-1. **Creación de pedidos**: Verificar que no aparezcan errores de mesa
-2. **Cambio de estado**: Verificar que funcione correctamente
-3. **Borrado de pedidos**: Verificar que se borren y liberen mesas
-4. **Protección de mesas**: Verificar que no se puedan borrar mesas ocupadas
-5. **Liberación automática**: Verificar que las mesas se liberen al cerrar pedidos
+### 🎨 Mejoras de UX/UI
+- ✅ Estados visuales con iconos (⏳ Pendiente, 👨‍🍳 En preparación, ✅ Servido, etc.)
+- ✅ Confirmaciones visuales para acciones críticas
+- ✅ Información contextual en todas las pantallas
+- ✅ Navegación mejorada con breadcrumbs visuales
 
-## 🚨 Problemas Conocidos y Soluciones
+## 📚 Documentación Técnica
 
-<!-- 
-CONTEXTO PARA IA:
-Estos son problemas que fueron identificados y corregidos durante el desarrollo:
-1. Error de validación en Mesa::update()
-2. Falta de manejo del parámetro delete
-3. Estados de pedidos desactualizados
-4. Falta de protección en eliminación de mesas ocupadas
--->
+### Para Desarrolladores
+- **`CONTEXTO_TECNICO.md`** - Documentación técnica completa con flujos, casos de uso y ejemplos de código
+- **`database/schema.sql`** - Schema completo con comentarios y datos de prueba
+- **`/Artefactos/`** - Diagramas de actividad y casos de uso del proyecto
 
-### Problemas Resueltos
-1. **Error "El número de mesa es obligatorio"**: Solucionado con método `Mesa::updateEstado()`
-2. **Borrado de pedidos no funcionaba**: Agregado manejo del parámetro `delete`
-3. **Cambio de estado no funcionaba**: Agregado campo `cambiar_estado` en formulario
-4. **Estados desactualizados**: Actualizados según requerimientos del negocio
+### Arquitectura y Patrones
+- Sistema MVC con routing centralizado
+- Separación clara de responsabilidades
+- Validaciones de negocio en modelos
+- Seguridad por capas
+- Optimizaciones de base de datos
 
-## 🔧 Mantenimiento
+### Testing y Debugging
+Ver `CONTEXTO_TECNICO.md` para:
+- Casos de prueba críticos
+- Flujos de trabajo detallados
+- Solución de problemas comunes
+- Consultas SQL optimizadas
 
-### Para Futuras Actualizaciones
-- Documentar cambios en archivos de documentación
-- Mantener consistencia en el esquema de base de datos
-- Probar funcionalidades antes de implementar cambios
-- Seguir las convenciones de código establecidas
+## 📝 Notas de Desarrollo
 
-### Backup y Recuperación
-- Hacer backup regular de la base de datos
-- Mantener copias de los archivos de configuración
-- Documentar cambios en el esquema de base de datos
-
-## 🤝 Contribución
-
-1. Fork el proyecto
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
-
-<!-- 
-CONTEXTO PARA IA:
-Para contribuir al proyecto, es importante:
-1. Seguir las convenciones de código existentes
-2. Documentar los cambios realizados
-3. Probar las funcionalidades antes de enviar
-4. Mantener la compatibilidad con la base de datos existente
--->
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
-
-## 📞 Soporte
-
-Para soporte técnico o consultas, contactar al equipo de desarrollo.
-
-<!-- 
-CONTEXTO PARA IA:
-Este sistema está diseñado para ser mantenible y escalable.
-Cualquier modificación debe considerar:
-1. La integridad de la base de datos
-2. La seguridad del sistema
-3. La experiencia del usuario
-4. La compatibilidad con versiones anteriores
--->
+- **Seguridad**: Prepared statements, validación de inputs, control de sesiones
+- **Performance**: Índices optimizados, consultas eficientes con JOINs
+- **Mantenibilidad**: Código modular, separación de responsabilidades
+- **UX**: Confirmaciones, mensajes informativos, navegación intuitiva
 
 ---
 
-**Desarrollado con ❤️ para la gestión eficiente de restaurantes**
+**Desarrollado para gestión eficiente de restaurantes** 🍴
 
-<!-- 
-INFORMACIÓN ADICIONAL PARA IA:
-- El sistema utiliza PHP 7.4+ con características modernas
-- La base de datos está optimizada para consultas frecuentes
-- El código sigue principios SOLID y patrones de diseño
-- La documentación está diseñada para ser clara y completa
--->
+**📖 Para información técnica detallada, consultar `CONTEXTO_TECNICO.md`**
