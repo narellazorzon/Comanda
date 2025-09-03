@@ -392,4 +392,13 @@ ESTRUCTURA DE MESAS:
 - Mesas 9-10: Ana Martínez (Jardín)
 - Mesas 11-12: Diego Rodríguez (VIP)
 - Mesas 13-15: Sin asignar
+
+NOTA: Para aplicar triggers de consistencia de datos, ejecutar también:
+database/triggers.sql
+
+Esto agregará:
+- Actualización automática de estado de mesas
+- Prevención de eliminación de mesas ocupadas  
+- Auditoría de cambios críticos
+- Validaciones de integridad de datos
 */

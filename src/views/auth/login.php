@@ -2,6 +2,7 @@
 // src/views/auth/login.php
 require_once __DIR__ . '/../../../vendor/autoload.php';
 use App\Controllers\AuthController;
+use App\Config\CsrfToken;
 
 // Determinar la ruta base del proyecto
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
@@ -47,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
 
   <form method="post" action="<?= $base_url ?>/index.php?route=login" id="loginForm">
+    <?= CsrfToken::field() ?>
     <label>Email:</label>
     <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" 
            value="<?= htmlspecialchars($_GET['email'] ?? '') ?>" required>

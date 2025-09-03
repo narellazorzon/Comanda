@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../../../vendor/autoload.php';
 use App\Models\CartaItem;
 
-session_start();
+// La sesión ya está iniciada desde public/index.php
 // Solo administradores pueden acceder
 if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
     header('Location: ../../public/index.php?route=login');
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-include __DIR__ . '/../includes/header.php';
+// El header ya se incluye desde public/index.php
 ?>
 
 <h2><?= isset($item) ? 'Editar Ítem' : 'Nuevo Ítem' ?></h2>

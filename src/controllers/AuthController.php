@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 use App\Models\Usuario;
+use App\Config\CsrfToken;
 
 class AuthController {
     public static function login() {
@@ -14,6 +15,13 @@ class AuthController {
         $host = $_SERVER['HTTP_HOST'];
         $script_name = $_SERVER['SCRIPT_NAME'];
         $base_url = $protocol . '://' . $host . dirname($script_name);
+
+        // Verificar token CSRF antes de procesar
+        $csrf_token = $_POST['csrf_token'] ?? '';
+        if (!CsrfToken::validate($csrf_token)) {
+            header('Location: ' . $base_url . '/index.php?route=login&error=' . urlencode('Token de seguridad inválido. Intenta nuevamente.'));
+            exit;
+        }
 
         // Sanitiza y comprueba que existan ambos campos
         $email = trim($_POST['email'] ?? '');

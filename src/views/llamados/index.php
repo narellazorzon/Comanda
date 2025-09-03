@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use App\Models\LlamadoMesa;
 
-session_start();
+// La sesión ya está iniciada desde public/index.php
 // Mozos y administradores pueden acceder
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ../../public/index.php?route=unauthorized');

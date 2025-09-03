@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Config\Validator;
 use PDO;
 
 class Mesa {
@@ -42,41 +43,58 @@ class Mesa {
     }
 
     /**
-     * Crea una nueva mesa. El estado por defecto (libre) lo asigna MySQL.
+     * Crea una nueva mesa usando validaciones robustas.
      */
     public static function create(array $data): bool {
-        // Debugging temporal
-        error_log("Mesa::create - Data recibida: " . print_r($data, true));
+        // Validar datos usando la nueva clase Validator
+        $validation = Validator::validateMultiple($data, [
+            'numero' => [
+                'type' => 'positive_integer',
+                'options' => ['min' => 1, 'max' => 999]
+            ],
+            'ubicacion' => [
+                'type' => 'string', 
+                'options' => ['min_length' => 0, 'max_length' => 100]
+            ]
+        ]);
         
-        // Validar que los datos requeridos estén presentes
-        if (!isset($data['numero']) || $data['numero'] === '' || $data['numero'] === null) {
-            error_log("Mesa::create - Error: numero no está presente o está vacío");
-            throw new \InvalidArgumentException('El número de mesa es obligatorio');
+        if (!$validation['valid']) {
+            $errors = implode(', ', $validation['errors']);
+            throw new \InvalidArgumentException('Datos inválidos: ' . $errors);
         }
         
-        // Validar que el número sea un entero positivo
-        $numero = (int) $data['numero'];
-        if ($numero <= 0) {
-            error_log("Mesa::create - Error: numero <= 0: " . $numero);
-            throw new \InvalidArgumentException('El número de mesa debe ser mayor a 0');
-        }
+        $validated_data = $validation['data'];
+        $numero = $validated_data['numero'];
+        $ubicacion = $validated_data['ubicacion'] ?: null;
         
-        $db   = (new Database)->getConnection();
+        $db = (new Database)->getConnection();
         
         // Verificar si ya existe una mesa con ese número
         $checkStmt = $db->prepare("SELECT COUNT(*) FROM mesas WHERE numero = ?");
         $checkStmt->execute([$numero]);
         if ($checkStmt->fetchColumn() > 0) {
-            error_log("Mesa::create - Error: mesa duplicada con numero: " . $numero);
             throw new \InvalidArgumentException('Ya existe una mesa con el número ' . $numero);
         }
         
+        // Validar id_mozo si se proporciona
+        $id_mozo = null;
+        if (!empty($data['id_mozo'])) {
+            $mozo_validation = Validator::validateInput($data['id_mozo'], 'positive_integer');
+            if (!$mozo_validation['valid']) {
+                throw new \InvalidArgumentException('ID de mozo inválido');
+            }
+            
+            // Verificar que el mozo existe y está activo
+            $mozoStmt = $db->prepare("SELECT COUNT(*) FROM usuarios WHERE id_usuario = ? AND rol = 'mozo' AND estado = 'activo'");
+            $mozoStmt->execute([$mozo_validation['value']]);
+            if ($mozoStmt->fetchColumn() == 0) {
+                throw new \InvalidArgumentException('El mozo especificado no existe o no está activo');
+            }
+            $id_mozo = $mozo_validation['value'];
+        }
+        
         $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, id_mozo) VALUES (?, ?, ?)");
-        return $stmt->execute([
-            $numero,
-            $data['ubicacion'] ?? null,
-            !empty($data['id_mozo']) ? (int) $data['id_mozo'] : null
-        ]);
+        return $stmt->execute([$numero, $ubicacion, $id_mozo]);
     }
 
     /**

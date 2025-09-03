@@ -7,7 +7,7 @@ use App\Models\Pedido;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    // La sesión ya está iniciada desde public/index.php
 }
 // Mozos y administradores pueden ver pedidos
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
