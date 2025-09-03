@@ -3,7 +3,7 @@ session_start();
 
 // Verificar autenticación y permisos
 if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
-    header('Location: ../unauthorized.php');
+    header('Location: ../../public/unauthorized.php');
     exit;
 }
 

@@ -1,13 +1,17 @@
 <?php
-// public/cme_carta.php
-require_once __DIR__ . '/../vendor/autoload.php';
+// src/views/carta/index.php
+require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\CartaItem;
 
-session_start();
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // Mozos y administradores pueden ver la carta
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
-    header('Location: login.php');
+    header('Location: ' . url('login'));
     exit;
 }
 
@@ -19,21 +23,19 @@ if (isset($_GET['delete']) && $rol === 'administrador') {
     if ($id > 0) {
         CartaItem::delete($id);
     }
-    header('Location: cme_carta.php');
+    header('Location: ' . url('carta'));
     exit;
 }
 
 // 3) Cargamos todos los ítems de la carta
 $items = CartaItem::all();
 
-// 4) Incluir cabecera
-include __DIR__ . '/includes/header.php';
 ?>
 
 <h2><?= $rol === 'administrador' ? 'Gestión de Carta' : 'Consulta de Carta' ?></h2>
 
 <?php if ($rol === 'administrador'): ?>
-  <a href="alta_carta.php" class="button">Nuevo Ítem</a>
+  <a href="<?= url('carta/create') ?>" class="button">Nuevo Ítem</a>
 <?php else: ?>
   <div style="background: #d1ecf1; padding: 10px; border-radius: 4px; margin-bottom: 1rem; color: #0c5460;">
     📋 Vista de solo lectura - Consulta los items del menú y precios
@@ -77,7 +79,7 @@ include __DIR__ . '/includes/header.php';
         </td>
         <?php if ($rol === 'administrador'): ?>
           <td>
-            <a href="alta_carta.php?id=<?= $item['id_item'] ?>" class="btn-action">Editar</a>
+            <a href="<?= url('carta/edit') ?>&id=<?= $item['id_item'] ?>" class="btn-action">Editar</a>
             <a href="?delete=<?= $item['id_item'] ?>" class="btn-action" style="background: #dc3545;"
                onclick="return confirm('¿Borrar ítem &quot;<?= htmlspecialchars($item['nombre']) ?>&quot;?')">
               Borrar
@@ -89,4 +91,4 @@ include __DIR__ . '/includes/header.php';
   </tbody>
 </table>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+

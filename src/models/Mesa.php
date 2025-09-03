@@ -86,6 +86,8 @@ class Mesa {
             throw new \InvalidArgumentException('Ya existe otra mesa con el número ' . $numero);
         }
         
+        $estado = $data['estado'] ?? 'libre';
+        
         $stmt = $db->prepare("
             UPDATE mesas
             SET numero   = ?,
@@ -96,7 +98,7 @@ class Mesa {
         return $stmt->execute([
             $numero,
             $data['ubicacion'] ?? null,
-            $data['estado']     ?? 'libre',
+            $estado,
             $id
         ]);
     }

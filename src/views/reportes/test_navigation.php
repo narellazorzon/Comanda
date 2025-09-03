@@ -3,7 +3,7 @@ session_start();
 
 // Verificar autenticación y permisos
 if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
-    header('Location: ../unauthorized.php');
+    header('Location: ../../public/unauthorized.php');
     exit;
 }
 
@@ -15,7 +15,7 @@ require_once __DIR__ . '/../includes/header.php';
 :root {
   --background: #f7f1e1; /* beige muy claro */
   --surface: #eee0be; /* blanco para cartas y tablas */
-  --primary: #a5a4a1; /* beige medio */
+  --primary:rgb(95, 74, 38); /* beige medio */
   --secondary: #a1866f; /* marrón suave */
   --accent: #eee0be; /* tonalidad intermedia */
   --text: #3f3f3f; /* gris oscuro para texto */

@@ -1,10 +1,20 @@
 <?php
-// public/cme_mozos.php
-
-require_once __DIR__ . '/../vendor/autoload.php';
+// src/views/mozos/index.php
+require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Controllers\MozoController;
 use App\Models\Usuario;
+
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+// Solo administradores pueden acceder
+if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+    header('Location: ' . url('login'));
+    exit;
+}
 
 // 1) Si llega ?delete=ID, borramos y redirigimos
 if (isset($_GET['delete'])) {
@@ -14,8 +24,6 @@ if (isset($_GET['delete'])) {
 // 2) Cargamos todos los mozos
 $mozos = Usuario::allByRole('mozo');
 
-// 3) Incluimos header (con tu style.css)
-require_once __DIR__ . '/includes/header.php';
 ?>
 
 <h2>Gestión de Mozos</h2>
@@ -32,7 +40,7 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 <?php endif; ?>
 
-<a class="button" href="alta_mozo.php">Nuevo Mozo</a>
+<a class="button" href="<?= url('mozos/create') ?>">Nuevo Mozo</a>
 
 <table>
   <tr>
@@ -54,8 +62,8 @@ require_once __DIR__ . '/includes/header.php';
         <td><?= htmlspecialchars($m['email']) ?></td>
         <td><?= $m['estado'] ?></td>
         <td>
-          <a href="alta_mozo.php?id=<?= $m['id_usuario'] ?>">Editar</a> |
-          <a href="cme_mozos.php?delete=<?= $m['id_usuario'] ?>"
+          <a href="<?= url('mozos/edit') ?>&id=<?= $m['id_usuario'] ?>">Editar</a> |
+          <a href="<?= url('mozos') ?>&delete=<?= $m['id_usuario'] ?>"
              onclick="return confirm('¿Borrar mozo?')">Borrar</a>
         </td>
       </tr>
@@ -63,7 +71,4 @@ require_once __DIR__ . '/includes/header.php';
   <?php endif; ?>
 </table>
 
-<?php
-// 4) Incluimos footer
-require_once __DIR__ . '/includes/footer.php';
-?>
+

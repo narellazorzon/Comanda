@@ -1,95 +1,188 @@
 <?php
+// public/index.php - Punto de entrada principal con routing MVC
 session_start();
-if (empty($_SESSION['user'])) {
-    header('Location: login.php');
-    exit;
+
+// Cargar autoload
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Incluir header para todas las páginas (excepto login)
+$route = $_GET['route'] ?? 'home';
+if ($route !== 'login') {
+    include __DIR__ . '/../src/views/includes/header.php';
 }
-require_once __DIR__ . '/includes/header.php';
+
+// Obtener la ruta solicitada
+$route = $_GET['route'] ?? 'home';
+
+// Función para redirigir al login si no está autenticado
+function requireAuth() {
+    if (empty($_SESSION['user'])) {
+        header('Location: index.php?route=login');
+        exit;
+    }
+}
+
+// Función para verificar permisos de administrador
+function requireAdmin() {
+    requireAuth();
+    if ($_SESSION['user']['rol'] !== 'administrador') {
+        header('Location: index.php?route=unauthorized');
+        exit;
+    }
+}
+
+// Función para verificar permisos de mozo o administrador
+function requireMozoOrAdmin() {
+    requireAuth();
+    if (!in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
+        header('Location: index.php?route=unauthorized');
+        exit;
+    }
+}
+
+// Sistema de routing
+switch ($route) {
+    case 'login':
+        // Si ya está logueado, redirigir al home
+        if (!empty($_SESSION['user'])) {
+            header('Location: index.php?route=home');
+            exit;
+        }
+        include __DIR__ . '/../src/views/auth/login.php';
+        break;
+
+    case 'logout':
+        require_once __DIR__ . '/../src/controllers/AuthController.php';
+        \App\Controllers\AuthController::logout();
+        break;
+
+    case 'home':
+        requireAuth();
+        include __DIR__ . '/../src/views/home/index.php';
+        break;
+
+    // Rutas de Mesas
+    case 'mesas':
+        requireMozoOrAdmin();
+        include __DIR__ . '/../src/views/mesas/index.php';
+        break;
+
+    case 'mesas/create':
+        requireAdmin();
+        include __DIR__ . '/../src/views/mesas/create.php';
+        break;
+
+    case 'mesas/edit':
+        requireAdmin();
+        include __DIR__ . '/../src/views/mesas/create.php';
+        break;
+
+    // Rutas de Mozos
+    case 'mozos':
+        requireAdmin();
+        include __DIR__ . '/../src/views/mozos/index.php';
+        break;
+
+    case 'mozos/create':
+        requireAdmin();
+        include __DIR__ . '/../src/views/mozos/create.php';
+        break;
+
+    case 'mozos/edit':
+        requireAdmin();
+        include __DIR__ . '/../src/views/mozos/create.php';
+        break;
+
+    // Rutas de Carta
+    case 'carta':
+        requireMozoOrAdmin();
+        include __DIR__ . '/../src/views/carta/index.php';
+        break;
+
+    case 'carta/create':
+        requireAdmin();
+        include __DIR__ . '/../src/views/carta/create.php';
+        break;
+
+    case 'carta/edit':
+        requireAdmin();
+        include __DIR__ . '/../src/views/carta/create.php';
+        break;
+
+    // Rutas de Pedidos
+    case 'pedidos':
+        requireMozoOrAdmin();
+        include __DIR__ . '/../src/views/pedidos/index.php';
+        break;
+
+    case 'pedidos/create':
+        requireMozoOrAdmin();
+        include __DIR__ . '/../src/views/pedidos/create.php';
+        break;
+
+    case 'pedidos/edit':
+        requireMozoOrAdmin();
+        include __DIR__ . '/../src/views/pedidos/create.php';
+        break;
+
+    // Rutas de Reportes
+    case 'reportes':
+        requireAdmin();
+        include __DIR__ . '/../src/views/reportes/index.php';
+        break;
+
+    case 'reportes/platos-mas-vendidos':
+        requireAdmin();
+        include __DIR__ . '/../src/views/reportes/platos_mas_vendidos.php';
+        break;
+
+    case 'reportes/propina':
+        requireAdmin();
+        include __DIR__ . '/../src/views/reportes/propina.php';
+        break;
+
+    case 'reportes/recaudacion':
+        requireAdmin();
+        include __DIR__ . '/../src/views/reportes/recaudacion_mensual.php';
+        break;
+
+    case 'reportes/ventas-categoria':
+        requireAdmin();
+        include __DIR__ . '/../src/views/reportes/ventas_por_categoria.php';
+        break;
+
+    case 'reportes/rendimiento-mozos':
+        requireAdmin();
+        include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
+        break;
+
+    // Rutas de Llamados (solo para mozos)
+    case 'llamados':
+        requireAuth();
+        if ($_SESSION['user']['rol'] !== 'mozo') {
+            header('Location: index.php?route=unauthorized');
+            exit;
+        }
+        include __DIR__ . '/../src/views/llamados/index.php';
+        break;
+
+    case 'unauthorized':
+        include __DIR__ . '/../src/views/errors/unauthorized.php';
+        break;
+
+    default:
+        // Si no está logueado, redirigir al login
+        if (empty($_SESSION['user'])) {
+            header('Location: index.php?route=login');
+            exit;
+        }
+        // Si está logueado, mostrar el home
+        header('Location: index.php?route=home');
+        exit;
+}
+
+// Incluir footer para todas las páginas (excepto login)
+if ($route !== 'login') {
+    include __DIR__ . '/../src/views/includes/footer.php';
+}
 ?>
-<h1>Bienvenido, <?= htmlspecialchars($_SESSION['user']['nombre']) ?></h1>
-<p style="color: #666; margin-bottom: 2rem;">
-    Sistema de Gestión de Restaurante - Panel de Control
-</p>
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
-    
-    <!-- Módulo 1: Gestión de Mesas -->
-    <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-        <h3 style="color: var(--secondary); margin-bottom: 1rem;">🏠 Gestión de Mesas</h3>
-        <p style="color: #666; margin-bottom: 1rem;">
-            Administra las mesas del restaurante, su ubicación y estado.
-        </p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="cme_mesas.php" class="button">Ver Mesas</a>
-            <a href="alta_mesa.php" class="button" style="background: var(--accent); color: var(--text);">Nueva Mesa</a>
-        </div>
-    </div>
-
-    <!-- Módulo 2: Gestión de Carta -->
-    <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-        <h3 style="color: var(--secondary); margin-bottom: 1rem;">📋 Gestión de Carta</h3>
-        <p style="color: #666; margin-bottom: 1rem;">
-            Gestiona los items del menú, precios y disponibilidad.
-        </p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="cme_carta.php" class="button">Ver Carta</a>
-            <a href="alta_carta.php" class="button" style="background: var(--accent); color: var(--text);">Nuevo Ítem</a>
-        </div>
-    </div>
-
-    <!-- Módulo 3: Gestión de Pedidos -->
-    <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-        <h3 style="color: var(--secondary); margin-bottom: 1rem;">🍽️ Gestión de Pedidos</h3>
-        <p style="color: #666; margin-bottom: 1rem;">
-            Crea y gestiona pedidos, controla estados y totales.
-        </p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="cme_pedidos.php" class="button">Ver Pedidos</a>
-            <a href="alta_pedido.php" class="button" style="background: var(--accent); color: var(--text);">Nuevo Pedido</a>
-        </div>
-    </div>
-
-    <!-- Módulos Adicionales -->
-    <?php if ($_SESSION['user']['rol'] === 'administrador'): ?>
-    <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-        <h3 style="color: var(--secondary); margin-bottom: 1rem;">👥 Gestión de Personal</h3>
-        <p style="color: #666; margin-bottom: 1rem;">
-            Administra mozos y usuarios del sistema.
-        </p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="cme_mozos.php" class="button">Ver Mozos</a>
-            <a href="alta_mozo.php" class="button" style="background: var(--accent); color: var(--text);">Nuevo Mozo</a>
-        </div>
-    </div>
-
-    <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-        <h3 style="color: var(--secondary); margin-bottom: 1rem;">📊 Reportes</h3>
-        <p style="color: #666; margin-bottom: 1rem;">
-            Genera reportes de ventas y análisis.
-        </p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="reportes/platos_mas_vendidos.php" class="button">Platos Populares</a>
-            <a href="reportes/recaudacion_mensual.php" class="button">Recaudación</a>
-            <a href="reportes/propina.php" class="button">Propinas</a>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- Funciones de Mozo -->
-    <?php if ($_SESSION['user']['rol'] === 'mozo'): ?>
-    <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-        <h3 style="color: var(--secondary); margin-bottom: 1rem;">🔔 Llamados de Mesa</h3>
-        <p style="color: #666; margin-bottom: 1rem;">
-            Gestiona las solicitudes de atención de las mesas.
-        </p>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="llamados.php" class="button">Ver Llamados</a>
-        </div>
-    </div>
-    <?php endif; ?>
-
-</div>
-
-
-
-<?php require_once __DIR__ . '/includes/footer.php'; ?>

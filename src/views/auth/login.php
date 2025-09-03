@@ -1,7 +1,13 @@
 <?php
-// public/login.php
-require_once __DIR__ . '/../vendor/autoload.php';
+// src/views/auth/login.php
+require_once __DIR__ . '/../../../vendor/autoload.php';
 use App\Controllers\AuthController;
+
+// Determinar la ruta base del proyecto
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'];
+$script_name = $_SERVER['SCRIPT_NAME'];
+$base_url = $protocol . '://' . $host . dirname($script_name);
 
 // Si es POST, procesamos el login y salimos
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -16,13 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Iniciar sesión — Comanda</title>
   <!-- Incluimos tu CSS -->
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/login.css">
+  <link rel="stylesheet" href="<?= $base_url ?>/assets/css/style.css?v=<?= time() ?>">
+  <link rel="stylesheet" href="<?= $base_url ?>/assets/css/login.css?v=<?= time() ?>">
 </head>
 <body>
 <main class="login-container">
   <div class="logo">
-  <img class="logo-img" src="assets/img/logo.png" alt="Logo Comanda">
+  <img class="logo-img" src="<?= $base_url ?>/assets/img/logo.png" alt="Logo Comanda">
   </div>
   <h2>Bienvenido</h2>
 
@@ -40,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   <?php endif; ?>
 
-  <form method="post" action="login.php" id="loginForm">
+  <form method="post" action="<?= $base_url ?>/index.php?route=login" id="loginForm">
     <label>Email:</label>
     <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" 
            value="<?= htmlspecialchars($_GET['email'] ?? '') ?>" required>

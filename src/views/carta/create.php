@@ -1,12 +1,12 @@
 <?php
-// public/alta_carta.php
-require_once __DIR__ . '/../vendor/autoload.php';
+// src/views/carta/create.php
+require_once __DIR__ . '/../../../vendor/autoload.php';
 use App\Models\CartaItem;
 
 session_start();
 // Solo administradores pueden acceder
 if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
-    header('Location: login.php');
+    header('Location: ../../public/index.php?route=login');
     exit;
 }
 
@@ -19,7 +19,7 @@ if (isset($_GET['id'])) {
     $id = (int) $_GET['id'];
     $item = CartaItem::find($id);
     if (!$item) {
-        header('Location: cme_carta.php');
+        header('Location: ../../public/index.php?route=carta');
         exit;
     }
 }
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../includes/header.php';
 ?>
 
 <h2><?= isset($item) ? 'Editar Ítem' : 'Nuevo Ítem' ?></h2>
@@ -130,7 +130,7 @@ include __DIR__ . '/includes/header.php';
         <?= isset($item) ? 'Actualizar Ítem' : 'Crear Ítem' ?>
     </button>
     
-    <a href="cme_carta.php" class="button" style="margin-left: 10px;">Volver</a>
+    <a href="../../public/index.php?route=carta" class="button" style="margin-left: 10px;">Volver</a>
 </form>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

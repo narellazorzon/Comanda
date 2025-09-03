@@ -4,6 +4,12 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 $rol = $_SESSION['user']['rol'] ?? '';
 
+// Determinar la ruta base del proyecto
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'];
+$script_name = $_SERVER['SCRIPT_NAME'];
+$base_url = $protocol . '://' . $host . dirname($script_name);
+
 // Determinar la ruta base según la ubicación actual
 $current_path = $_SERVER['PHP_SELF'] ?? '';
 $is_in_reportes = strpos($current_path, '/reportes/') !== false;
@@ -12,7 +18,7 @@ $base_path = $is_in_reportes ? '../' : '';
 <nav class="navbar">
   <div class="nav-container">
     <div class="nav-logo">
-      <span>🍽️ Comanda</span>
+      <img src="<?= $base_url ?>/assets/img/logo.png" alt="Comanda" style="height: 70px; width: auto; max-height: 70px;">
     </div>
     
     <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
@@ -23,20 +29,20 @@ $base_path = $is_in_reportes ? '../' : '';
     
     <div class="nav-menu" id="nav-menu">
       <?php if ($rol === 'administrador'): ?>
-        <a href="<?= $base_path ?>index.php" class="nav-link">🏠 Inicio</a>
-        <a href="<?= $base_path ?>cme_mesas.php" class="nav-link">🪑 Mesas</a>
-        <a href="<?= $base_path ?>cme_pedidos.php" class="nav-link">🍽️ Pedidos</a>
-        <a href="<?= $base_path ?>cme_mozos.php" class="nav-link">👥 Mozos</a>
-        <a href="<?= $base_path ?>cme_carta.php" class="nav-link">📋 Carta</a>
-        <a href="<?= $base_path ?>reportes/index.php" class="nav-link">📊 Reportes</a>
+        <a href="<?= $base_url ?>/index.php?route=home" class="nav-link">🏠 Inicio</a>
+        <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Mesas</a>
+        <a href="<?= $base_url ?>/index.php?route=pedidos" class="nav-link">🍽️ Pedidos</a>
+        <a href="<?= $base_url ?>/index.php?route=mozos" class="nav-link">👥 Mozos</a>
+        <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Carta</a>
+        <a href="<?= $base_url ?>/index.php?route=reportes" class="nav-link">📊 Reportes</a>
       <?php elseif ($rol === 'mozo'): ?>
-        <a href="<?= $base_path ?>index.php" class="nav-link">🏠 Inicio</a>
-        <a href="<?= $base_path ?>cme_mesas.php" class="nav-link">🪑 Ver Mesas</a>
-        <a href="<?= $base_path ?>cme_carta.php" class="nav-link">📋 Ver Carta</a>
-        <a href="<?= $base_path ?>cme_pedidos.php" class="nav-link">🍽️ Ver Pedidos</a>
-        <a href="<?= $base_path ?>llamados.php" class="nav-link">🔔 Llamados Mesa</a>
+        <a href="<?= $base_url ?>/index.php?route=home" class="nav-link">🏠 Inicio</a>
+        <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Ver Mesas</a>
+        <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Ver Carta</a>
+        <a href="<?= $base_url ?>/index.php?route=pedidos" class="nav-link">🍽️ Ver Pedidos</a>
+        <a href="<?= $base_url ?>/index.php?route=llamados" class="nav-link">🔔 Llamados Mesa</a>
       <?php endif; ?>
-      <a href="<?= $base_path ?>logout.php" class="nav-link logout">🚪 Cerrar sesión</a>
+      <a href="<?= $base_url ?>/index.php?route=logout" class="nav-link logout">🚪 Cerrar sesión</a>
     </div>
   </div>
 </nav>
