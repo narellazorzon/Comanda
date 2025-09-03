@@ -17,15 +17,7 @@ $stats = Reporte::estadisticasPeriodo('mes');
 
 <style>
 /* Usar las mismas variables de color del dashboard principal */
-:root {
-  --background: #f7f1e1; /* beige muy claro */
-  --surface: #eee0be; /* blanco para cartas y tablas */
-  --primary: #a5a4a1; /* beige medio */
-  --secondary: #a1866f; /* marrón suave */
-  --accent: #eee0be; /* tonalidad intermedia */
-  --text: #3f3f3f; /* gris oscuro para texto */
-  --text-light: #ffffff; /* texto claro sobre fondo oscuro */
-}
+/* Variables CSS removidas - usar las del style.css global para mantener consistencia */
 
 body {
     background-color: var(--background);
@@ -35,22 +27,7 @@ body {
     color: var(--text);
 }
 
-nav {
-    background-color: var(--primary);
-    padding: 0.75rem 1rem;
-    border-bottom: 2px solid var(--secondary);
-}
-
-nav a {
-    color: var(--text);
-    text-decoration: none;
-    margin-right: 1rem;
-    font-weight: 600;
-}
-
-nav a:hover {
-    color: var(--secondary);
-}
+/* Estilos de nav removidos - ahora usa el nav estándar del header */
 
 main {
     max-width: 960px;
@@ -285,7 +262,7 @@ main {
 }
 </style>
 
-<main>
+<!-- Contenido dentro del main que ya viene del header -->
     <div class="welcome-section">
         <h1>Bienvenido, <?= htmlspecialchars($_SESSION['user']['nombre']) ?></h1>
         <p>Sistema de Reportes - Análisis de Ventas y Rendimiento</p>
@@ -386,6 +363,4 @@ main {
         
         <p><strong>Consejo:</strong> Revisa estos reportes regularmente (semanal o mensualmente) para identificar tendencias y tomar decisiones informadas sobre tu negocio.</p>
     </div>
-</main>
-
-
+<?php include __DIR__ . '/../includes/footer.php'; ?>
