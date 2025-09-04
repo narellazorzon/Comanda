@@ -68,30 +68,30 @@ class PedidoController {
 
     /**
      * Elimina (cancela) un pedido.
-     * Administradores pueden borrar cualquiera;
-     * comensales (QR) sólo sus mesas, mozos no borran.
+     * Solo administradores pueden eliminar pedidos.
      */
     public static function delete() {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
-        $rol    = $_SESSION['user']['rol'] ?? '';
-        $id     = (int)($_GET['delete'] ?? 0);
-        $pedido = Pedido::find($id);
-        if (! $pedido) {
-            header('Location: cme_pedidos.php');
+        
+        $rol = $_SESSION['user']['rol'] ?? '';
+        if ($rol !== 'administrador') {
+            header('Location: ' . url('unauthorized'));
             exit;
         }
-        $mesaId = $_SESSION['mesa_id'] ?? null;
-        if ($rol === 'administrador'
-            || ($rol !== 'administrador' && $pedido['id_mesa'] === $mesaId)
-        ) {
-            Pedido::delete($id);
+        
+        $id = (int)($_GET['delete'] ?? 0);
+        if ($id > 0) {
+            $resultado = Pedido::delete($id);
+            if ($resultado) {
+                header('Location: ' . url('pedidos', ['success' => 'Pedido eliminado correctamente']));
+            } else {
+                header('Location: ' . url('pedidos', ['error' => 'Error al eliminar el pedido']));
+            }
         } else {
-            header('Location: unauthorized.php');
-            exit;
+            header('Location: ' . url('pedidos', ['error' => 'ID de pedido inválido']));
         }
-        header('Location: cme_pedidos.php');
         exit;
     }
 }

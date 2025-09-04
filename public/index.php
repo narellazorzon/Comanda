@@ -146,6 +146,11 @@ switch ($route) {
         include __DIR__ . '/../src/views/pedidos/create.php';
         break;
 
+    case 'pedidos/delete':
+        requireAdmin();
+        \App\Controllers\PedidoController::delete();
+        break;
+
     // Rutas de Reportes
     case 'reportes':
         requireAdmin();

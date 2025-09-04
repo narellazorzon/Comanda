@@ -20,7 +20,7 @@ class CartaController {
 
     public static function index() {
         self::authorize();
-        $items = CartaItem::all();
+        $items = CartaItem::allIncludingUnavailable();
         include __DIR__ . '/../views/carta/index.php';
     }
 
@@ -106,10 +106,24 @@ class CartaController {
     public static function delete() {
         self::authorize();
         $id = (int)($_GET['delete'] ?? 0);
+        
+        // Debug log
+        error_log("CartaController::delete() - ID recibido: " . $id);
+        error_log("CartaController::delete() - GET params: " . print_r($_GET, true));
+        
         if ($id > 0) {
-            CartaItem::delete($id);
+            $resultado = CartaItem::delete($id);
+            error_log("CartaController::delete() - Resultado: " . ($resultado ? 'true' : 'false'));
+            
+            if ($resultado) {
+                header('Location: ' . url('carta', ['success' => 'Ítem eliminado correctamente']));
+            } else {
+                header('Location: ' . url('carta', ['error' => 'Error al eliminar el ítem']));
+            }
+        } else {
+            error_log("CartaController::delete() - ID inválido: " . $id);
+            header('Location: ' . url('carta', ['error' => 'ID de ítem inválido']));
         }
-        header('Location: ' . url('carta'));
         exit;
     }
 }

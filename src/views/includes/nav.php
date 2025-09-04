@@ -18,7 +18,9 @@ $base_path = $is_in_reportes ? '../' : '';
 <nav class="navbar">
   <div class="nav-container">
     <div class="nav-logo">
-      <img src="<?= $base_url ?>/assets/img/logo.png" alt="Comanda" style="height: 70px; width: auto; max-height: 70px;">
+      <a href="<?= $base_url ?>/index.php?route=home" style="text-decoration: none; display: block;">
+        <img src="<?= $base_url ?>/assets/img/logo.png" alt="Comanda" style="height: 60px; width: auto; max-height: 60px;">
+      </a>
     </div>
     
     <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
@@ -29,14 +31,12 @@ $base_path = $is_in_reportes ? '../' : '';
     
     <div class="nav-menu" id="nav-menu">
       <?php if ($rol === 'administrador'): ?>
-        <a href="<?= $base_url ?>/index.php?route=home" class="nav-link">🏠 Inicio</a>
         <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Mesas</a>
         <a href="<?= $base_url ?>/index.php?route=pedidos" class="nav-link">🍽️ Pedidos</a>
         <a href="<?= $base_url ?>/index.php?route=mozos" class="nav-link">👥 Mozos</a>
         <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Carta</a>
         <a href="<?= $base_url ?>/index.php?route=reportes" class="nav-link">📊 Reportes</a>
       <?php elseif ($rol === 'mozo'): ?>
-        <a href="<?= $base_url ?>/index.php?route=home" class="nav-link">🏠 Inicio</a>
         <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Ver Mesas</a>
         <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Ver Carta</a>
         <a href="<?= $base_url ?>/index.php?route=pedidos" class="nav-link">🍽️ Ver Pedidos</a>

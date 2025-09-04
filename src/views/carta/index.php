@@ -17,17 +17,9 @@ if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'ad
 
 $rol = $_SESSION['user']['rol'];
 
-// Solo administradores pueden eliminar items
-if (isset($_GET['delete']) && $rol === 'administrador') {
-    $id = (int) $_GET['delete'];
-    if ($id > 0) {
-        CartaItem::delete($id);
-    }
-    header('Location: ' . url('carta'));
-    exit;
-}
+// La eliminación se maneja a través del controlador CartaController::delete()
 
-// 3) Cargamos todos los ítems de la carta
+// Cargamos todos los ítems de la carta
 $items = CartaItem::all();
 
 ?>
@@ -382,6 +374,7 @@ $items = CartaItem::all();
     padding: 10px;
   }
 }
+
 </style>
 
 <div class="carta-digital">
@@ -389,6 +382,18 @@ $items = CartaItem::all();
     <h1 class="carta-title">🍽️ Carta Digital</h1>
     <p class="carta-subtitle">Deliciosos platos preparados con amor</p>
   </div>
+
+  <?php if (isset($_GET['success'])): ?>
+    <div class="alert success" style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; padding: 0.75rem; margin: 1rem 0; font-weight: 500; font-size: 0.85rem;">
+      ✅ <?= htmlspecialchars($_GET['success']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['error'])): ?>
+    <div class="alert error" style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 0.75rem; margin: 1rem 0; font-weight: 500; font-size: 0.85rem;">
+      ⚠️ <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
 
   <?php if ($rol === 'administrador'): ?>
     <div class="admin-controls">
@@ -433,7 +438,8 @@ $items = CartaItem::all();
       }
       ?>
       <div class="menu-item <?= !$item['disponibilidad'] ? 'unavailable' : '' ?>" 
-           data-categoria="<?= htmlspecialchars($item['categoria'] ?? 'Sin categoría') ?>">
+           data-categoria="<?= htmlspecialchars($item['categoria'] ?? 'Sin categoría') ?>"
+           data-item-id="<?= $item['id_item'] ?>">
         
         <?php if (!empty($item['imagen_url'])): ?>
           <img src="<?= htmlspecialchars($item['imagen_url']) ?>" 
@@ -480,9 +486,9 @@ $items = CartaItem::all();
               <a href="<?= url('carta/edit', ['id' => $item['id_item']]) ?>" class="btn-modern btn-edit">
                 ✏️ Editar
               </a>
-              <a href="<?= url('carta', ['delete' => $item['id_item']]) ?>" 
+              <a href="#" 
                  class="btn-modern btn-delete"
-                 onclick="return confirm('¿Borrar ítem &quot;<?= htmlspecialchars($item['nombre']) ?>&quot;?')">
+                 onclick="confirmarBorradoCarta(<?= $item['id_item'] ?>, '<?= htmlspecialchars($item['nombre']) ?>')">
                 🗑️ Borrar
               </a>
             </div>
@@ -499,6 +505,8 @@ $items = CartaItem::all();
     </div>
   <?php endif; ?>
 </div>
+
+
 
 <script>
 function filtrarCategoria(categoria) {
@@ -525,6 +533,7 @@ function filtrarCategoria(categoria) {
   });
 }
 
+
 // Animación de entrada
 document.addEventListener('DOMContentLoaded', function() {
   const items = document.querySelectorAll('.menu-item');
@@ -540,5 +549,4 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-
 

@@ -34,7 +34,7 @@ CREATE TABLE usuarios (
 CREATE TABLE mesas (
   id_mesa        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   numero         INT NOT NULL UNIQUE,
-  estado         ENUM('libre','ocupada') NOT NULL DEFAULT 'libre',
+  estado         ENUM('libre','ocupada','reservada') NOT NULL DEFAULT 'libre',
   ubicacion      VARCHAR(100) NULL,
   id_mozo        INT UNSIGNED NULL,
   fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

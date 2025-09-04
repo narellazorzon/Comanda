@@ -71,10 +71,13 @@ class Mesa {
             throw new \InvalidArgumentException('Ya existe una mesa con el número ' . $numero);
         }
         
-        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, id_mozo) VALUES (?, ?, ?)");
+        $estado = $data['estado'] ?? 'libre';
+        
+        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, estado, id_mozo) VALUES (?, ?, ?, ?)");
         return $stmt->execute([
             $numero,
             $data['ubicacion'] ?? null,
+            $estado,
             !empty($data['id_mozo']) ? (int) $data['id_mozo'] : null
         ]);
     }
@@ -170,11 +173,39 @@ class Mesa {
     }
 
     /**
-     * Borra una mesa por su ID.
+     * Verifica si una mesa tiene pedidos activos.
      */
-    public static function delete(int $id): bool {
-        $db   = (new Database)->getConnection();
-        $stmt = $db->prepare("DELETE FROM mesas WHERE id_mesa = ?");
-        return $stmt->execute([$id]);
+    public static function tienePedidosActivos(int $id): bool {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("SELECT COUNT(*) FROM pedidos WHERE id_mesa = ? AND estado NOT IN ('cerrado', 'cancelado')");
+        $stmt->execute([$id]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * Borra una mesa por su ID.
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public static function delete(int $id): array {
+        $db = (new Database)->getConnection();
+        
+        try {
+            $stmt = $db->prepare("DELETE FROM mesas WHERE id_mesa = ?");
+            $result = $stmt->execute([$id]);
+            
+            if ($result && $stmt->rowCount() > 0) {
+                return ['success' => true, 'message' => 'Mesa eliminada correctamente'];
+            } else {
+                return ['success' => false, 'message' => 'No se pudo eliminar la mesa'];
+            }
+        } catch (PDOException $e) {
+            // Manejar el error específico de pedidos activos
+            if ($e->getCode() == '45000' && strpos($e->getMessage(), 'pedidos activos') !== false) {
+                return ['success' => false, 'message' => 'No se puede eliminar una mesa con pedidos activos. Primero debe cerrar todos los pedidos de esta mesa.'];
+            }
+            
+            // Otros errores de base de datos
+            return ['success' => false, 'message' => 'Error al eliminar la mesa: ' . $e->getMessage()];
+        }
     }
 }
