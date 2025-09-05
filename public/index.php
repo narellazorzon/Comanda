@@ -6,13 +6,13 @@ session_start();
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Incluir header para todas las páginas (excepto login)
-$route = $_GET['route'] ?? 'home';
+$route = $_GET['route'] ?? 'cliente';
 if ($route !== 'login') {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
 // Obtener la ruta solicitada
-$route = $_GET['route'] ?? 'home';
+$route = $_GET['route'] ?? 'cliente';
 
 // Función para redirigir al login si no está autenticado
 function requireAuth() {
@@ -59,6 +59,10 @@ switch ($route) {
     case 'home':
         requireAuth();
         include __DIR__ . '/../src/views/home/index.php';
+        break;
+
+    case 'cliente':
+        include __DIR__ . '/../src/views/cliente/index.php';
         break;
 
     // Rutas de Mesas
@@ -203,9 +207,9 @@ switch ($route) {
         break;
 
     default:
-        // Si no está logueado, redirigir al login
+        // Si no está logueado, mostrar la vista pública del cliente
         if (empty($_SESSION['user'])) {
-            header('Location: index.php?route=login');
+            header('Location: index.php?route=cliente');
             exit;
         }
         // Si está logueado, mostrar el home
