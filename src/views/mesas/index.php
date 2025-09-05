@@ -110,7 +110,7 @@ $mesas = Mesa::all();
       ➕ Nueva Mesa
     </a>
     <a href="<?= url('mesas/cambiar-mozo') ?>" class="button" style="background:rgb(237, 221, 172); color: #212529; padding: 0.6rem 1rem; font-size: 0.9rem; white-space: nowrap;">
-      🔄 Gestionar Mozos
+      🔄 Gestionar asignaciones de mesas
     </a>
   </div>
 <?php else: ?>

@@ -166,6 +166,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   box-shadow: 0 0 5px rgba(222, 184, 135, 0.5);
 }
 
+.modo-consumo-container {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.modo-consumo-btn {
+  flex: 1;
+  max-width: 200px;
+  background: #F5DEB3;
+  border: 3px solid #CD853F;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.modo-consumo-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #CD853F, #DEB887, #A0522D, #DEB887, #CD853F);
+}
+
+.modo-consumo-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 6px 6px 12px rgba(0,0,0,0.3);
+  border-color: #DEB887;
+}
+
+.modo-consumo-btn.selected {
+  background: #E6FFE6;
+  border-color: #228B22;
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 12px rgba(0,0,0,0.4);
+}
+
+.modo-consumo-btn input[type="radio"] {
+  display: none;
+}
+
+.modo-consumo-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.modo-consumo-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2F1B14;
+  margin: 0 0 5px 0;
+}
+
+.modo-consumo-desc {
+  font-size: 0.9rem;
+  color: #5D4037;
+  margin: 0;
+  font-style: italic;
+}
+
+.mesa-section {
+  display: none;
+  background: #F5DEB3;
+  border: 3px solid #CD853F;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+.mesa-section.show {
+  display: block;
+  animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mesa-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #CD853F, #DEB887, #A0522D, #DEB887, #CD853F);
+}
+
+.carta-section {
+  display: none;
+}
+
+.carta-section.show {
+  display: block;
+  animation: slideDown 0.5s ease;
+}
+
 .categorias-nav {
   display: flex;
   justify-content: center;
@@ -486,8 +601,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="pedido-digital">
   <div class="pedido-header">
-    <h1 class="pedido-title">🍽️ Nuevo Pedido</h1>
-    <p class="pedido-subtitle">Selecciona la mesa y agrega los items del menú</p>
+    <h1 class="pedido-title">🍽️ Bienvenido a la carta</h1>
+    <p class="pedido-subtitle">¿Qué vas a comer hoy?</p>
   </div>
 
   <?php if ($error): ?>
@@ -503,12 +618,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
 
   <form method="post" id="pedidoForm">
-    <!-- Selección de Mesa -->
+    <!-- Selección de Modo de Consumo -->
     <div class="form-section">
+      <h3>🍽️ ¿Cómo vas a consumir?</h3>
+      <div class="modo-consumo-container">
+        <label class="modo-consumo-btn" for="stay">
+          <input type="radio" name="modo_consumo" value="stay" id="stay" required>
+          <span class="modo-consumo-icon">🍽️</span>
+          <div class="modo-consumo-title">Stay</div>
+          <div class="modo-consumo-desc">Consumo en el local</div>
+        </label>
+        
+        <label class="modo-consumo-btn" for="takeaway">
+          <input type="radio" name="modo_consumo" value="takeaway" id="takeaway" required>
+          <span class="modo-consumo-icon">📦</span>
+          <div class="modo-consumo-title">Takeaway</div>
+          <div class="modo-consumo-desc">Para llevar</div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Selección de Mesa (solo para Stay) -->
+    <div class="mesa-section" id="mesa-section">
       <h3>📍 Seleccionar Mesa</h3>
       <div class="form-group">
         <label>Mesa:</label>
-        <select name="id_mesa" required>
+        <select name="id_mesa" id="mesa-select">
           <option value="">Seleccionar mesa</option>
           <?php foreach ($mesas as $mesa): ?>
             <option value="<?= $mesa['id_mesa'] ?>" 
@@ -524,7 +659,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <!-- Selección de Items -->
-    <div class="form-section">
+    <div class="carta-section" id="carta-section">
       <h3>🍽️ Seleccionar Items del Menú</h3>
       
       <?php 
@@ -740,8 +875,66 @@ function filtrarCategoria(categoria) {
   });
 }
 
+// Lógica para mostrar/ocultar secciones según modo de consumo
+function handleModoConsumoChange() {
+    const stayRadio = document.getElementById('stay');
+    const takeawayRadio = document.getElementById('takeaway');
+    const mesaSection = document.getElementById('mesa-section');
+    const cartaSection = document.getElementById('carta-section');
+    const mesaSelect = document.getElementById('mesa-select');
+    
+    // Actualizar estilos de botones
+    document.querySelectorAll('.modo-consumo-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    if (stayRadio.checked) {
+        document.querySelector('label[for="stay"]').classList.add('selected');
+        mesaSection.classList.add('show');
+        mesaSelect.required = true;
+        
+        // Mostrar carta solo si ya se seleccionó mesa
+        if (mesaSelect.value) {
+            cartaSection.classList.add('show');
+        } else {
+            cartaSection.classList.remove('show');
+        }
+    } else if (takeawayRadio.checked) {
+        document.querySelector('label[for="takeaway"]').classList.add('selected');
+        mesaSection.classList.remove('show');
+        mesaSelect.required = false;
+        mesaSelect.value = '';
+        cartaSection.classList.add('show');
+    } else {
+        mesaSection.classList.remove('show');
+        cartaSection.classList.remove('show');
+        mesaSelect.required = false;
+    }
+}
+
+function handleMesaChange() {
+    const mesaSelect = document.getElementById('mesa-select');
+    const cartaSection = document.getElementById('carta-section');
+    const stayRadio = document.getElementById('stay');
+    
+    if (stayRadio.checked && mesaSelect.value) {
+        cartaSection.classList.add('show');
+    } else if (stayRadio.checked) {
+        cartaSection.classList.remove('show');
+    }
+}
+
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    // Event listeners para modo de consumo
+    document.getElementById('stay').addEventListener('change', handleModoConsumoChange);
+    document.getElementById('takeaway').addEventListener('change', handleModoConsumoChange);
+    
+    // Event listener para selección de mesa
+    document.getElementById('mesa-select').addEventListener('change', handleMesaChange);
+    
+    // Inicializar estado
+    handleModoConsumoChange();
     // Agregar event listeners a los items de la carta
     document.querySelectorAll('.carta-item').forEach(item => {
         item.addEventListener('click', function() {

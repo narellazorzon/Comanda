@@ -77,7 +77,7 @@ class Pedido {
         ");
         $stmt->execute([
             $data['id_mesa'] ?? null,
-            $data['modo_consumo'],
+            $data['modo_consumo'] ?? 'stay', // Default a 'stay' si no se especifica
             0.00,
             'pendiente',
             $_SESSION['user']['id_usuario'] ?? null

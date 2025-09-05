@@ -175,6 +175,7 @@ $pedidos = Pedido::all();
   </div>
 </div>
 
+<div class="pedidos-container">
 <div class="table-responsive">
 <table class="table">
   <thead>
@@ -287,7 +288,7 @@ $pedidos = Pedido::all();
 </div>
 
 <!-- Vista móvil con tarjetas -->
-<div class="mobile-cards" style="max-height: 60vh; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+<div class="mobile-cards">
   <?php if (empty($pedidos)): ?>
     <div class="mobile-card" style="text-align: center; padding: 1rem; color: #666;">
       No hay pedidos registrados.
@@ -310,6 +311,7 @@ $pedidos = Pedido::all();
             <?php endif; ?>
           </div>
         </div>
+        
         <?php if ($rol === 'administrador'): ?>
         <div class="mobile-state-shortcuts">
           <div class="state-shortcuts">
@@ -335,7 +337,7 @@ $pedidos = Pedido::all();
           </div>
         </div>
         <?php endif; ?>
-        </div>
+        
         <div class="mobile-card-body">
           <div class="mobile-card-item">
             <div class="mobile-card-label">Mesa</div>
@@ -349,44 +351,47 @@ $pedidos = Pedido::all();
             <div class="mobile-card-label">Estado</div>
             <div class="mobile-card-value">
               <?php
-              // Definir colores según el estado del pedido
               $estado = $pedido['estado'];
+              $bg_color = '';
+              $text_color = '';
+              $icono = '';
+              
               switch ($estado) {
-                  case 'pendiente':
-                      $bg_color = '#fff3cd';
-                      $text_color = '#856404';
-                      $icon = '⏳';
-                      break;
-                  case 'en_preparacion':
-                      $bg_color = '#cce5ff';
-                      $text_color = '#004085';
-                      $icon = '👨‍🍳';
-                      break;
-                  case 'servido':
-                      $bg_color = '#d4edda';
-                      $text_color = '#155724';
-                      $icon = '✅';
-                      break;
-                  case 'cuenta':
-                      $bg_color = '#d1ecf1';
-                      $text_color = '#0c5460';
-                      $icon = '💳';
-                      break;
-                  case 'cerrado':
-                      $bg_color = '#e2e3e5';
-                      $text_color = '#383d41';
-                      $icon = '🔒';
-                      break;
-                  default:
-                      $bg_color = '#f8d7da';
-                      $text_color = '#721c24';
-                      $icon = '❓';
+                case 'pendiente':
+                  $bg_color = '#fff3cd';
+                  $text_color = '#856404';
+                  $icono = '⏳';
+                  break;
+                case 'en_preparacion':
+                  $bg_color = '#cce5ff';
+                  $text_color = '#004085';
+                  $icono = '👨‍🍳';
+                  break;
+                case 'servido':
+                  $bg_color = '#d4edda';
+                  $text_color = '#155724';
+                  $icono = '✅';
+                  break;
+                case 'cuenta':
+                  $bg_color = '#d1ecf1';
+                  $text_color = '#0c5460';
+                  $icono = '💳';
+                  break;
+                case 'cerrado':
+                  $bg_color = '#e2e3e5';
+                  $text_color = '#383d41';
+                  $icono = '🔒';
+                  break;
+                default:
+                  $bg_color = '#f8d7da';
+                  $text_color = '#721c24';
+                  $icono = '❓';
               }
               ?>
               <span style="padding: 2px 6px; border-radius: 8px; font-size: 0.7em; font-weight: bold; 
                            background: <?= $bg_color ?>; 
                            color: <?= $text_color ?>;">
-                <?= $icon ?> <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $pedido['estado']))) ?>
+                <?= $icono ?> <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $estado))) ?>
               </span>
             </div>
           </div>
@@ -419,9 +424,12 @@ $pedidos = Pedido::all();
     </div>
   </div>
 </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Solo tabla visible - sin tarjetas móviles por ahora
+    
     // Elementos del DOM
     const searchId = document.getElementById('searchId');
     const searchMesa = document.getElementById('searchMesa');
@@ -439,9 +447,30 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentStatusFilter = 'all';
     
     function getPedidoStatus(element) {
-        const statusSpan = element.querySelector('td:nth-child(4) span') || element.querySelector('.mobile-card-value span');
+        let statusSpan;
+        
+        if (element.tagName === 'TR') {
+            // Para filas de tabla, buscar en la columna 4 (Estado)
+            statusSpan = element.querySelector('td:nth-child(4) span');
+        } else {
+            // Para tarjetas móviles, buscar en el span del estado
+            const estadoItem = element.querySelector('.mobile-card-item:nth-child(3) .mobile-card-value span');
+            statusSpan = estadoItem;
+        }
+        
         if (statusSpan) {
-            return statusSpan.textContent.toLowerCase().trim().replace(/[⏳👨‍🍳✅💳🔒]/g, '').trim();
+            let status = statusSpan.textContent.toLowerCase().trim().replace(/[⏳👨‍🍳✅💳🔒]/g, '').trim();
+            
+            // Mapear los nombres mostrados a los valores de la base de datos
+            const statusMap = {
+                'pendiente': 'pendiente',
+                'en preparación': 'en_preparacion',
+                'servido': 'servido',
+                'cuenta': 'cuenta',
+                'cerrado': 'cerrado'
+            };
+            
+            return statusMap[status] || status;
         }
         return '';
     }
@@ -503,6 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const matchesMozo = pedidoData.mozo.includes(currentMozoSearch);
             const matchesFecha = currentFechaSearch === '' || pedidoData.fecha === currentFechaSearch;
             const matchesStatus = currentStatusFilter === 'all' || pedidoData.status === currentStatusFilter;
+            
             
             if (matchesId && matchesMesa && matchesMozo && matchesFecha && matchesStatus) {
                 row.style.display = '';
@@ -877,43 +907,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-/* Asegurar que en desktop se muestre la tabla y se oculten las tarjetas */
-.table-responsive {
-    display: block;
+/* Reglas específicas para pedidos - control estricto de visualización dual */
+
+/* Desktop: SOLO tabla, NUNCA tarjetas móviles */
+@media (min-width: 769px) {
+    .table-responsive {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    .mobile-cards {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 }
 
-.mobile-cards {
-    display: none;
-}
-
-/* En móvil, ocultar tabla y mostrar tarjetas */
+/* Móvil: SOLO tarjetas, NUNCA tabla */
 @media (max-width: 768px) {
     .table-responsive {
         display: none !important;
+        visibility: hidden !important;
     }
     
     .mobile-cards {
         display: block !important;
+        visibility: visible !important;
+        max-height: 60vh;
+        overflow-y: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 0.5rem;
     }
 }
 
-/* Estilos para scroll personalizado en tarjetas móviles */
-.mobile-cards::-webkit-scrollbar {
-    width: 6px;
-}
-
-.mobile-cards::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.mobile-cards::-webkit-scrollbar-thumb {
-    background: var(--secondary);
-    border-radius: 3px;
-}
-
-.mobile-cards::-webkit-scrollbar-thumb:hover {
-    background: #8a6f5a;
+/* Regla de emergencia para desktop */
+@media screen and (min-width: 769px) {
+    .mobile-cards,
+    .mobile-cards * {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+    }
 }
 </style>
 

@@ -33,11 +33,26 @@ class PedidoController {
             session_start();
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $idPedido = Pedido::create($_POST);
-            foreach ((array)($_POST['items'] ?? []) as $itemId) {
-                DetallePedido::create($idPedido, (int)$itemId);
+            // Preparar datos para el pedido
+            $pedidoData = [
+                'id_mesa' => $_POST['id_mesa'] ?? null,
+                'modo_consumo' => $_POST['modo_consumo'] ?? 'stay'
+            ];
+            
+            $idPedido = Pedido::create($pedidoData);
+            
+            // Crear detalles del pedido
+            if (isset($_POST['items']) && is_array($_POST['items'])) {
+                foreach ($_POST['items'] as $item) {
+                    if (isset($item['id_item']) && isset($item['cantidad'])) {
+                        for ($i = 0; $i < (int)$item['cantidad']; $i++) {
+                            DetallePedido::create($idPedido, (int)$item['id_item']);
+                        }
+                    }
+                }
             }
-            header('Location: cme_pedidos.php');
+            
+            header('Location: ' . url('pedidos', ['success' => 'Pedido creado correctamente']));
             exit;
         }
         $carta = CartaItem::all();
