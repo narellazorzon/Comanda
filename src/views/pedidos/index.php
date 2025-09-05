@@ -465,6 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const statusMap = {
                 'pendiente': 'pendiente',
                 'en preparación': 'en_preparacion',
+                'en preparacion': 'en_preparacion', // Agregar sin tilde también
                 'servido': 'servido',
                 'cuenta': 'cuenta',
                 'cerrado': 'cerrado'
