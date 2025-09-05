@@ -172,8 +172,8 @@ $mesas = Mesa::all();
       <th>Ubicación</th>
       <th>Estado</th>
       <th>Mozo Asignado</th>
+      <th>Cambiar Estado</th>
       <?php if ($rol === 'administrador'): ?>
-          <th>Cambiar Estado</th>
         <th>Acciones</th>
       <?php endif; ?>
     </tr>
@@ -214,26 +214,26 @@ $mesas = Mesa::all();
             <span style="color: #6c757d; font-style: italic;">Sin asignar</span>
           <?php endif; ?>
         </td>
+        <td>
+          <div class="state-shortcuts">
+            <?php if ($m['estado'] !== 'libre'): ?>
+              <button class="state-btn libre" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'libre')" title="Marcar como Libre">
+                🟢
+              </button>
+            <?php endif; ?>
+            <?php if ($m['estado'] !== 'ocupada'): ?>
+              <button class="state-btn ocupada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'ocupada')" title="Marcar como Ocupada">
+                🔴
+              </button>
+            <?php endif; ?>
+            <?php if ($m['estado'] !== 'reservada'): ?>
+              <button class="state-btn reservada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'reservada')" title="Marcar como Reservada">
+                🟡
+              </button>
+            <?php endif; ?>
+          </div>
+        </td>
         <?php if ($rol === 'administrador'): ?>
-          <td>
-            <div class="state-shortcuts">
-              <?php if ($m['estado'] !== 'libre'): ?>
-                <button class="state-btn libre" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'libre')" title="Marcar como Libre">
-                  🟢
-                </button>
-              <?php endif; ?>
-              <?php if ($m['estado'] !== 'ocupada'): ?>
-                <button class="state-btn ocupada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'ocupada')" title="Marcar como Ocupada">
-                  🔴
-                </button>
-              <?php endif; ?>
-              <?php if ($m['estado'] !== 'reservada'): ?>
-                <button class="state-btn reservada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'reservada')" title="Marcar como Reservada">
-                  🟡
-                </button>
-              <?php endif; ?>
-            </div>
-          </td>
           <td>
             <a href="<?= url('mesas/edit', ['id' => $m['id_mesa']]) ?>" class="btn-action" title="Editar mesa">
               ✏️
@@ -331,28 +331,26 @@ $mesas = Mesa::all();
         </div>
       </div>
       
-      <?php if ($rol === 'administrador'): ?>
-        <div class="mobile-state-shortcuts">
-          <div class="mobile-card-label" style="margin-bottom: 0.3rem;">🔄 Cambiar Estado:</div>
-          <div class="state-shortcuts">
-            <?php if ($m['estado'] !== 'libre'): ?>
-              <button class="state-btn libre" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'libre')" title="Marcar como Libre">
-                🟢 Libre
-              </button>
-            <?php endif; ?>
-            <?php if ($m['estado'] !== 'ocupada'): ?>
-              <button class="state-btn ocupada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'ocupada')" title="Marcar como Ocupada">
-                🔴 Ocupada
-              </button>
-            <?php endif; ?>
-            <?php if ($m['estado'] !== 'reservada'): ?>
-              <button class="state-btn reservada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'reservada')" title="Marcar como Reservada">
-                🟡 Reservada
-              </button>
-            <?php endif; ?>
-          </div>
+      <div class="mobile-state-shortcuts">
+        <div class="mobile-card-label" style="margin-bottom: 0.3rem;">🔄 Cambiar Estado:</div>
+        <div class="state-shortcuts">
+          <?php if ($m['estado'] !== 'libre'): ?>
+            <button class="state-btn libre" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'libre')" title="Marcar como Libre">
+              🟢 Libre
+            </button>
+          <?php endif; ?>
+          <?php if ($m['estado'] !== 'ocupada'): ?>
+            <button class="state-btn ocupada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'ocupada')" title="Marcar como Ocupada">
+              🔴 Ocupada
+            </button>
+          <?php endif; ?>
+          <?php if ($m['estado'] !== 'reservada'): ?>
+            <button class="state-btn reservada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'reservada')" title="Marcar como Reservada">
+              🟡 Reservada
+            </button>
+          <?php endif; ?>
         </div>
-      <?php endif; ?>
+      </div>
     </div>
   <?php endforeach; ?>
 </div>

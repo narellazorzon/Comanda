@@ -4,7 +4,10 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 
 use App\Models\LlamadoMesa;
 
-session_start();
+// Iniciar sesión solo si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // Mozos y administradores pueden acceder
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ../../public/index.php?route=unauthorized');
@@ -23,7 +26,6 @@ if ($user_rol === 'mozo') {
     $llamados = LlamadoMesa::all();
 }
 
-include __DIR__ . '/../includes/header.php';
 ?>
 
 <h2>🔔 Llamados de Mesa</h2>
@@ -89,5 +91,3 @@ include __DIR__ . '/../includes/header.php';
     <?php endif; ?>
   </tbody>
 </table>
-
-<?php include __DIR__ . '/../includes/footer.php'; ?>

@@ -258,8 +258,6 @@ main {
 </style>
 
 <main>
-    <a href="index.php" class="back-btn">← Volver a Reportes</a>
-
     <div class="report-header">
         <h1>🍽️ Reporte de Platos Más Vendidos</h1>
         <p>Análisis de ventas por período de tiempo</p>
@@ -370,5 +368,5 @@ function applyFilters() {
 </script>
 
 <div style="margin-top: 2rem; text-align: center;">
-    <a href="<?= url('reportes') ?>" class="access-btn">← Volver a Reportes</a>
+    <a href="<?= url('reportes') ?>" class="back-btn">← Volver a Reportes</a>
 </div>

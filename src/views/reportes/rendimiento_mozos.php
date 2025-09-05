@@ -222,6 +222,24 @@ $stats = Reporte::estadisticasPeriodo($periodo);
         overflow-x: auto;
     }
 }
+
+.back-btn {
+    display: inline-block;
+    background: var(--secondary);
+    color: var(--text-light);
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    margin-bottom: 1.5rem;
+}
+
+.back-btn:hover {
+    background-color: #8b5e46;
+    text-decoration: none;
+    color: var(--text-light);
+}
 </style>
 
 <div class="report-container">
@@ -346,5 +364,5 @@ function applyFilters() {
 </script>
 
 <div style="margin-top: 2rem; text-align: center;">
-    <a href="<?= url('reportes') ?>" class="access-btn">← Volver a Reportes</a>
+    <a href="<?= url('reportes') ?>" class="back-btn">← Volver a Reportes</a>
 </div>

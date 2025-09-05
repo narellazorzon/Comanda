@@ -13,6 +13,9 @@ use App\Models\Reporte;
 
 // Obtener estadísticas generales del mes actual
 $stats = Reporte::estadisticasPeriodo('mes');
+
+// Diagnóstico para debuggear problemas
+$diagnostico = Reporte::diagnosticar();
 ?>
 
 <style>
@@ -363,4 +366,29 @@ main {
         
         <p><strong>Consejo:</strong> Revisa estos reportes regularmente (semanal o mensualmente) para identificar tendencias y tomar decisiones informadas sobre tu negocio.</p>
     </div>
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+
+    <!-- Información de diagnóstico -->
+    <?php if ($diagnostico['pedidos_reporteables'] == 0): ?>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #856404; margin-top: 0;">⚠️ Información importante sobre reportes</h3>
+            <p style="color: #856404; margin-bottom: 10px;">
+                Los reportes necesitan pedidos completados para generar estadísticas. Estado actual de datos:
+            </p>
+            <ul style="color: #856404;">
+                <li><strong>Pedidos totales:</strong> <?= $diagnostico['pedidos_totales'] ?></li>
+                <li><strong>Detalles de pedido:</strong> <?= $diagnostico['detalles_pedido'] ?></li>
+                <li><strong>Pedidos completados (reporteables):</strong> <?= $diagnostico['pedidos_reporteables'] ?></li>
+            </ul>
+            <?php if (!empty($diagnostico['pedidos_por_estado'])): ?>
+                <p style="color: #856404;"><strong>Pedidos por estado:</strong></p>
+                <ul style="color: #856404;">
+                    <?php foreach ($diagnostico['pedidos_por_estado'] as $estado): ?>
+                        <li><?= ucfirst($estado['estado']) ?>: <?= $estado['cantidad'] ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+            <p style="color: #856404;">
+                <strong>Para ver reportes con datos:</strong> Crea pedidos y cambia su estado a "Servido", "Cuenta" o "Cerrado".
+            </p>
+        </div>
+    <?php endif; ?>

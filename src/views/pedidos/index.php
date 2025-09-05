@@ -19,7 +19,8 @@ $rol = $_SESSION['user']['rol'];
 
 // Procesar cambio de estado si es POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
-    if ($rol === 'administrador') {
+    // Permitir a mozos y administradores cambiar estado
+    if (in_array($rol, ['mozo', 'administrador'])) {
         $id_pedido = (int) $_POST['id_pedido'];
         $nuevo_estado = $_POST['nuevo_estado'];
         
@@ -46,17 +47,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
     }
 }
 
-// Cargar pedidos
-$pedidos = Pedido::all();
+// Cargar pedidos según el rol
+if ($rol === 'mozo') {
+    // Los mozos solo ven pedidos del día actual
+    $pedidos = Pedido::todayOnly();
+} else {
+    // Los administradores ven todos los pedidos
+    $pedidos = Pedido::all();
+}
 
 ?>
 
-<h2><?= $rol === 'administrador' ? 'Gestión de Pedidos' : 'Consulta de Pedidos' ?></h2>
+<h2><?= $rol === 'administrador' ? 'Gestión de Pedidos' : 'Pedidos del Día' ?></h2>
+
+<?php if ($rol === 'mozo'): ?>
+  <div style="background: #d1ecf1; padding: 8px; border-radius: 4px; margin-bottom: 0.8rem; color: #0c5460; font-size: 0.85rem;">
+    📅 Mostrando únicamente los pedidos del día de hoy (<?= date('d/m/Y') ?>)
+  </div>
+<?php endif; ?>
 
 <?php if (isset($_GET['success'])): ?>
     <div class="success" style="color: green; background: #d4edda; padding: 6px 10px; border-radius: 4px; margin-bottom: 0.6rem; font-size: 0.85rem;">
         <?php if ($_GET['success'] == '1'): ?>
-        Estado del pedido actualizado correctamente.
+            Estado del pedido actualizado correctamente.
+        <?php else: ?>
+            <?= htmlspecialchars($_GET['success']) ?>
         <?php endif; ?>
     </div>
 <?php endif; ?>
@@ -64,11 +79,13 @@ $pedidos = Pedido::all();
 <?php if (isset($_GET['error'])): ?>
     <div class="error" style="color: red; background: #f8d7da; padding: 6px 10px; border-radius: 4px; margin-bottom: 0.6rem; font-size: 0.85rem;">
         <?php if ($_GET['error'] == '1'): ?>
-        Error al actualizar el estado del pedido.
+            Error al actualizar el estado del pedido.
         <?php elseif ($_GET['error'] == '2'): ?>
-        Estado inválido.
+            Estado inválido.
         <?php elseif ($_GET['error'] == '3'): ?>
-        No se puede cambiar el estado de un pedido cerrado.
+            No se puede cambiar el estado de un pedido cerrado.
+        <?php else: ?>
+            <?= htmlspecialchars($_GET['error']) ?>
         <?php endif; ?>
     </div>
 <?php endif; ?>
@@ -186,8 +203,8 @@ $pedidos = Pedido::all();
       <th>Estado</th>
       <th>Total</th>
       <th>Fecha</th>
+      <th>Cambiar Estado</th>
       <?php if ($rol === 'administrador'): ?>
-        <th>Cambiar Estado</th>
         <th>Acciones</th>
       <?php endif; ?>
     </tr>
@@ -195,7 +212,7 @@ $pedidos = Pedido::all();
   <tbody>
     <?php if (empty($pedidos)): ?>
       <tr>
-        <td colspan="<?= $rol === 'administrador' ? '8' : '6' ?>">No hay pedidos registrados.</td>
+        <td colspan="<?= $rol === 'administrador' ? '8' : '7' ?>">No hay pedidos registrados.</td>
       </tr>
     <?php else: ?>
       <?php foreach ($pedidos as $pedido): ?>
@@ -247,30 +264,30 @@ $pedidos = Pedido::all();
           </td>
           <td><strong>$<?= number_format($pedido['total'] ?? 0, 2) ?></strong></td>
           <td><?= !empty($pedido['fecha_creacion']) ? date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) : 'N/A' ?></td>
+          <td class="action-cell">
+            <div class="state-shortcuts">
+              <?php if ($pedido['estado'] !== 'cerrado'): ?>
+                <button class="state-btn pendiente" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'pendiente')" title="Cambiar a Pendiente">
+                  ⏳
+                </button>
+                <button class="state-btn en_preparacion" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'en_preparacion')" title="Cambiar a En Preparación">
+                  👨‍🍳
+                </button>
+                <button class="state-btn servido" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'servido')" title="Cambiar a Servido">
+                  ✅
+                </button>
+                <button class="state-btn cuenta" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cuenta')" title="Cambiar a Cuenta">
+                  💳
+                </button>
+                <button class="state-btn cerrado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cerrado')" title="Cambiar a Cerrado">
+                  🔒
+                </button>
+              <?php else: ?>
+                <span style="color: #6c757d; font-size: 0.8rem; font-style: italic;">Pedido cerrado</span>
+              <?php endif; ?>
+            </div>
+          </td>
           <?php if ($rol === 'administrador'): ?>
-            <td class="action-cell">
-              <div class="state-shortcuts">
-                <?php if ($pedido['estado'] !== 'cerrado'): ?>
-                  <button class="state-btn pendiente" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'pendiente')" title="Cambiar a Pendiente">
-                    ⏳
-                  </button>
-                  <button class="state-btn en_preparacion" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'en_preparacion')" title="Cambiar a En Preparación">
-                    👨‍🍳
-                  </button>
-                  <button class="state-btn servido" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'servido')" title="Cambiar a Servido">
-                    ✅
-                  </button>
-                  <button class="state-btn cuenta" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cuenta')" title="Cambiar a Cuenta">
-                    💳
-                  </button>
-                  <button class="state-btn cerrado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cerrado')" title="Cambiar a Cerrado">
-                    🔒
-                  </button>
-                <?php else: ?>
-                  <span style="color: #6c757d; font-size: 0.8rem; font-style: italic;">Pedido cerrado</span>
-                <?php endif; ?>
-              </div>
-            </td>
             <td class="action-cell">
               <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
                 ✏️
@@ -312,7 +329,6 @@ $pedidos = Pedido::all();
           </div>
         </div>
         
-        <?php if ($rol === 'administrador'): ?>
         <div class="mobile-state-shortcuts">
           <div class="state-shortcuts">
             <?php if ($pedido['estado'] !== 'cerrado'): ?>
@@ -336,7 +352,6 @@ $pedidos = Pedido::all();
             <?php endif; ?>
           </div>
         </div>
-        <?php endif; ?>
         
         <div class="mobile-card-body">
           <div class="mobile-card-item">

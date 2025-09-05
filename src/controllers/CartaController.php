@@ -19,7 +19,14 @@ class CartaController {
     }
 
     public static function index() {
-        self::authorize();
+        // Permitir acceso a mozos y administradores para ver la carta
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        if (!in_array(($_SESSION['user']['rol'] ?? ''), ['administrador', 'mozo'])) {
+            header('Location: ' . url('unauthorized'));
+            exit;
+        }
         $items = CartaItem::allIncludingUnavailable();
         include __DIR__ . '/../views/carta/index.php';
     }

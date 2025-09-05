@@ -6,6 +6,9 @@ use App\Models\Pedido;
 use App\Models\DetallePedido;
 use App\Models\CartaItem;
 
+// Incluir helpers después del namespace
+require_once __DIR__ . '/../config/helpers.php';
+
 class PedidoController {
     /**
      * Muestra todos los pedidos tanto para administradores como para mozos.
