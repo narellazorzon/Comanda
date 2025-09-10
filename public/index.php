@@ -202,6 +202,12 @@ switch ($route) {
         include __DIR__ . '/../src/views/llamados/index.php';
         break;
 
+    // Ruta del generador de QRs offline (solo administrador)
+    case 'admin/qr-offline':
+        requireAdmin();
+        include __DIR__ . '/../src/views/admin/generador_qr_offline.php';
+        break;
+
     case 'unauthorized':
         include __DIR__ . '/../src/views/errors/unauthorized.php';
         break;

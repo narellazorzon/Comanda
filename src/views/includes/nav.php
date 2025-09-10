@@ -38,6 +38,7 @@ $base_path = $is_in_reportes ? '../' : '';
         <a href="<?= $base_url ?>/index.php?route=mozos" class="nav-link">👥 Mozos</a>
         <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Carta</a>
         <a href="<?= $base_url ?>/index.php?route=reportes" class="nav-link">📊 Reportes</a>
+        <a href="<?= $base_url ?>/index.php?route=admin/qr-offline" class="nav-link">📱 QR Mesas</a>
       <?php elseif ($rol === 'mozo'): ?>
         <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Ver Mesas</a>
         <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Ver Carta</a>
