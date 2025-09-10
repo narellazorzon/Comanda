@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\Mesa;
+use App\Models\Usuario;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -44,6 +45,12 @@ if (isset($_GET['delete']) && $rol === 'administrador') {
 
 // 1) Cargamos todas las mesas
 $mesas = Mesa::all();
+
+// Obtener datos únicos para filtros
+$ubicaciones_unicas = array_unique(array_filter(array_column($mesas, 'ubicacion')));
+sort($ubicaciones_unicas);
+
+$mozos = Usuario::findByRole('mozo');
 ?>
 
 <h2><?= $rol === 'administrador' ? 'Gestión de Mesas' : 'Consulta de Mesas' ?></h2>
@@ -73,6 +80,78 @@ $mesas = Mesa::all();
   </div>
 <?php endif; ?>
 
+<!-- Panel de Filtros -->
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+        <h4 style="margin: 0; color: #6c757d; font-size: 1rem;">
+            <span style="margin-right: 0.5rem;">🔍</span>Filtros de búsqueda
+        </h4>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <!-- Búsqueda por número -->
+        <div>
+            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
+                Buscar por número:
+            </label>
+            <input type="text" id="filtro-numero" placeholder="Ej: 5, 12" 
+                   style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
+        </div>
+        
+        <!-- Filtro por Estado -->
+        <div>
+            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
+                Estado:
+            </label>
+            <select id="filtro-estado" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
+                <option value="">Todos los estados</option>
+                <option value="libre">🟢 Libre</option>
+                <option value="ocupada">🔴 Ocupada</option>
+                <option value="reservada">🟡 Reservada</option>
+            </select>
+        </div>
+        
+        <!-- Filtro por Ubicación -->
+        <div>
+            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
+                Ubicación:
+            </label>
+            <select id="filtro-ubicacion" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
+                <option value="">Todas las ubicaciones</option>
+                <?php foreach ($ubicaciones_unicas as $ubicacion): ?>
+                    <option value="<?= htmlspecialchars($ubicacion) ?>"><?= htmlspecialchars($ubicacion) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        
+        <!-- Filtro por Mozo Asignado -->
+        <div>
+            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
+                Mozo asignado:
+            </label>
+            <select id="filtro-mozo" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
+                <option value="">Todos los mozos</option>
+                <option value="sin-asignar">Sin asignar</option>
+                <?php foreach ($mozos as $mozo): ?>
+                    <option value="<?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>">
+                        <?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Botones de acción -->
+    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center;">
+        <button onclick="limpiarFiltrosMesas()" style="padding: 0.5rem 1rem; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Limpiar Filtros
+        </button>
+        <span id="contador-mesas" style="margin-left: auto; padding: 0.5rem 1rem; color: #6c757d; font-size: 0.875rem;">
+            Mostrando <span id="num-mesas"><?= count($mesas) ?></span> mesa(s)
+        </span>
+    </div>
+</div>
+
 <table class="table">
   <thead>
     <tr>
@@ -88,7 +167,11 @@ $mesas = Mesa::all();
   </thead>
   <tbody>
     <?php foreach ($mesas as $m): ?>
-      <tr>
+      <tr class="mesa-row"
+          data-numero="<?= htmlspecialchars($m['numero']) ?>"
+          data-estado="<?= htmlspecialchars($m['estado']) ?>"
+          data-ubicacion="<?= htmlspecialchars($m['ubicacion'] ?? '') ?>"
+          data-mozo="<?= htmlspecialchars($m['mozo_nombre_completo'] ?? 'sin-asignar') ?>">
         <td><?= htmlspecialchars($m['id_mesa']) ?></td>
         <td><?= htmlspecialchars($m['numero']) ?></td>
         <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
@@ -222,4 +305,105 @@ document.getElementById('btnConfirmar').addEventListener('mouseleave', function(
     this.style.background = '#dc3545';
     this.style.transform = 'translateY(0)';
 });
+
+// === FUNCIONALIDAD DE FILTROS ===
+function aplicarFiltrosMesas() {
+    const filtroNumero = document.getElementById('filtro-numero').value.toLowerCase();
+    const filtroEstado = document.getElementById('filtro-estado').value.toLowerCase();
+    const filtroUbicacion = document.getElementById('filtro-ubicacion').value.toLowerCase();
+    const filtroMozo = document.getElementById('filtro-mozo').value.toLowerCase();
+    
+    const filas = document.querySelectorAll('.mesa-row');
+    let contadorVisible = 0;
+    
+    filas.forEach(fila => {
+        const numero = fila.dataset.numero.toLowerCase();
+        const estado = fila.dataset.estado.toLowerCase();
+        const ubicacion = fila.dataset.ubicacion.toLowerCase();
+        const mozo = fila.dataset.mozo.toLowerCase();
+        
+        let mostrar = true;
+        
+        // Filtro por número (búsqueda parcial)
+        if (filtroNumero && !numero.includes(filtroNumero)) {
+            mostrar = false;
+        }
+        
+        // Filtro por estado
+        if (filtroEstado && estado !== filtroEstado) {
+            mostrar = false;
+        }
+        
+        // Filtro por ubicación
+        if (filtroUbicacion && ubicacion !== filtroUbicacion) {
+            mostrar = false;
+        }
+        
+        // Filtro por mozo
+        if (filtroMozo) {
+            if (filtroMozo === 'sin-asignar' && mozo !== 'sin-asignar') {
+                mostrar = false;
+            } else if (filtroMozo !== 'sin-asignar' && mozo !== filtroMozo) {
+                mostrar = false;
+            }
+        }
+        
+        // Mostrar u ocultar la fila
+        if (mostrar) {
+            fila.style.display = '';
+            contadorVisible++;
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+    
+    // Actualizar contador
+    document.getElementById('num-mesas').textContent = contadorVisible;
+    
+    // Mostrar mensaje si no hay resultados
+    if (contadorVisible === 0 && filas.length > 0) {
+        let filaNoResultados = document.getElementById('fila-no-mesas');
+        if (!filaNoResultados) {
+            const tbody = document.querySelector('.table tbody');
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.id = 'fila-no-mesas';
+            const numColumnas = document.querySelector('.table thead tr').children.length;
+            nuevaFila.innerHTML = `<td colspan="${numColumnas}" style="text-align: center; padding: 2rem; color: #6c757d;">
+                <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">🪑 No se encontraron mesas con los filtros aplicados</div>
+                <div style="font-size: 0.9rem;">Intenta ajustar los criterios de búsqueda</div>
+            </td>`;
+            tbody.appendChild(nuevaFila);
+        }
+    } else {
+        const filaNoResultados = document.getElementById('fila-no-mesas');
+        if (filaNoResultados) {
+            filaNoResultados.remove();
+        }
+    }
+}
+
+function limpiarFiltrosMesas() {
+    document.getElementById('filtro-numero').value = '';
+    document.getElementById('filtro-estado').value = '';
+    document.getElementById('filtro-ubicacion').value = '';
+    document.getElementById('filtro-mozo').value = '';
+    
+    const filas = document.querySelectorAll('.mesa-row');
+    filas.forEach(fila => {
+        fila.style.display = '';
+    });
+    
+    document.getElementById('num-mesas').textContent = filas.length;
+    
+    const filaNoResultados = document.getElementById('fila-no-mesas');
+    if (filaNoResultados) {
+        filaNoResultados.remove();
+    }
+}
+
+// Agregar eventos a los filtros
+document.getElementById('filtro-numero').addEventListener('input', aplicarFiltrosMesas);
+document.getElementById('filtro-estado').addEventListener('change', aplicarFiltrosMesas);
+document.getElementById('filtro-ubicacion').addEventListener('change', aplicarFiltrosMesas);
+document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltrosMesas);
 </script>

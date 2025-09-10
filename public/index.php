@@ -5,9 +5,9 @@ session_start();
 // Cargar autoload
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Incluir header para todas las páginas (excepto login)
+// Incluir header para todas las páginas (excepto login y cliente)
 $route = $_GET['route'] ?? 'home';
-if ($route !== 'login') {
+if ($route !== 'login' && $route !== 'cliente') {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
@@ -188,6 +188,24 @@ switch ($route) {
         include __DIR__ . '/../src/views/llamados/index.php';
         break;
 
+    // Ruta del generador de QRs (solo administrador)
+    case 'admin/qr-generator':
+        requireAdmin();
+        include __DIR__ . '/../src/views/admin/generador_qr.php';
+        break;
+
+    // Ruta del generador de QRs offline (solo administrador)
+    case 'admin/qr-offline':
+        requireAdmin();
+        include __DIR__ . '/../src/views/admin/generador_qr_offline.php';
+        break;
+
+    // Ruta para clientes (acceso público al menú)
+    case 'cliente':
+        // No requiere autenticación - es acceso público
+        include __DIR__ . '/../src/views/cliente/index.php';
+        break;
+
     case 'unauthorized':
         include __DIR__ . '/../src/views/errors/unauthorized.php';
         break;
@@ -203,8 +221,8 @@ switch ($route) {
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login)
-if ($route !== 'login') {
+// Incluir footer para todas las páginas (excepto login y cliente)
+if ($route !== 'login' && $route !== 'cliente') {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>

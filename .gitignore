@@ -1,0 +1,29 @@
+# Archivos de desarrollo y testing
+test*.html
+test*.php
+debug*.php
+*.tmp
+*.bak
+backup*.sql
+tatus
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Archivos de configuración local
+config/local.php
+.env.local
+
+# Composer
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Uploads temporales
+uploads/temp/

@@ -35,6 +35,22 @@ class Usuario {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Obtiene todos los usuarios por rol (para filtros).
+     */
+    public static function findByRole(string $rol): array {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT id_usuario, nombre, apellido, email, estado,
+                   CONCAT(nombre, ' ', apellido) as nombre_completo
+            FROM usuarios 
+            WHERE rol = ?
+            ORDER BY nombre, apellido
+        ");
+        $stmt->execute([$rol]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function find(int $id): ?array {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("SELECT * FROM usuarios WHERE id_usuario = ?");
