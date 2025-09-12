@@ -40,6 +40,24 @@ class Mesa {
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
+    
+    /**
+     * Busca una mesa por su número con información del mozo asignado.
+     */
+    public static function findByNumero(int $numero): ?array {
+        $db   = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT m.*, 
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
+            FROM mesas m
+            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
+            WHERE m.numero = ?
+        ");
+        $stmt->execute([$numero]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
 
     /**
      * Crea una nueva mesa. El estado por defecto (libre) lo asigna MySQL.

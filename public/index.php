@@ -5,14 +5,21 @@ session_start();
 // Cargar autoload
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Incluir header para todas las páginas (excepto login)
-$route = $_GET['route'] ?? 'cliente';
-if ($route !== 'login') {
-    include __DIR__ . '/../src/views/includes/header.php';
-}
-
 // Obtener la ruta solicitada
 $route = $_GET['route'] ?? 'cliente';
+
+// Rutas que NO deben incluir header/footer (APIs, AJAX, etc)
+$noHeaderRoutes = [
+    'login',
+    'cliente/crear-pedido',
+    'cliente/procesar-pago',
+    'mozos/procesar-inactivacion'
+];
+
+// Incluir header solo si la ruta lo requiere
+if (!in_array($route, $noHeaderRoutes)) {
+    include __DIR__ . '/../src/views/includes/header.php';
+}
 
 // Función para redirigir al login si no está autenticado
 function requireAuth() {
@@ -63,6 +70,26 @@ switch ($route) {
 
     case 'cliente':
         include __DIR__ . '/../src/views/cliente/index.php';
+        break;
+    
+    case 'cliente/pago':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::pago();
+        break;
+    
+    case 'cliente/procesar-pago':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::procesarPago();
+        break;
+    
+    case 'cliente/confirmacion':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::confirmacion();
+        break;
+    
+    case 'cliente/crear-pedido':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::crearPedido();
         break;
 
     // Rutas de Mesas
@@ -223,8 +250,8 @@ switch ($route) {
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login)
-if ($route !== 'login') {
+// Incluir footer solo si la ruta lo requiere
+if (!in_array($route, $noHeaderRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>

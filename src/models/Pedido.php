@@ -102,12 +102,22 @@ class Pedido {
                 INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo)
                 VALUES (?,?,?,?,?)
             ");
+            // Solo asignar mozo si viene explícitamente en los datos (desde la mesa)
+            // No usar el usuario logueado para pedidos de clientes
+            $idMozo = null;
+            if (isset($data['id_mozo']) && $data['id_mozo']) {
+                $idMozo = $data['id_mozo'];
+            } elseif (isset($_SESSION['user']['rol']) && $_SESSION['user']['rol'] === 'mozo') {
+                // Solo si es un mozo creando el pedido
+                $idMozo = $_SESSION['user']['id_usuario'];
+            }
+            
             $stmt->execute([
                 $data['id_mesa'] ?? null,
                 $data['modo_consumo'] ?? 'stay',
                 0.00, // Temporal, se actualizará después
                 'pendiente',
-                $_SESSION['user']['id_usuario'] ?? null
+                $idMozo
             ]);
             
             $pedidoId = (int)$db->lastInsertId();
@@ -191,5 +201,49 @@ class Pedido {
             WHERE id_pedido = ?
         ");
         return $stmt->execute([$total, $id]);
+    }
+    
+    /**
+     * Obtiene un pedido con su información completa incluyendo propina
+     */
+    public static function findWithDetails(int $id): ?array {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT p.*, 
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   prop.monto as propina_monto
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            LEFT JOIN propinas prop ON p.id_pedido = prop.id_pedido
+            WHERE p.id_pedido = ?
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+    
+    /**
+     * Calcula el total con propina
+     */
+    public static function calcularTotalConPropina(int $idPedido, float $porcentajePropina = 0): array {
+        $pedido = self::find($idPedido);
+        if (!$pedido) {
+            return ['total' => 0, 'propina' => 0, 'total_con_propina' => 0];
+        }
+        
+        $total = $pedido['total'];
+        $propina = $total * ($porcentajePropina / 100);
+        $totalConPropina = $total + $propina;
+        
+        return [
+            'total' => $total,
+            'propina' => round($propina, 2),
+            'total_con_propina' => round($totalConPropina, 2),
+            'porcentaje' => $porcentajePropina
+        ];
     }
 }

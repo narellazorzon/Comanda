@@ -23,9 +23,10 @@ function url($route = '', $params = []) {
     }
     
     // Agregar parámetros adicionales
-    foreach ($params as $key => $value) {
-        $url .= ($route || !empty($params)) ? '&' : '?';
-        $url .= urlencode($key) . '=' . urlencode($value);
+    if (!empty($params)) {
+        foreach ($params as $key => $value) {
+            $url .= '&' . urlencode($key) . '=' . urlencode($value);
+        }
     }
     
     return $url;

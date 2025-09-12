@@ -37,4 +37,11 @@ class DetallePedido {
         $stmt->execute([$idPedido]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    
+    /**
+     * Obtiene todos los detalles de un pedido (alias para compatibilidad).
+     */
+    public static function getByPedido(int $idPedido): array {
+        return self::allByPedido($idPedido);
+    }
 }
