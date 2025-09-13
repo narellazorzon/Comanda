@@ -81,7 +81,7 @@ El sistema implementa un flujo de estados que refleja la operación real de un r
 
 ```
 ┌─────────────┐    ┌──────────────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
-│  pendiente  │───▶│  en_preparacion  │───▶│ servido │───▶│ cuenta  │───▶│ cerrado │
+│  pendiente  │───▶│  en_preparacion  │───▶│ pagado  │───▶│ cerrado │
 └─────────────┘    └──────────────────┘    └─────────┘    └─────────┘    └─────────┘
       ↓                       ↓                  ↓           ↓              ↓
    Mesa se              Cocina está         Mozo sirvió   Cliente     Mesa liberada
@@ -105,7 +105,7 @@ CREATE TABLE pedidos (
   id_mesa      INT UNSIGNED NULL,
   modo_consumo ENUM('stay','takeaway') NOT NULL,
   total        DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  estado       ENUM('pendiente','en_preparacion','servido','cuenta','cerrado') NOT NULL DEFAULT 'pendiente',
+  estado       ENUM('pendiente','en_preparacion','pagado','cerrado') NOT NULL DEFAULT 'pendiente',
   fecha_hora   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   id_mozo      INT UNSIGNED NULL,
   observaciones TEXT NULL
@@ -138,9 +138,8 @@ CREATE TABLE pedidos (
    └─ Cliente consume
 
 5. PAGO
-   ├─ Cliente solicita cuenta (estado: cuenta)
+   ├─ Cliente solicita cuenta (estado: cerrado)
    ├─ Procesamiento de pago
-   ├─ Cambiar estado: cuenta → cerrado
    └─ Mesa liberada automáticamente (ocupada → libre)
 ```
 
@@ -214,7 +213,7 @@ pedidos {
   id_mesa FK → mesas.id_mesa
   modo_consumo ENUM('stay','takeaway')
   total DECIMAL(10,2)
-  estado ENUM('pendiente','en_preparacion','servido','cuenta','cerrado')
+  estado ENUM('pendiente','en_preparacion','pagado','cerrado')
   fecha_hora DATETIME
   id_mozo FK → usuarios.id_usuario
 }

@@ -28,8 +28,8 @@ FLUJO DE NEGOCIO:
 1. Cliente llega → Se asigna mesa con mozo
 2. Cliente pide → Mozo toma pedido (pendiente)
 3. Cocina prepara → Estado "en_preparacion"
-4. Mozo sirve → Estado "servido"
-5. Cliente pide cuenta → Estado "cuenta"
+4. Mozo sirve → Estado "pagado"
+5. Cliente pide cuenta → Estado "cerrado"
 6. Cliente paga → Estado "cerrado", mesa se libera automáticamente
 
 CASOS DE USO CRÍTICOS:
@@ -212,7 +212,7 @@ function requireMozoOrAdmin() {
 - **Estados de atención**: Pendiente, En atención, Completado
 
 ### 🍴 Gestión Completa de Pedidos
-- **Estados del flujo real**: Pendiente → En preparación → Servido → Cuenta → Cerrado
+- **Estados del flujo real**: Pendiente → En preparación → Pagado → Cerrado
 - **Modalidades**: Stay (mesa) / Takeaway (para llevar)
 - **Automatizaciones**: Liberación de mesa al cerrar pedido
 

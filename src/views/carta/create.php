@@ -53,9 +53,30 @@ if (isset($_GET['error'])) {
   <select name="categoria" required>
     <option value="">Seleccionar categoría</option>
     <?php 
-    $categorias = ['Entradas', 'Platos Principales', 'Postres', 'Bebidas', 'Acompañamientos'];
+    // Obtener categorías dinámicamente desde la base de datos
+    $items = \App\Models\CartaItem::allIncludingUnavailable();
+    $categoriasUnicas = [];
+    
+    foreach ($items as $itemData) {
+        $categoria = $itemData['categoria'] ?? 'Sin categoría';
+        if (!in_array($categoria, $categoriasUnicas)) {
+            $categoriasUnicas[] = $categoria;
+        }
+    }
+    
+    // Agregar categorías predefinidas si no existen en la BD
+    $categoriasPredefinidas = ['Entradas', 'Platos Principales', 'Postres', 'Bebidas', 'Acompañamientos', 'Carnes', 'Ensaladas', 'Pastas', 'Pizzas'];
+    foreach ($categoriasPredefinidas as $categoria) {
+        if (!in_array($categoria, $categoriasUnicas)) {
+            $categoriasUnicas[] = $categoria;
+        }
+    }
+    
+    // Ordenar alfabéticamente
+    sort($categoriasUnicas);
+    
     $categoriaSeleccionada = $item['categoria'] ?? ($usePostData ? $_POST['categoria'] : '') ?? '';
-    foreach ($categorias as $categoria): 
+    foreach ($categoriasUnicas as $categoria): 
     ?>
       <option value="<?= $categoria ?>" <?= $categoriaSeleccionada === $categoria ? 'selected' : '' ?>>
         <?= $categoria ?>

@@ -58,6 +58,8 @@ class MozoController {
             // Es una creación nueva
             // Validar que el email no esté duplicado
             if (Usuario::emailExists($_POST['email'])) {
+                // Preservar los datos del formulario en la sesión para mostrarlos en el error
+                $_SESSION['form_data'] = $_POST;
                 header('Location: ' . url('mozos/create', ['error' => 'El email ya está en uso por otro usuario']));
                 exit;
             }

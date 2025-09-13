@@ -388,7 +388,7 @@ main {
                 </ul>
             <?php endif; ?>
             <p style="color: #856404;">
-                <strong>Para ver reportes con datos:</strong> Crea pedidos y cambia su estado a "Servido", "Cuenta" o "Cerrado".
+                <strong>Para ver reportes con datos:</strong> Crea pedidos y cambia su estado a "Pagado" o "Cerrado".
             </p>
         </div>
     <?php endif; ?>

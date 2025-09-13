@@ -70,24 +70,35 @@ class CartaItem {
         
         error_log("CartaItem::delete() - ID: " . $id);
         
-        // Verificar si el item está siendo usado en pedidos
-        $canDelete = self::canDelete($id);
-        error_log("CartaItem::delete() - Can delete: " . ($canDelete ? 'true' : 'false'));
-        
-        if (!$canDelete) {
-            // Si está siendo usado, marcar como no disponible en lugar de eliminar
-            error_log("CartaItem::delete() - Marcando como no disponible");
-            $updateStmt = $db->prepare("UPDATE carta SET disponibilidad = 0 WHERE id_item = ?");
-            $result = $updateStmt->execute([$id]);
-            error_log("CartaItem::delete() - Update result: " . ($result ? 'true' : 'false'));
-            return $result;
-        } else {
-            // Si no está siendo usado, eliminar completamente
-            error_log("CartaItem::delete() - Eliminando completamente");
-            $deleteStmt = $db->prepare("DELETE FROM carta WHERE id_item = ?");
-            $result = $deleteStmt->execute([$id]);
-            error_log("CartaItem::delete() - Delete result: " . ($result ? 'true' : 'false'));
-            return $result;
+        try {
+            $db->beginTransaction();
+            
+            // Primero eliminar todas las referencias en detalle_pedido
+            error_log("CartaItem::delete() - Eliminando referencias en detalle_pedido");
+            $deleteDetalleStmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_item = ?");
+            $detalleResult = $deleteDetalleStmt->execute([$id]);
+            error_log("CartaItem::delete() - Detalle delete result: " . ($detalleResult ? 'true' : 'false'));
+            
+            // Luego eliminar el item de la carta
+            error_log("CartaItem::delete() - Eliminando item de carta");
+            $deleteCartaStmt = $db->prepare("DELETE FROM carta WHERE id_item = ?");
+            $cartaResult = $deleteCartaStmt->execute([$id]);
+            error_log("CartaItem::delete() - Carta delete result: " . ($cartaResult ? 'true' : 'false'));
+            
+            if ($cartaResult) {
+                $db->commit();
+                error_log("CartaItem::delete() - Transacción completada exitosamente");
+                return true;
+            } else {
+                $db->rollBack();
+                error_log("CartaItem::delete() - Error al eliminar item, rollback ejecutado");
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log("CartaItem::delete() - Error en transacción: " . $e->getMessage());
+            return false;
         }
     }
 }

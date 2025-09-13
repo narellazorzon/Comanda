@@ -102,15 +102,23 @@ class ModalConfirmacion {
 function confirmarBorradoCarta(id, nombre) {
     console.log('confirmarBorradoCarta llamado con:', id, nombre);
     
-    if (confirm('¿Estás seguro de que quieres eliminar el ítem "' + nombre + '"?\n\nNota: Si este ítem está siendo usado en pedidos, se marcará como no disponible en lugar de eliminarse completamente.')) {
-        // Usar window.location.href directamente
-        const actionUrl = window.location.origin + window.location.pathname + '?route=carta/delete&delete=' + id;
-        
-        console.log('URL generada para eliminación:', actionUrl);
-        console.log('Redirigiendo a:', actionUrl);
-        
-        window.location.href = actionUrl;
-    }
+    ModalConfirmacion.show({
+        title: '🗑️ Eliminar Item de Carta',
+        message: '¿Estás seguro de que quieres eliminar este ítem?',
+        itemName: nombre,
+        note: 'Esta acción eliminará permanentemente el ítem y todos sus registros relacionados en pedidos. Esta acción no se puede deshacer.',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        onConfirm: () => {
+            const actionUrl = window.location.origin + window.location.pathname + '?route=carta/delete&delete=' + id;
+            console.log('URL generada para eliminación:', actionUrl);
+            console.log('Redirigiendo a:', actionUrl);
+            window.location.href = actionUrl;
+        },
+        onCancel: () => {
+            console.log('Eliminación cancelada');
+        }
+    });
 }
 
 function confirmarBorradoMozo(id, nombre) {

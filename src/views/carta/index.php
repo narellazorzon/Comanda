@@ -17,175 +17,176 @@ if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'ad
 
 $rol = $_SESSION['user']['rol'];
 
+// Debug: mostrar el rol del usuario
+// echo "<!-- Rol del usuario: " . $rol . " -->";
+
 // La eliminación se maneja a través del controlador CartaController::delete()
 
-// Cargamos todos los ítems de la carta
-$items = CartaItem::all();
+// Cargamos todos los ítems de la carta (incluyendo no disponibles para los filtros)
+$items = CartaItem::allIncludingUnavailable();
 
 ?>
 
 <style>
-.carta-digital {
-  max-width: 1000px;
+/* Estilos modernos para la Carta - Compacto */
+.carta-container {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 15px;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(195, 174, 146, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(222, 184, 135, 0.1) 0%, transparent 50%),
-    linear-gradient(135deg, #D2B48C 0%,rgba(223, 202, 174, 0.79) 25%,rgb(221, 192, 168) 50%, #D2B48C 75%, #F5DEB3 100%);
+  padding: 12px;
+  background:rgb(244, 229, 194);
   min-height: 100vh;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  position: relative;
-}
-
-.carta-digital::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(210, 180, 140, 0.03) 2px, rgba(210, 180, 140, 0.03) 4px);
-  pointer-events: none;
 }
 
 .carta-header {
+  background: linear-gradient(135deg,rgb(130, 93, 65),rgb(101, 70, 56));
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
   text-align: center;
-  margin-bottom: 25px;
-  color: #2F1B14;
-  position: relative;
-  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .carta-title {
-  font-size: 2.2rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 8px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-  letter-spacing: 1px;
-  color:rgb(61, 37, 20);
+  margin: 0 0 4px 0;
+  color: white;
 }
 
 .carta-subtitle {
-  font-size: 1rem;
-  opacity: 0.8;
-  font-weight: 400;
-  color: #5D4037;
-  font-style: italic;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin: 0;
+  color: white;
 }
 
 .admin-controls {
-  background: rgba(139, 69, 19, 0.15);
-  border: 2px solid #8B4513;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 20px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
 .categorias-nav {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 25px;
+  gap: 6px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 
 .categoria-btn {
-  background:rgb(216, 199, 181);
-  color: #F5DEB3;
-  border: 2px solidrgb(109, 82, 69);
+  background: white;
+  color: #333;
+  border: 1px solid #e0e0e0;
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: 16px;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
-  font-size: 0.85rem;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  font-size: 0.8rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .categoria-btn:hover, .categoria-btn.active {
-  background: #DEB887;
-  border-color:rgb(229, 208, 188);
+  background: #8B4513;
+  color: white;
+  border-color: #8B4513;
   transform: translateY(-1px);
-  box-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .menu-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Estilos para el scrollbar */
+.menu-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.menu-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.menu-grid::-webkit-scrollbar-thumb {
+  background: #8B4513;
+  border-radius: 4px;
+}
+
+.menu-grid::-webkit-scrollbar-thumb:hover {
+  background: #A0522D;
 }
 
 .menu-item {
-  background: #F5DEB3;
-  border: 3px solidrgb(117, 104, 92);
+  background: white;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 4px 4px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: all 0.3s ease;
   position: relative;
   display: flex;
-  min-height: 120px;
-}
-
-.menu-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg,rgb(215, 204, 159), #DEB887,rgb(236, 222, 186), #DEB887,rgb(229, 205, 181));
+  flex-direction: row;
+  min-height: 140px;
+  align-items: stretch;
 }
 
 .menu-item:hover {
   transform: translateY(-2px);
-  box-shadow: 6px 6px 12px rgba(0,0,0,0.4);
-  border-color: #DEB887;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  border-color: #8B4513;
 }
 
 .menu-item.unavailable {
-  opacity: 0.7;
-  filter: grayscale(30%);
-  border-color: #696969;
+  opacity: 0.6;
+  filter: grayscale(50%);
 }
 
 .item-image {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   object-fit: cover;
-  background: linear-gradient(45deg,rgb(213, 180, 151), #DEB887);
-  border-right: 2px solidrgb(185, 161, 136);
+  background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
   flex-shrink: 0;
+  border-right: 1px solid #e0e0e0;
 }
 
 .item-image-placeholder {
-  width: 120px;
-  height: 120px;
-  background: linear-gradient(45deg,rgb(225, 195, 168), #DEB887);
+  width: 140px;
+  height: 140px;
+  background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  color:rgb(161, 130, 115);
-  border-right: 2px solidrgb(215, 182, 149);
+  font-size: 2.5rem;
+  color: #8B4513;
   flex-shrink: 0;
+  border-right: 1px solid #e0e0e0;
 }
 
 .item-content {
   padding: 12px;
-  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  flex: 1;
+  justify-content: space-between;
 }
 
 .item-header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 8px;
 }
@@ -193,29 +194,28 @@ $items = CartaItem::all();
 .item-name {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #2F1B14;
+  color: #333;
   margin: 0;
-  line-height: 1.2;
+  flex: 1;
 }
 
 .item-category {
-  background:rgb(214, 176, 138);
-  color: #F5DEB3;
-  padding: 3px 8px;
-  border-radius: 3px;
-  font-size: 0.7rem;
+  background: #8B4513;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solidrgb(234, 192, 172);
+  margin-left: 8px;
+  white-space: nowrap;
 }
 
 .item-description {
-  color: #5D4037;
-  font-size: 0.8rem;
+  color: #666;
+  font-size: 0.85rem;
   line-height: 1.4;
-  margin-bottom: 8px;
-  font-style: italic;
+  margin: 0 0 12px 0;
+  flex: 1;
 }
 
 .item-footer {
@@ -223,174 +223,310 @@ $items = CartaItem::all();
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .item-price {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .price-original {
   text-decoration: line-through;
-  color:rgb(115, 100, 89);
-  font-size: 0.75rem;
+  color: #999;
+  font-size: 0.8rem;
 }
 
-.price-final {
-  font-size: 1.3rem;
+.price-final, .price-normal {
+  font-size: 1.2rem;
   font-weight: 700;
   color: #8B4513;
   margin: 0;
 }
 
-.price-normal {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #2F1B14;
-  margin: 0;
-}
-
 .discount-badge {
-  background: #228B22;
+  background: #dc3545;
   color: white;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.65rem;
   font-weight: 600;
-  margin-top: 3px;
-  border: 1px solid #32CD32;
 }
 
 .availability-badge {
   padding: 4px 8px;
-  border-radius: 3px;
-  font-size: 0.75rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   border: 1px solid;
 }
 
 .available {
-  background: #228B22;
-  color: white;
-  border-color: #32CD32;
+  background: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
 }
 
 .unavailable-badge {
-  background: #8B0000;
-  color: white;
-  border-color: #DC143C;
+  background: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
 }
 
 .admin-actions {
   margin-top: 8px;
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
 .btn-modern {
-  padding: 6px 12px;
-  border: 2px solid;
-  border-radius: 3px;
+  padding: 4px 8px;
+  border: 1px solid;
+  border-radius: 4px;
   font-weight: 500;
   text-decoration: none;
   transition: all 0.3s ease;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-edit {
-  background: #4682B4;
+  background:rgb(109, 170, 234);
   color: white;
-  border-color: #5F9EA0;
+  border-color: #007bff;
 }
 
 .btn-delete {
-  background: #8B0000;
+  background:rgb(216, 102, 113);
   color: white;
-  border-color: #DC143C;
+  border-color: #dc3545;
 }
 
 .btn-modern:hover {
   transform: translateY(-1px);
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .btn-nuevo-item {
-  background: #228B22;
+  background: #28a745;
   color: white;
-  padding: 12px 30px;
-  border-radius: 4px;
+  padding: 8px 16px;
+  border-radius: 6px;
   text-decoration: none;
   font-weight: 600;
   font-size: 0.9rem;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.3s ease;
-  box-shadow: 3px 3px 6px rgba(0,0,0,0.3);
-  border: 2px solid #32CD32;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border: 1px solid #28a745;
   width: 100%;
-  text-align: center;
-  box-sizing: border-box;
+  justify-content: center;
 }
 
 .btn-nuevo-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 4px 4px 8px rgba(0,0,0,0.4);
-  background: #32CD32;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: #218838;
 }
 
 .no-items {
   text-align: center;
-  color: #2F1B14;
-  font-size: 1.1rem;
-  margin-top: 40px;
+  color: #666;
+  font-size: 1rem;
+  margin-top: 30px;
+  padding: 30px;
+  background: white;
+  border-radius: 8px;
+  border: 2px dashed #e0e0e0;
 }
 
+/* Tarjetas móviles */
+.mobile-cards {
+  display: none;
+}
+
+.mobile-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.card-title {
+  flex: 1;
+}
+
+.card-title strong {
+  display: block;
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+
+.card-category {
+  font-size: 0.75rem;
+  color: #8B4513;
+  background: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.card-status {
+  margin-left: 6px;
+}
+
+.card-content {
+  margin-bottom: 8px;
+}
+
+.card-description {
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.card-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #8B4513;
+  margin-bottom: 6px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.card-actions .btn-modern {
+  flex: 1;
+  justify-content: center;
+  font-size: 0.7rem;
+  padding: 5px 10px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
+  .carta-container {
+    padding: 8px;
+  }
+  
+  .carta-header {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
   .carta-title {
-    font-size: 1.8rem;
+    font-size: 1.3rem;
   }
   
   .menu-grid {
-    grid-template-columns: 1fr;
+    max-height: 60vh;
+  }
+  
+  .menu-item {
+    min-height: 120px;
+  }
+  
+  .item-image, .item-image-placeholder {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .item-content {
+    padding: 10px;
+  }
+  
+  .item-name {
+    font-size: 1rem;
+  }
+  
+  .item-description {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  
+  .item-category {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+  }
+  
+  .price-final, .price-normal {
+    font-size: 1.1rem;
   }
   
   .categorias-nav {
-    justify-content: center;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 6px;
   }
   
-  .carta-digital {
-    padding: 10px;
-  }
-  
-  .btn-nuevo-item {
-    padding: 10px 20px;
-    font-size: 0.85rem;
+  .categoria-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    padding: 5px 10px;
   }
   
   .admin-controls {
-    padding: 10px;
+    padding: 8px;
+  }
+  
+  .btn-nuevo-item {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .mobile-cards {
+    display: none;
   }
 }
 
+@media (min-width: 769px) {
+  .mobile-cards {
+    display: none;
+  }
+}
 </style>
 
-<div class="carta-digital">
+<div class="carta-container">
   <div class="carta-header">
     <h1 class="carta-title">🍽️ Carta Digital</h1>
     <p class="carta-subtitle">Deliciosos platos preparados con amor</p>
   </div>
 
   <?php if (isset($_GET['success'])): ?>
-    <div class="alert success" style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; padding: 0.75rem; margin: 1rem 0; font-weight: 500; font-size: 0.85rem;">
+    <div style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; padding: 0.75rem; margin: 1rem 0; font-weight: 500; font-size: 0.85rem;">
       ✅ <?= htmlspecialchars($_GET['success']) ?>
     </div>
   <?php endif; ?>
 
   <?php if (isset($_GET['error'])): ?>
-    <div class="alert error" style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 0.75rem; margin: 1rem 0; font-weight: 500; font-size: 0.85rem;">
+    <div style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 0.75rem; margin: 1rem 0; font-weight: 500; font-size: 0.85rem;">
       ⚠️ <?= htmlspecialchars($_GET['error']) ?>
     </div>
   <?php endif; ?>
@@ -410,18 +546,33 @@ $items = CartaItem::all();
   <?php 
   // Agrupar items por categoría
   $categorias = [];
+  $categoriasUnicas = [];
+  
   foreach ($items as $item) {
       $categoria = $item['categoria'] ?? 'Sin categoría';
+      
+      // Agregar a la lista de categorías únicas
+      if (!in_array($categoria, $categoriasUnicas)) {
+          $categoriasUnicas[] = $categoria;
+      }
+      
+      // Agrupar items por categoría
       if (!isset($categorias[$categoria])) {
           $categorias[$categoria] = [];
       }
       $categorias[$categoria][] = $item;
   }
+  
+  // Ordenar categorías alfabéticamente
+  sort($categoriasUnicas);
+  
+  // Debug: mostrar categorías encontradas
+  // echo "<!-- Categorías encontradas: " . implode(', ', $categoriasUnicas) . " -->";
   ?>
 
   <div class="categorias-nav">
     <button class="categoria-btn active" onclick="filtrarCategoria('todas')">Todas</button>
-    <?php foreach (array_keys($categorias) as $categoria): ?>
+    <?php foreach ($categoriasUnicas as $categoria): ?>
       <button class="categoria-btn" onclick="filtrarCategoria('<?= htmlspecialchars($categoria) ?>')">
         <?= htmlspecialchars($categoria) ?>
       </button>
@@ -498,55 +649,111 @@ $items = CartaItem::all();
     <?php endforeach; ?>
   </div>
 
+  <!-- Tarjetas móviles (solo visibles en móvil) -->
+  <div class="mobile-cards" id="mobile-cards">
+    <?php if (empty($items)): ?>
+      <div class="no-items">
+        <p>No hay items en la carta.</p>
+      </div>
+    <?php else: ?>
+      <?php foreach ($items as $item): ?>
+        <?php 
+        $precioFinal = $item['precio'];
+        if (!empty($item['descuento']) && $item['descuento'] > 0) {
+            $descuentoCalculado = $item['precio'] * ($item['descuento'] / 100);
+            $precioFinal = $item['precio'] - $descuentoCalculado;
+        }
+        ?>
+        <div class="mobile-card" 
+             data-categoria="<?= htmlspecialchars($item['categoria'] ?? 'Sin categoría') ?>"
+             data-item-id="<?= $item['id_item'] ?>">
+          
+          <div class="card-header">
+            <div class="card-title">
+              <strong><?= htmlspecialchars($item['nombre']) ?></strong>
+              <span class="card-category"><?= htmlspecialchars($item['categoria'] ?? 'Sin categoría') ?></span>
+            </div>
+            <div class="card-status">
+              <div class="availability-badge <?= $item['disponibilidad'] ? 'available' : 'unavailable-badge' ?>">
+                <?= $item['disponibilidad'] ? '✅' : '❌' ?>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-content">
+            <p class="card-description">
+              <?= htmlspecialchars($item['descripcion'] ?? 'Delicioso plato preparado con ingredientes frescos.') ?>
+            </p>
+            
+            <div class="card-price">
+              <?php if (!empty($item['descuento']) && $item['descuento'] > 0): ?>
+                <span class="price-original">$<?= number_format($item['precio'], 2) ?></span>
+                <span class="price-final">$<?= number_format($precioFinal, 2) ?></span>
+                <span class="discount-badge">-<?= number_format($item['descuento'], 0) ?>% OFF</span>
+              <?php else: ?>
+                <span class="price-normal">$<?= number_format($item['precio'], 2) ?></span>
+              <?php endif; ?>
+            </div>
+          </div>
+          
+          <?php if ($rol === 'administrador'): ?>
+            <div class="card-actions">
+              <a href="<?= url('carta/edit', ['id' => $item['id_item']]) ?>" class="btn-modern btn-edit">
+                ✏️ Editar
+              </a>
+              <a href="#" 
+                 class="btn-modern btn-delete"
+                 onclick="confirmarBorradoCarta(<?= $item['id_item'] ?>, '<?= htmlspecialchars($item['nombre']) ?>')">
+                🗑️ Borrar
+              </a>
+            </div>
+          <?php endif; ?>
+        </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </div>
+
   <?php if (empty($items)): ?>
     <div class="no-items">
-      <h3>🍽️ No hay items en la carta</h3>
-      <p>Agrega algunos platos deliciosos para comenzar</p>
+      <p>No hay items en la carta.</p>
     </div>
   <?php endif; ?>
 </div>
 
-
-
 <script>
+// Filtros de categoría
 function filtrarCategoria(categoria) {
-  const items = document.querySelectorAll('.menu-item');
-  const botones = document.querySelectorAll('.categoria-btn');
-  
   // Actualizar botones activos
-  botones.forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.categoria-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
   event.target.classList.add('active');
   
-  // Filtrar items
-  items.forEach(item => {
-    if (categoria === 'todas' || item.dataset.categoria === categoria) {
+  // Filtrar items en desktop
+  const menuItems = document.querySelectorAll('.menu-item');
+  menuItems.forEach(item => {
+    const itemCategoria = item.getAttribute('data-categoria');
+    if (categoria === 'todas' || itemCategoria === categoria) {
       item.style.display = 'flex';
-      item.style.opacity = '1';
-      item.style.transform = 'translateY(0)';
     } else {
-      item.style.opacity = '0';
-      item.style.transform = 'translateY(20px)';
-      setTimeout(() => {
-        item.style.display = 'none';
-      }, 300);
+      item.style.display = 'none';
+    }
+  });
+  
+  // Filtrar tarjetas móviles
+  const mobileCards = document.querySelectorAll('.mobile-card');
+  mobileCards.forEach(card => {
+    const cardCategoria = card.getAttribute('data-categoria');
+    if (categoria === 'todas' || cardCategoria === categoria) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
     }
   });
 }
 
-
-// Animación de entrada
+// Inicializar filtros
 document.addEventListener('DOMContentLoaded', function() {
-  const items = document.querySelectorAll('.menu-item');
-  items.forEach((item, index) => {
-    item.style.display = 'flex';
-    item.style.opacity = '0';
-    item.style.transform = 'translateY(30px)';
-    setTimeout(() => {
-      item.style.transition = 'all 0.6s ease';
-      item.style.opacity = '1';
-      item.style.transform = 'translateY(0)';
-    }, index * 100);
-  });
+  filtrarCategoria('todas');
 });
 </script>
-

@@ -65,9 +65,10 @@ CREATE TABLE pedidos (
   id_mesa      INT UNSIGNED NULL,
   modo_consumo ENUM('stay','takeaway') NOT NULL,
   total        DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  estado       ENUM('pendiente','en_preparacion','servido','cuenta','cerrado') NOT NULL DEFAULT 'pendiente',
+  estado       ENUM('pendiente','en_preparacion','pagado','cerrado') NOT NULL DEFAULT 'pendiente',
   fecha_hora   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   id_mozo      INT UNSIGNED NULL,
+  forma_pago   ENUM('efectivo','tarjeta','transferencia','otro') NULL,
   observaciones TEXT NULL,
   FOREIGN KEY (id_mesa) 
     REFERENCES mesas(id_mesa)
@@ -259,19 +260,19 @@ INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad) VALUE
 -- -------------------------------------------------
 -- 14. Pedidos de prueba
 -- -------------------------------------------------
-INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, observaciones, fecha_hora) VALUES
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago, observaciones, fecha_hora) VALUES
 -- Pedidos activos
-(2, 'stay', 45.50, 'en_preparacion', 2, 'Cliente pidió el bife bien cocido', '2024-01-09 19:30:00'),
-(5, 'stay', 32.00, 'pendiente', 3, NULL, '2024-01-09 20:15:00'),
-(10, 'stay', 78.50, 'servido', 5, 'Mesa celebrando cumpleaños', '2024-01-09 18:45:00'),
+(2, 'stay', 45.50, 'en_preparacion', 2, NULL, 'Cliente pidió el bife bien cocido', '2024-01-09 19:30:00'),
+(5, 'stay', 32.00, 'pendiente', 3, NULL, NULL, '2024-01-09 20:15:00'),
+(10, 'stay', 78.50, 'pagado', 5, 'tarjeta', 'Mesa celebrando cumpleaños', '2024-01-09 18:45:00'),
 
 -- Pedidos takeaway
-(NULL, 'takeaway', 23.50, 'cuenta', 4, 'Pedido para retirar en 15 minutos', '2024-01-09 20:00:00'),
-(NULL, 'takeaway', 12.00, 'cerrado', 2, NULL, '2024-01-09 19:00:00'),
+(NULL, 'takeaway', 23.50, 'pagado', 4, 'efectivo', 'Pedido para retirar en 15 minutos', '2024-01-09 20:00:00'),
+(NULL, 'takeaway', 12.00, 'cerrado', 2, 'transferencia', NULL, '2024-01-09 19:00:00'),
 
 -- Pedidos históricos
-(1, 'stay', 67.00, 'cerrado', 2, NULL, '2024-01-08 21:30:00'),
-(4, 'stay', 89.50, 'cerrado', 3, 'Mesa muy satisfecha', '2024-01-08 20:15:00'),
+(1, 'stay', 67.00, 'cerrado', 2, 'efectivo', NULL, '2024-01-08 21:30:00'),
+(4, 'stay', 89.50, 'cerrado', 3, 'tarjeta', 'Mesa muy satisfecha', '2024-01-08 20:15:00'),
 (7, 'stay', 34.50, 'cerrado', 4, NULL, '2024-01-07 19:45:00');
 
 -- -------------------------------------------------

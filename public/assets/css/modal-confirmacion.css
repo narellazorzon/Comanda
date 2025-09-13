@@ -148,3 +148,57 @@
     transform: translateY(-5px);
   }
 }
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .modal-confirmacion-content {
+    padding: 1.5rem;
+    margin: 1rem;
+    max-width: 95%;
+    border-radius: 15px;
+  }
+  
+  .modal-confirmacion-header {
+    font-size: 1rem;
+    padding: 6px 12px;
+    top: -12px;
+  }
+  
+  .modal-confirmacion-icon {
+    font-size: 3rem;
+    margin: 1rem 0 0.8rem 0;
+  }
+  
+  .modal-confirmacion-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .modal-confirmacion-message {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  .modal-confirmacion-item-name {
+    font-size: 1rem;
+  }
+  
+  .modal-confirmacion-note {
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .modal-confirmacion-note p {
+    font-size: 0.8rem;
+  }
+  
+  .modal-confirmacion-buttons {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .modal-confirmacion-btn {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.85rem;
+  }
+}

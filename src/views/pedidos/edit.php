@@ -1,5 +1,5 @@
 <?php
-// src/views/pedidos/create.php
+// src/views/pedidos/edit.php
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
@@ -11,7 +11,8 @@ use App\Models\CartaItem;
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Mozos y administradores pueden crear pedidos
+
+// Mozos y administradores pueden editar pedidos
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ' . url('login'));
     exit;
@@ -21,11 +22,29 @@ $rol = $_SESSION['user']['rol'];
 $error = '';
 $success = '';
 
-// Cargar datos necesarios
+// Obtener ID del pedido a editar
+$pedido_id = (int) ($_GET['id'] ?? 0);
+
+if ($pedido_id <= 0) {
+    header('Location: ' . url('pedidos', ['error' => 'ID de pedido inválido']));
+    exit;
+}
+
+// Cargar datos del pedido
+$pedido = Pedido::find($pedido_id);
+if (!$pedido) {
+    header('Location: ' . url('pedidos', ['error' => 'Pedido no encontrado']));
+    exit;
+}
+
+// Cargar detalles del pedido
+$detalles = Pedido::getDetalles($pedido_id);
+
+// Cargar datos necesarios para el formulario
 $mesas = Mesa::all();
 $items = CartaItem::all();
 
-// Procesar formulario
+// Procesar formulario de actualización
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_mesa = (int) ($_POST['id_mesa'] ?? 0);
     $modo_consumo = $_POST['modo_consumo'] ?? 'stay';
@@ -51,13 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['id_mesa'] = $id_mesa;
             }
             
-            $pedidoId = Pedido::create($data);
-            if ($pedidoId > 0) {
-                $success = 'Pedido creado correctamente con ID: ' . $pedidoId;
-                // Limpiar formulario
-                $_POST = [];
+            if (Pedido::update($pedido_id, $data)) {
+                $success = 'Pedido actualizado correctamente';
+                // Recargar datos actualizados
+                $pedido = Pedido::find($pedido_id);
+                $detalles = Pedido::getDetalles($pedido_id);
             } else {
-                $error = 'Error al crear el pedido';
+                $error = 'Error al actualizar el pedido';
             }
         } catch (Exception $e) {
             $error = 'Error: ' . $e->getMessage();
@@ -77,16 +96,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .pedido-header {
-  background: linear-gradient(135deg,rgb(144, 104, 76),rgb(92, 64, 51));
+  background: linear-gradient(135deg,rgb(129, 92, 66),rgb(97, 68, 55));
   color: white !important;
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 12px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.pedido-header * {
-  color: white !important;
 }
 
 .pedido-header h1 {
@@ -96,9 +111,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   color: white !important;
 }
 
+.pedido-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.info-item {
+  background: rgba(255,255,255,0.1);
+  padding: 6px;
+  border-radius: 4px;
+}
+
+.info-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-bottom: 3px;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .form-section {
   background: white;
-  border: 2px solid rgb(187, 155, 123);
+  border: 2px solid #CD853F;
   border-radius: 6px;
   padding: 12px;
   margin-bottom: 12px;
@@ -168,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .modo-consumo-btn.selected {
-  background: rgb(177, 128, 80);
+  background: #CD853F;
   color: white;
   transform: translateY(-1px);
   box-shadow: 3px 3px 6px rgba(0,0,0,0.3);
@@ -292,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .btn-primary:hover {
-  background: #A0522D;
+  background:rgb(171, 123, 101);
   transform: translateY(-2px);
 }
 
@@ -341,6 +380,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     padding: 5px;
   }
   
+  .pedido-info {
+    display: block;
+    grid-template-columns: none;
+    gap: 0;
+    margin-top: 16px;
+    width: 100%;
+  }
+  
+  .info-item {
+    background: rgba(255,255,255,0.2);
+    padding: 12px;
+    margin-bottom: 8px;
+    min-height: auto;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    display: block;
+    width: 100%;
+  }
+  
+  .info-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+    display: block;
+  }
+  
+  .info-value {
+    font-size: 1rem;
+    color: white;
+    font-weight: 500;
+    display: block;
+  }
+  
+  .pedido-header {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .pedido-header h1 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: white;
+  }
+  
+  .pedido-header {
+    background: linear-gradient(135deg,rgb(129, 92, 66),rgb(97, 68, 55));
+    color: white;
+  }
+  
   .modo-consumo-container {
     flex-direction: column;
     gap: 8px;
@@ -366,7 +455,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="pedido-edit-container">
   <!-- Header del pedido -->
   <div class="pedido-header">
-    <h1>🍽️ Crear Nuevo Pedido</h1>
+    <h1>✏️ Editar Pedido #<?= $pedido['id_pedido'] ?></h1>
+    <div class="pedido-info">
+      <div class="info-item">
+        <div class="info-label">Estado Actual</div>
+        <div class="info-value"><?= ucfirst($pedido['estado']) ?></div>
+      </div>
+      <?php if ($pedido['modo_consumo'] === 'stay'): ?>
+      <div class="info-item">
+        <div class="info-label">Mesa</div>
+        <div class="info-value">#<?= $pedido['numero_mesa'] ?> - <?= $pedido['ubicacion_mesa'] ?></div>
+      </div>
+      <?php endif; ?>
+      <div class="info-item">
+        <div class="info-label">Mozo</div>
+        <div class="info-value"><?= $pedido['nombre_mozo_completo'] ?></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Fecha</div>
+        <div class="info-value"><?= date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) ?></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Total Actual</div>
+        <div class="info-value">$<?= number_format($pedido['total'], 2) ?></div>
+      </div>
+    </div>
   </div>
 
   <!-- Mensajes de error/success -->
@@ -390,7 +503,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <?php foreach ($mesas as $mesa): ?>
             <option value="<?= $mesa['id_mesa'] ?>" 
                     data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
-                    <?= (isset($_POST['id_mesa']) && $_POST['id_mesa'] == $mesa['id_mesa']) ? 'selected' : '' ?>>
+                    <?= $mesa['id_mesa'] == $pedido['id_mesa'] ? 'selected' : '' ?>>
               Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
             </option>
           <?php endforeach; ?>
@@ -398,42 +511,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div id="mozo-info" style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; display: none;">
           <strong>Mozo asignado:</strong> <span id="mozo-nombre"></span>
         </div>
-    </div>
+      </div>
 
       <div class="form-group">
         <label>Modo de Consumo *</label>
         <div class="modo-consumo-container">
-          <div class="modo-consumo-btn <?= (isset($_POST['modo_consumo']) && $_POST['modo_consumo'] === 'stay') || !isset($_POST['modo_consumo']) ? 'selected' : '' ?>" 
+          <div class="modo-consumo-btn <?= $pedido['modo_consumo'] === 'stay' ? 'selected' : '' ?>" 
                onclick="selectModoConsumo('stay')">
             <div style="font-size: 1.5rem; margin-bottom: 6px;">🍽️</div>
             <div style="font-size: 0.9rem;"><strong>En el Local</strong></div>
             <div style="font-size: 0.8rem; opacity: 0.8;">Stay</div>
-      </div>
-          <div class="modo-consumo-btn <?= (isset($_POST['modo_consumo']) && $_POST['modo_consumo'] === 'takeaway') ? 'selected' : '' ?>" 
+          </div>
+          <div class="modo-consumo-btn <?= $pedido['modo_consumo'] === 'takeaway' ? 'selected' : '' ?>" 
                onclick="selectModoConsumo('takeaway')">
             <div style="font-size: 1.5rem; margin-bottom: 6px;">🛍️</div>
             <div style="font-size: 0.9rem;"><strong>Para Llevar</strong></div>
             <div style="font-size: 0.8rem; opacity: 0.8;">Takeaway</div>
-                </div>
-                </div>
-        <input type="hidden" name="modo_consumo" id="modo_consumo" value="<?= $_POST['modo_consumo'] ?? 'stay' ?>" required>
-                </div>
-                
+          </div>
+        </div>
+        <input type="hidden" name="modo_consumo" id="modo_consumo" value="<?= $pedido['modo_consumo'] ?>" required>
+      </div>
+
       <div class="form-group">
         <label for="forma_pago">Forma de Pago</label>
         <select name="forma_pago" id="forma_pago">
           <option value="">Seleccionar forma de pago...</option>
-          <option value="efectivo" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'efectivo') ? 'selected' : '' ?>>💵 Efectivo</option>
-          <option value="tarjeta" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'tarjeta') ? 'selected' : '' ?>>💳 Tarjeta</option>
-          <option value="transferencia" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'transferencia') ? 'selected' : '' ?>>🏦 Transferencia</option>
-          <option value="otro" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'otro') ? 'selected' : '' ?>>❓ Otro</option>
+          <option value="efectivo" <?= ($pedido['forma_pago'] ?? '') === 'efectivo' ? 'selected' : '' ?>>💵 Efectivo</option>
+          <option value="tarjeta" <?= ($pedido['forma_pago'] ?? '') === 'tarjeta' ? 'selected' : '' ?>>💳 Tarjeta</option>
+          <option value="transferencia" <?= ($pedido['forma_pago'] ?? '') === 'transferencia' ? 'selected' : '' ?>>🏦 Transferencia</option>
+          <option value="otro" <?= ($pedido['forma_pago'] ?? '') === 'otro' ? 'selected' : '' ?>>❓ Otro</option>
         </select>
       </div>
-                
+
       <div class="form-group">
         <label for="observaciones">Observaciones</label>
         <textarea name="observaciones" id="observaciones" rows="3" 
-                  placeholder="Observaciones especiales del pedido..."><?= htmlspecialchars($_POST['observaciones'] ?? '') ?></textarea>
+                  placeholder="Observaciones especiales del pedido..."><?= htmlspecialchars($pedido['observaciones'] ?? '') ?></textarea>
       </div>
     </div>
 
@@ -444,62 +557,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="button" class="add-item-btn" onclick="addItem()">
           ➕ Agregar Item
         </button>
-    </div>
+      </div>
 
       <div id="items-container">
-        <?php if (isset($_POST['items']) && is_array($_POST['items'])): ?>
-          <?php foreach ($_POST['items'] as $index => $item): ?>
-            <div class="item-row" data-index="<?= $index ?>">
-              <select name="items[<?= $index ?>][id_item]" required onchange="updateItemPrice(<?= $index ?>)">
-                <option value="">Seleccionar item</option>
-                <?php foreach ($items as $cartaItem): ?>
-                  <option value="<?= $cartaItem['id_item'] ?>" 
-                          data-precio="<?= $cartaItem['precio'] ?>"
-                          <?= $cartaItem['id_item'] == $item['id_item'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($cartaItem['nombre']) ?> - $<?= number_format($cartaItem['precio'], 2) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-              <input type="number" name="items[<?= $index ?>][cantidad]" 
-                     value="<?= $item['cantidad'] ?>" min="1" max="99" 
-                     onchange="updateTotal()" required>
-              <input type="number" name="items[<?= $index ?>][precio_unitario]" 
-                     value="<?= $item['precio_unitario'] ?? 0 ?>" step="0.01" 
-                     readonly style="background: #f8f9fa;">
-              <input type="text" value="$<?= number_format(($item['cantidad'] ?? 1) * ($item['precio_unitario'] ?? 0), 2) ?>" 
-                     readonly style="background: #f8f9fa; text-align: right;">
-              <button type="button" class="remove-item-btn" onclick="removeItem(<?= $index ?>)">
-                ❌
-              </button>
-            </div>
-          <?php endforeach; ?>
-        <?php endif; ?>
+        <?php foreach ($detalles as $index => $detalle): ?>
+          <div class="item-row" data-index="<?= $index ?>">
+            <select name="items[<?= $index ?>][id_item]" required onchange="updateItemPrice(<?= $index ?>)">
+              <option value="">Seleccionar item</option>
+              <?php foreach ($items as $item): ?>
+                <option value="<?= $item['id_item'] ?>" 
+                        data-precio="<?= $item['precio'] ?>"
+                        <?= $item['id_item'] == $detalle['id_item'] ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($item['nombre']) ?> - $<?= number_format($item['precio'], 2) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <input type="number" name="items[<?= $index ?>][cantidad]" 
+                   value="<?= $detalle['cantidad'] ?>" min="1" max="99" 
+                   onchange="updateTotal()" required>
+            <input type="number" name="items[<?= $index ?>][precio_unitario]" 
+                   value="<?= $detalle['precio_actual'] ?>" step="0.01" 
+                   readonly style="background: #f8f9fa;">
+            <input type="text" value="$<?= number_format($detalle['cantidad'] * $detalle['precio_actual'], 2) ?>" 
+                   readonly style="background: #f8f9fa; text-align: right;">
+            <button type="button" class="remove-item-btn" onclick="removeItem(<?= $index ?>)">
+              ❌
+            </button>
+          </div>
+        <?php endforeach; ?>
       </div>
     </div>
 
     <!-- Total -->
     <div class="total-section">
       <h3>💰 Total del Pedido</h3>
-      <div class="total-amount" id="total-amount">$0.00</div>
+      <div class="total-amount" id="total-amount">$<?= number_format($pedido['total'], 2) ?></div>
     </div>
 
     <!-- Botones -->
     <div class="buttons-section">
       <a href="<?= url('pedidos') ?>" class="btn btn-secondary">
-      ← Volver a Pedidos
-    </a>
+        ← Volver a Pedidos
+      </a>
       <button type="button" class="btn btn-primary" onclick="addItem()">
         ➕ Agregar Item
       </button>
       <button type="submit" class="btn btn-success">
-        💾 Crear Pedido
+        💾 Guardar Cambios
       </button>
     </div>
   </form>
 </div>
 
 <script>
-let itemIndex = <?= isset($_POST['items']) ? count($_POST['items']) : 0 ?>;
+let itemIndex = <?= count($detalles) ?>;
 
 function selectModoConsumo(modo) {
   // Remover selección anterior
@@ -541,7 +652,7 @@ function showMozoInfo() {
     const mozo = selectedOption.getAttribute('data-mozo');
     mozoNombre.textContent = mozo;
     mozoInfo.style.display = 'block';
-        } else {
+  } else {
     mozoInfo.style.display = 'none';
   }
 }
@@ -642,11 +753,21 @@ function updateItemPrice(index) {
 
 function updateTotal() {
   let total = 0;
-  console.log('Calculando total...');
+  console.log('Calculando total en formulario de editar...');
   
-  document.querySelectorAll('.item-row').forEach((row, index) => {
+  const itemRows = document.querySelectorAll('.item-row');
+  console.log('Encontradas', itemRows.length, 'filas de items');
+  
+  itemRows.forEach((row, index) => {
     const cantidadInput = row.querySelector('input[name*="[cantidad]"]');
     const precioInput = row.querySelector('input[name*="[precio_unitario]"]');
+    
+    console.log(`Procesando fila ${index}:`, {
+      cantidadInput: cantidadInput,
+      precioInput: precioInput,
+      cantidadValue: cantidadInput ? cantidadInput.value : 'N/A',
+      precioValue: precioInput ? precioInput.value : 'N/A'
+    });
     
     if (cantidadInput && precioInput) {
       const cantidad = parseFloat(cantidadInput.value) || 0;
@@ -659,6 +780,7 @@ function updateTotal() {
       const subtotalInput = row.querySelector('input[readonly]');
       if (subtotalInput) {
         subtotalInput.value = '$' + subtotal.toFixed(2);
+        console.log(`Subtotal actualizado: ${subtotalInput.value}`);
       }
       
       total += subtotal;
@@ -669,20 +791,24 @@ function updateTotal() {
   const totalElement = document.getElementById('total-amount');
   if (totalElement) {
     totalElement.textContent = '$' + total.toFixed(2);
+    console.log('Total actualizado en UI:', totalElement.textContent);
+  } else {
+    console.error('No se encontró el elemento total-amount');
   }
 }
 
 // Inicializar total al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
-    updateTotal();
-    
-  // Inicializar visibilidad del campo de mesa según el modo seleccionado
-  const modoConsumo = document.getElementById('modo_consumo').value;
+  console.log('Inicializando formulario de editar...');
+  updateTotal();
+  
+  // Inicializar visibilidad del campo de mesa según el modo actual del pedido
+  const modoConsumo = '<?= $pedido['modo_consumo'] ?>';
   if (modoConsumo) {
     selectModoConsumo(modoConsumo);
-  } else {
-    // Por defecto, modo 'stay' está seleccionado
-    selectModoConsumo('stay');
   }
+  
+  // Mostrar información del mozo si hay mesa seleccionada
+  showMozoInfo();
 });
 </script>

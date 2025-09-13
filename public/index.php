@@ -147,7 +147,7 @@ switch ($route) {
 
     case 'pedidos/edit':
         requireMozoOrAdmin();
-        include __DIR__ . '/../src/views/pedidos/create.php';
+        include __DIR__ . '/../src/views/pedidos/edit.php';
         break;
 
     case 'pedidos/delete':

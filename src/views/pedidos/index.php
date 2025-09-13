@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
         $nuevo_estado = $_POST['nuevo_estado'];
         
         // Validar que el estado sea válido
-        $estados_validos = ['pendiente', 'en_preparacion', 'servido', 'cuenta', 'cerrado'];
+        $estados_validos = ['pendiente', 'en_preparacion', 'pagado', 'cerrado'];
         if (in_array($nuevo_estado, $estados_validos)) {
             // Verificar que el pedido no esté cerrado
             $pedido = Pedido::find($id_pedido);
@@ -178,11 +178,8 @@ if ($rol === 'mozo') {
       <button class="status-filter-btn" data-status="en_preparacion" style="padding: 4px 8px; border: none; background: #cce5ff; color: #004085; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         👨‍🍳 En Preparación
       </button>
-      <button class="status-filter-btn" data-status="servido" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
-        ✅ Servido
-      </button>
-      <button class="status-filter-btn" data-status="cuenta" style="padding: 4px 8px; border: none; background: #d1ecf1; color: #0c5460; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
-        💳 Cuenta
+      <button class="status-filter-btn" data-status="pagado" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
+        💰 Pagado
       </button>
       <button class="status-filter-btn" data-status="cerrado" style="padding: 4px 8px; border: none; background: #e2e3e5; color: #383d41; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         🔒 Cerrado
@@ -201,6 +198,7 @@ if ($rol === 'mozo') {
       <th>Mesa</th>
       <th>Mozo</th>
       <th>Estado</th>
+      <th>Forma de Pago</th>
       <th>Total</th>
       <th>Fecha</th>
       <th>Cambiar Estado</th>
@@ -212,7 +210,7 @@ if ($rol === 'mozo') {
   <tbody>
     <?php if (empty($pedidos)): ?>
       <tr>
-        <td colspan="<?= $rol === 'administrador' ? '8' : '7' ?>">No hay pedidos registrados.</td>
+        <td colspan="<?= $rol === 'administrador' ? '9' : '8' ?>">No hay pedidos registrados.</td>
       </tr>
     <?php else: ?>
       <?php foreach ($pedidos as $pedido): ?>
@@ -235,15 +233,10 @@ if ($rol === 'mozo') {
                     $text_color = '#004085';
                     $icon = '👨‍🍳';
                     break;
-                case 'servido':
+                case 'pagado':
                     $bg_color = '#d4edda';
                     $text_color = '#155724';
-                    $icon = '✅';
-                    break;
-                case 'cuenta':
-                    $bg_color = '#d1ecf1';
-                    $text_color = '#0c5460';
-                    $icon = '💳';
+                    $icon = '💰';
                     break;
                 case 'cerrado':
                     $bg_color = '#e2e3e5';
@@ -262,6 +255,30 @@ if ($rol === 'mozo') {
               <?= $icon ?> <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $pedido['estado']))) ?>
             </span>
           </td>
+          <td>
+            <?php
+            $forma_pago = $pedido['forma_pago'] ?? null;
+            if ($forma_pago) {
+                $iconos_pago = [
+                    'efectivo' => '💵',
+                    'tarjeta' => '💳',
+                    'transferencia' => '🏦'
+                ];
+                $nombres_pago = [
+                    'efectivo' => 'Efectivo',
+                    'tarjeta' => 'Tarjeta',
+                    'transferencia' => 'Transferencia'
+                ];
+                $icono = $iconos_pago[$forma_pago] ?? '❓';
+                $nombre = $nombres_pago[$forma_pago] ?? ucfirst($forma_pago);
+                echo '<span style="padding: 2px 6px; border-radius: 8px; font-size: 0.75em; font-weight: 500; background: #e9ecef; color: #495057;">';
+                echo $icono . ' ' . $nombre;
+                echo '</span>';
+            } else {
+                echo '<span style="color: #6c757d; font-style: italic; font-size: 0.8em;">No definida</span>';
+            }
+            ?>
+          </td>
           <td><strong>$<?= number_format($pedido['total'] ?? 0, 2) ?></strong></td>
           <td><?= !empty($pedido['fecha_creacion']) ? date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) : 'N/A' ?></td>
           <td class="action-cell">
@@ -273,11 +290,8 @@ if ($rol === 'mozo') {
                 <button class="state-btn en_preparacion" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'en_preparacion')" title="Cambiar a En Preparación">
                   👨‍🍳
                 </button>
-                <button class="state-btn servido" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'servido')" title="Cambiar a Servido">
-                  ✅
-                </button>
-                <button class="state-btn cuenta" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cuenta')" title="Cambiar a Cuenta">
-                  💳
+                <button class="state-btn pagado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'pagado')" title="Cambiar a Pagado">
+                  💰
                 </button>
                 <button class="state-btn cerrado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cerrado')" title="Cambiar a Cerrado">
                   🔒
@@ -338,11 +352,8 @@ if ($rol === 'mozo') {
               <button class="state-btn en_preparacion" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'en_preparacion')" title="Cambiar a En Preparación">
                 👨‍🍳
               </button>
-              <button class="state-btn servido" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'servido')" title="Cambiar a Servido">
-                ✅
-              </button>
-              <button class="state-btn cuenta" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cuenta')" title="Cambiar a Cuenta">
-                💳
+              <button class="state-btn pagado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'pagado')" title="Cambiar a Pagado">
+                💰
               </button>
               <button class="state-btn cerrado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cerrado')" title="Cambiar a Cerrado">
                 🔒
@@ -382,15 +393,10 @@ if ($rol === 'mozo') {
                   $text_color = '#004085';
                   $icono = '👨‍🍳';
                   break;
-                case 'servido':
+                case 'pagado':
                   $bg_color = '#d4edda';
                   $text_color = '#155724';
-                  $icono = '✅';
-                  break;
-                case 'cuenta':
-                  $bg_color = '#d1ecf1';
-                  $text_color = '#0c5460';
-                  $icono = '💳';
+                  $icono = '💰';
                   break;
                 case 'cerrado':
                   $bg_color = '#e2e3e5';
@@ -408,6 +414,33 @@ if ($rol === 'mozo') {
                            color: <?= $text_color ?>;">
                 <?= $icono ?> <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $estado))) ?>
               </span>
+            </div>
+          </div>
+          <div class="mobile-card-item">
+            <div class="mobile-card-label">Forma de Pago</div>
+            <div class="mobile-card-value">
+              <?php
+              $forma_pago = $pedido['forma_pago'] ?? null;
+              if ($forma_pago) {
+                  $iconos_pago = [
+                      'efectivo' => '💵',
+                      'tarjeta' => '💳',
+                      'transferencia' => '🏦'
+                  ];
+                  $nombres_pago = [
+                      'efectivo' => 'Efectivo',
+                      'tarjeta' => 'Tarjeta',
+                      'transferencia' => 'Transferencia'
+                  ];
+                  $icono = $iconos_pago[$forma_pago] ?? '❓';
+                  $nombre = $nombres_pago[$forma_pago] ?? ucfirst($forma_pago);
+                  echo '<span style="padding: 2px 6px; border-radius: 8px; font-size: 0.75em; font-weight: 500; background: #e9ecef; color: #495057;">';
+                  echo $icono . ' ' . $nombre;
+                  echo '</span>';
+              } else {
+                  echo '<span style="color: #6c757d; font-style: italic; font-size: 0.8em;">No definida</span>';
+              }
+              ?>
             </div>
           </div>
           <div class="mobile-card-item">
@@ -481,8 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'pendiente': 'pendiente',
                 'en preparación': 'en_preparacion',
                 'en preparacion': 'en_preparacion', // Agregar sin tilde también
-                'servido': 'servido',
-                'cuenta': 'cuenta',
+                'pagado': 'pagado',
                 'cerrado': 'cerrado'
             };
             
@@ -642,12 +674,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (status === 'en_preparacion') {
                     btn.style.background = '#cce5ff';
                     btn.style.color = '#004085';
-                } else if (status === 'servido') {
+                } else if (status === 'pagado') {
                     btn.style.background = '#d4edda';
                     btn.style.color = '#155724';
-                } else if (status === 'cuenta') {
-                    btn.style.background = '#d1ecf1';
-                    btn.style.color = '#0c5460';
                 } else if (status === 'cerrado') {
                     btn.style.background = '#e2e3e5';
                     btn.style.color = '#383d41';
@@ -698,8 +727,7 @@ function confirmarCambioEstado(idPedido, nuevoEstado) {
     const nombresEstados = {
         'pendiente': 'Pendiente',
         'en_preparacion': 'En Preparación',
-        'servido': 'Servido',
-        'cuenta': 'Cuenta',
+        'pagado': 'Pagado',
         'cerrado': 'Cerrado'
     };
     
@@ -882,25 +910,16 @@ document.addEventListener('DOMContentLoaded', function() {
   color: #cce5ff;
 }
 
-.state-btn.servido {
+.state-btn.pagado {
   background-color: #d4edda;
   color: #155724;
 }
 
-.state-btn.servido:hover {
+.state-btn.pagado:hover {
   background-color: #155724;
   color: #d4edda;
 }
 
-.state-btn.cuenta {
-  background-color: #d1ecf1;
-  color: #0c5460;
-}
-
-.state-btn.cuenta:hover {
-  background-color: #0c5460;
-  color: #d1ecf1;
-}
 
 .state-btn.cerrado {
   background-color: #e2e3e5;

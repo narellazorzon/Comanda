@@ -2,7 +2,7 @@
 :root {
   --background: #f7f1e1; /* beige muy claro */
   --surface: hsl(42, 60%, 84%); /* blanco para cartas y tablas */
-  --primary: #f0deb1; /* marrón oscuro más visible */
+  --primary: #f3e2b8; /* marrón oscuro más visible */
   --secondary: #a1866f; /* marrón suave */
   --accent: #eee0be; /* tonalidad intermedia */
   --text: #3f3f3f; /* gris oscuro para texto */

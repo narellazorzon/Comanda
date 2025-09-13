@@ -56,23 +56,30 @@ if (isset($_GET['id'])) {
   <?php endif; ?>
   
   <?php 
-  // Solo usar datos del POST si hay error de validación (no para creación exitosa)
-  $usePostData = isset($_GET['error']) && !isset($mozo);
+  // Usar datos de la sesión si hay error de validación, o datos del mozo si estamos editando
+  $formData = null;
+  if (isset($mozo)) {
+      $formData = $mozo;
+  } elseif (isset($_GET['error']) && isset($_SESSION['form_data'])) {
+      $formData = $_SESSION['form_data'];
+      // Limpiar los datos de la sesión después de usarlos
+      unset($_SESSION['form_data']);
+  }
   ?>
   
   <label>Nombre:</label>
-  <input type="text" name="nombre" required value="<?= htmlspecialchars($mozo['nombre'] ?? ($usePostData ? $_POST['nombre'] : '') ?? '') ?>" autocomplete="off">
+  <input type="text" name="nombre" required value="<?= htmlspecialchars($formData['nombre'] ?? '') ?>" autocomplete="off">
 
   <label>Apellido:</label>
-  <input type="text" name="apellido" required value="<?= htmlspecialchars($mozo['apellido'] ?? ($usePostData ? $_POST['apellido'] : '') ?? '') ?>" autocomplete="off">
+  <input type="text" name="apellido" required value="<?= htmlspecialchars($formData['apellido'] ?? '') ?>" autocomplete="off">
 
   <label>Email:</label>
-  <input type="email" name="email" required value="<?= htmlspecialchars($mozo['email'] ?? ($usePostData ? $_POST['email'] : '') ?? '') ?>" autocomplete="off">
+  <input type="email" name="email" required value="<?= htmlspecialchars($formData['email'] ?? '') ?>" autocomplete="off">
 
   <?php if (isset($mozo)): ?>
     <label>Estado:</label>
     <select name="estado" required>
-      <?php $estado = $mozo['estado'] ?? $_POST['estado'] ?? 'activo'; ?>
+      <?php $estado = $formData['estado'] ?? 'activo'; ?>
       <option value="activo" <?= $estado === 'activo' ? 'selected' : '' ?>>Activo</option>
       <option value="inactivo" <?= $estado === 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
     </select>
