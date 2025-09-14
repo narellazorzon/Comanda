@@ -54,6 +54,7 @@ CREATE TABLE carta (
   categoria      VARCHAR(50) NULL,
   disponibilidad TINYINT(1) NOT NULL DEFAULT 1,
   imagen_url     VARCHAR(255) NULL,
+  descuento      DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -68,8 +69,10 @@ CREATE TABLE pedidos (
   estado       ENUM('pendiente','en_preparacion','pagado','cerrado') NOT NULL DEFAULT 'pendiente',
   fecha_hora   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   id_mozo      INT UNSIGNED NULL,
-  forma_pago   ENUM('efectivo','tarjeta','transferencia','otro') NULL,
+  forma_pago   ENUM('efectivo','tarjeta','transferencia') NULL,
   observaciones TEXT NULL,
+  cliente_nombre VARCHAR(100) NULL,
+  cliente_email VARCHAR(100) NULL,
   FOREIGN KEY (id_mesa) 
     REFERENCES mesas(id_mesa)
       ON UPDATE CASCADE ON DELETE SET NULL,

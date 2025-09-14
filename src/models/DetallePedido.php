@@ -11,15 +11,28 @@ class DetallePedido {
     public static function create(array $data): bool {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
-            INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario, detalle)
+            VALUES (?, ?, ?, ?, ?)
         ");
         return $stmt->execute([
             $data['id_pedido'],
             $data['id_item'],
             $data['cantidad'],
-            $data['precio_unitario']
+            $data['precio_unitario'],
+            $data['detalle'] ?? ''
         ]);
+    }
+
+    /**
+     * Crea un nuevo detalle de pedido con parámetros individuales.
+     */
+    public static function create(int $idPedido, int $idItem, string $detalle = ''): bool {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            INSERT INTO detalle_pedido (id_pedido, id_item, detalle)
+            VALUES (?, ?, ?)
+        ");
+        return $stmt->execute([$idPedido, $idItem, $detalle]);
     }
 
     /**

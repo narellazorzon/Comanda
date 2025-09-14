@@ -539,7 +539,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <option value="efectivo" <?= ($pedido['forma_pago'] ?? '') === 'efectivo' ? 'selected' : '' ?>>💵 Efectivo</option>
           <option value="tarjeta" <?= ($pedido['forma_pago'] ?? '') === 'tarjeta' ? 'selected' : '' ?>>💳 Tarjeta</option>
           <option value="transferencia" <?= ($pedido['forma_pago'] ?? '') === 'transferencia' ? 'selected' : '' ?>>🏦 Transferencia</option>
-          <option value="otro" <?= ($pedido['forma_pago'] ?? '') === 'otro' ? 'selected' : '' ?>>❓ Otro</option>
         </select>
       </div>
 

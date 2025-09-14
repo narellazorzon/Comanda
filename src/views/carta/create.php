@@ -115,9 +115,14 @@ if (isset($_GET['error'])) {
   </select>
 
   <label>URL de Imagen (opcional):</label>
-  <input type="url" name="imagen_url" 
+  <input type="url" name="imagen_url" id="imagen_url"
          value="<?= htmlspecialchars($item['imagen_url'] ?? ($usePostData ? $_POST['imagen_url'] : '') ?? '') ?>"
-         placeholder="https://ejemplo.com/imagen.jpg" autocomplete="off">
+         placeholder="https://ejemplo.com/imagen.jpg" autocomplete="off"
+         onblur="validarImagenUrl()">
+  <div id="imagen-preview" style="margin-top: 8px; display: none;">
+    <img id="preview-img" src="" alt="Vista previa" style="max-width: 200px; max-height: 150px; border: 1px solid #ddd; border-radius: 4px;">
+  </div>
+  <div id="imagen-error" style="color: red; font-size: 0.8rem; margin-top: 4px; display: none;"></div>
 
   <button type="submit">
     <?= isset($item) ? 'Actualizar Ítem' : 'Crear Ítem' ?>
@@ -147,5 +152,59 @@ document.getElementById('descuento').addEventListener('input', calcularPrecioFin
 // Calcular precio inicial al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
     calcularPrecioFinal();
+    
+    // Mostrar vista previa de imagen si ya hay una URL
+    const imagenUrl = document.getElementById('imagen_url').value;
+    if (imagenUrl) {
+        validarImagenUrl();
+    }
 });
+
+function validarImagenUrl() {
+    const urlInput = document.getElementById('imagen_url');
+    const previewDiv = document.getElementById('imagen-preview');
+    const previewImg = document.getElementById('preview-img');
+    const errorDiv = document.getElementById('imagen-error');
+    
+    const url = urlInput.value.trim();
+    
+    // Limpiar estados anteriores
+    previewDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+    errorDiv.textContent = '';
+    
+    if (!url) {
+        return; // No hay URL, no hacer nada
+    }
+    
+    // Validar formato de URL
+    try {
+        new URL(url);
+    } catch (e) {
+        errorDiv.textContent = 'URL inválida. Debe ser una URL completa (ej: https://ejemplo.com/imagen.jpg)';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    // Validar que sea una imagen
+    const extensionesValidas = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+    const esImagen = extensionesValidas.some(ext => url.toLowerCase().includes(ext));
+    
+    if (!esImagen) {
+        errorDiv.textContent = 'La URL debe apuntar a una imagen (jpg, png, gif, webp, svg)';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    // Mostrar vista previa
+    previewImg.src = url;
+    previewImg.onload = function() {
+        previewDiv.style.display = 'block';
+    };
+    previewImg.onerror = function() {
+        errorDiv.textContent = 'No se pudo cargar la imagen. Verifica que la URL sea correcta y accesible.';
+        errorDiv.style.display = 'block';
+        previewDiv.style.display = 'none';
+    };
+}
 </script>

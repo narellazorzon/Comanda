@@ -48,8 +48,9 @@ class PedidoController {
             if (isset($_POST['items']) && is_array($_POST['items'])) {
                 foreach ($_POST['items'] as $item) {
                     if (isset($item['id_item']) && isset($item['cantidad'])) {
+                        $detalle = $item['detalle'] ?? '';
                         for ($i = 0; $i < (int)$item['cantidad']; $i++) {
-                            DetallePedido::create($idPedido, (int)$item['id_item']);
+                            DetallePedido::create($idPedido, (int)$item['id_item'], $detalle);
                         }
                     }
                 }
