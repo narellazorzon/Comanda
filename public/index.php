@@ -2,17 +2,35 @@
 // public/index.php - Punto de entrada principal con routing MVC
 session_start();
 
-// Cargar autoload
-require_once __DIR__ . '/../vendor/autoload.php';
-
-// Incluir header para todas las páginas (excepto login)
-$route = $_GET['route'] ?? 'cliente';
-if ($route !== 'login') {
-    include __DIR__ . '/../src/views/includes/header.php';
+// Cargar autoload si existe, o hacer autoload manual básico
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+} else {
+    // Autoload básico para el proyecto
+    spl_autoload_register(function ($className) {
+        $className = str_replace('App\\', '', $className);
+        $path = __DIR__ . '/../src/' . str_replace('\\', '/', $className) . '.php';
+        if (file_exists($path)) {
+            require_once $path;
+        }
+    });
 }
 
 // Obtener la ruta solicitada
 $route = $_GET['route'] ?? 'cliente';
+
+// Rutas que NO deben incluir header/footer (APIs, AJAX, etc)
+$noHeaderRoutes = [
+    'login',
+    'cliente/crear-pedido',
+    'cliente/procesar-pago',
+    'mozos/procesar-inactivacion'
+];
+
+// Incluir header solo si la ruta lo requiere
+if (!in_array($route, $noHeaderRoutes)) {
+    include __DIR__ . '/../src/views/includes/header.php';
+}
 
 // Función para redirigir al login si no está autenticado
 function requireAuth() {
@@ -63,6 +81,26 @@ switch ($route) {
 
     case 'cliente':
         include __DIR__ . '/../src/views/cliente/index.php';
+        break;
+    
+    case 'cliente/pago':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::pago();
+        break;
+    
+    case 'cliente/procesar-pago':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::procesarPago();
+        break;
+    
+    case 'cliente/confirmacion':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::confirmacion();
+        break;
+    
+    case 'cliente/crear-pedido':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::crearPedido();
         break;
 
     // Rutas de Mesas
@@ -183,7 +221,8 @@ switch ($route) {
 
     case 'reportes/rendimiento-mozos':
         requireAdmin();
-        include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
+        require_once __DIR__ . '/../src/controllers/ReporteController.php';
+        \App\Controllers\ReporteController::rendimientoMozos();
         break;
 
     // Rutas de Llamados (mozos y administradores)
@@ -219,8 +258,8 @@ switch ($route) {
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login)
-if ($route !== 'login') {
+// Incluir footer solo si la ruta lo requiere
+if (!in_array($route, $noHeaderRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>

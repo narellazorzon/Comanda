@@ -1,28 +1,19 @@
 <?php 
-require_once __DIR__ . '/../../../vendor/autoload.php';
-require_once __DIR__ . '/../../config/helpers.php';
+// La vista recibe $resultado desde el controlador con:
+// - params: ['desde', 'hasta', 'agrupar']  
+// - kpis: array con los datos
 
-// La sesión ya está iniciada desde public/index.php
-// Verificar autenticación y permisos
-if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
-    header('Location: ' . url('unauthorized'));
-    exit;
-}
+$params = $resultado['params'] ?? [];
+$kpis = $resultado['kpis'] ?? [];
+$desde = $params['desde'] ?? date('Y-m-01');
+$hasta = $params['hasta'] ?? date('Y-m-d');
+$agrupar = $params['agrupar'] ?? 'ninguno';
 
-use App\Models\Reporte;
-
-// Parámetros de filtro
-$periodo = $_GET['periodo'] ?? 'mes';
-
-// Validar período
-$periodos_validos = ['semana', 'mes', 'año'];
-if (!in_array($periodo, $periodos_validos)) {
-    $periodo = 'mes';
-}
-
-// Obtener datos usando el modelo Reporte
-$mozos = Reporte::rendimientoMozos($periodo);
-$stats = Reporte::estadisticasPeriodo($periodo);
+// Calcular totales generales
+$totalPedidos = array_sum(array_column($kpis, 'pedidos'));
+$totalPropinas = array_sum(array_column($kpis, 'propina_total'));
+$totalVendido = array_sum(array_column($kpis, 'total_vendido'));
+$promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 ?>
 
 <style>
@@ -82,18 +73,40 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 }
 
 .apply-btn {
-    background: #fd7e14;
+    background: var(--primary);
     color: white;
     border: none;
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 600;
     transition: background 0.3s;
 }
 
 .apply-btn:hover {
-    background: #e8690b;
+    background-color: #d97817;
+    transform: translateY(-2px);
+}
+
+.clear-btn {
+    background: var(--secondary);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.clear-btn:hover {
+    background-color: #8b5e46;
+    text-decoration: none;
+    color: var(--text-light);
 }
 
 .stats-grid {
@@ -232,7 +245,6 @@ $stats = Reporte::estadisticasPeriodo($periodo);
     text-decoration: none;
     font-weight: 600;
     transition: background-color 0.2s ease;
-    margin-bottom: 1.5rem;
 }
 
 .back-btn:hover {
@@ -240,129 +252,397 @@ $stats = Reporte::estadisticasPeriodo($periodo);
     text-decoration: none;
     color: var(--text-light);
 }
+
+.export-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s;
+    float: right;
+}
+
+.export-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
 </style>
 
-<div class="report-container">
-    <div class="report-header">
-        <h1>👥 Rendimiento de Mozos</h1>
-        <p>Análisis de productividad y ventas por mozo</p>
-    </div>
-
-    <div class="filters-section">
-        <div class="filter-group">
-            <label for="periodo">Período:</label>
-            <select name="periodo" id="periodo" onchange="updateFilters()">
-                <option value="semana" <?= $periodo === 'semana' ? 'selected' : '' ?>>Última Semana</option>
-                <option value="mes" <?= $periodo === 'mes' ? 'selected' : '' ?>>Último Mes</option>
-                <option value="año" <?= $periodo === 'año' ? 'selected' : '' ?>>Último Año</option>
-            </select>
-        </div>
-        
-        <button class="apply-btn" onclick="applyFilters()">Aplicar Filtros</button>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Total de Pedidos</h3>
-            <div class="value"><?= number_format($stats['total_pedidos'] ?? 0) ?></div>
-        </div>
-        <div class="stat-card">
-            <h3>Ingresos Totales</h3>
-            <div class="value">$<?= number_format($stats['ingresos_totales'] ?? 0, 2) ?></div>
-        </div>
-        <div class="stat-card">
-            <h3>Promedio por Pedido</h3>
-            <div class="value">$<?= number_format($stats['promedio_pedido'] ?? 0, 2) ?></div>
-        </div>
-        <div class="stat-card">
-            <h3>Mozos Activos</h3>
-            <div class="value"><?= count($mozos) ?></div>
-        </div>
-    </div>
-
-    <div class="mozos-table">
-        <?php if (empty($mozos)): ?>
-            <div class="no-data">
-                <h3>No hay datos disponibles</h3>
-                <p>No se encontraron datos de rendimiento para el período seleccionado.</p>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h2 mb-0">📊 Rendimiento de Mozos</h1>
+                <button class="export-btn" onclick="exportarCSV()">
+                    📥 Exportar CSV
+                </button>
             </div>
-        <?php else: ?>
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Mozo</th>
-                        <th>Total Pedidos</th>
-                        <th>Ingresos Generados</th>
-                        <th>Promedio por Pedido</th>
-                        <th>Rendimiento</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php 
-                    $max_ingresos = max(array_column($mozos, 'ingresos_generados'));
-                    $max_pedidos = max(array_column($mozos, 'total_pedidos'));
-                    ?>
-                    <?php foreach ($mozos as $index => $mozo): ?>
-                        <?php 
-                        $rendimiento_ingresos = $max_ingresos > 0 ? ($mozo['ingresos_generados'] / $max_ingresos) * 100 : 0;
-                        $rendimiento_pedidos = $max_pedidos > 0 ? ($mozo['total_pedidos'] / $max_pedidos) * 100 : 0;
-                        $rendimiento_promedio = ($rendimiento_ingresos + $rendimiento_pedidos) / 2;
+            
+            <!-- Filtros -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" action="" class="row g-3">
+                        <input type="hidden" name="route" value="reportes/rendimiento-mozos">
                         
-                        $performance_class = '';
-                        $performance_text = '';
-                        if ($rendimiento_promedio >= 90) {
-                            $performance_class = 'performance-excellent';
-                            $performance_text = 'Excelente';
-                        } elseif ($rendimiento_promedio >= 75) {
-                            $performance_class = 'performance-good';
-                            $performance_text = 'Bueno';
-                        } elseif ($rendimiento_promedio >= 50) {
-                            $performance_class = 'performance-average';
-                            $performance_text = 'Promedio';
-                        } else {
-                            $performance_class = 'performance-poor';
-                            $performance_text = 'Necesita Mejora';
-                        }
-                        ?>
-                        <tr>
-                            <td>
-                                <span class="rank-badge"><?= $index + 1 ?></span>
-                            </td>
-                            <td>
-                                <div class="mozo-name"><?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?></div>
-                            </td>
-                            <td><?= number_format($mozo['total_pedidos']) ?></td>
-                            <td class="revenue">$<?= number_format($mozo['ingresos_generados'], 2) ?></td>
-                            <td>$<?= number_format($mozo['promedio_pedido'], 2) ?></td>
-                            <td>
-                                <span class="performance-badge <?= $performance_class ?>">
-                                    <?= $performance_text ?>
-                                </span>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
+                        <div class="col-md-3">
+                            <label for="desde" class="form-label">Desde</label>
+                            <input type="date" class="form-control" id="desde" name="desde" 
+                                   value="<?= htmlspecialchars($desde) ?>" max="<?= date('Y-m-d') ?>">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="hasta" class="form-label">Hasta</label>
+                            <input type="date" class="form-control" id="hasta" name="hasta" 
+                                   value="<?= htmlspecialchars($hasta) ?>" max="<?= date('Y-m-d') ?>">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="agrupar" class="form-label">Agrupar por</label>
+                            <select class="form-select" id="agrupar" name="agrupar">
+                                <option value="ninguno" <?= $agrupar === 'ninguno' ? 'selected' : '' ?>>
+                                    Sin agrupar (Ranking)
+                                </option>
+                                <option value="dia" <?= $agrupar === 'dia' ? 'selected' : '' ?>>
+                                    Por día
+                                </option>
+                                <option value="mes" <?= $agrupar === 'mes' ? 'selected' : '' ?>>
+                                    Por mes
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="apply-btn me-2">
+                                🔍 Filtrar
+                            </button>
+                            <a href="?route=reportes/rendimiento-mozos" class="clear-btn">
+                                🔄 Limpiar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Tarjetas de estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>Total Pedidos</h3>
+                        <div class="value"><?= number_format($totalPedidos) ?></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>Total Propinas</h3>
+                        <div class="value text-success">$<?= number_format($totalPropinas, 2) ?></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>Total Vendido</h3>
+                        <div class="value">$<?= number_format($totalVendido, 2) ?></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>Propina Promedio</h3>
+                        <div class="value text-info">$<?= number_format($promedioGeneral, 2) ?></div>
+                    </div>
+                </div>
+            </div>
+            
+            <?php if (empty($kpis)): ?>
+                <div class="alert alert-warning" role="alert">
+                    No se encontraron datos para el período seleccionado.
+                </div>
+            <?php else: ?>
+                
+                <?php if ($agrupar === 'ninguno'): ?>
+                    <!-- Vista de Ranking -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">🏆 Ranking de Rendimiento</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th width="60">#</th>
+                                            <th>Mozo</th>
+                                            <th class="text-center">Pedidos</th>
+                                            <th class="text-end">Total Vendido</th>
+                                            <th class="text-end">Total Propinas</th>
+                                            <th class="text-end">Propina Promedio</th>
+                                            <th class="text-center">Tasa Propina</th>
+                                            <th width="150">Rendimiento</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($kpis as $kpi): ?>
+                                            <?php
+                                            $rankClass = 'rank-badge';
+                                            if ($kpi['ranking'] == 1) $rankClass .= ' bg-warning text-dark';
+                                            elseif ($kpi['ranking'] == 2) $rankClass .= ' bg-secondary';
+                                            elseif ($kpi['ranking'] == 3) $rankClass .= ' bg-danger';
+                                            
+                                            // Calcular porcentaje de rendimiento basado en tasa de propina
+                                            $maxTasa = max(array_column($kpis, 'tasa_propina'));
+                                            $performancePercent = $maxTasa > 0 ? ($kpi['tasa_propina'] / $maxTasa * 100) : 0;
+                                            ?>
+                                            <tr>
+                                                <td>
+                                                    <span class="<?= $rankClass ?>">
+                                                        <?= $kpi['ranking'] ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <strong><?= htmlspecialchars($kpi['mozo']) ?></strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary"><?= $kpi['pedidos'] ?></span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <strong>$<?= number_format($kpi['total_vendido'], 2) ?></strong>
+                                                </td>
+                                                <td class="text-end text-success">
+                                                    <strong>$<?= number_format($kpi['propina_total'], 2) ?></strong>
+                                                </td>
+                                                <td class="text-end">
+                                                    $<?= number_format($kpi['propina_promedio_por_pedido'], 2) ?>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-info">
+                                                        <?= number_format($kpi['tasa_propina'] * 100, 2) ?>%
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar bg-success" role="progressbar" 
+                                                             style="width: <?= $performancePercent ?>%"
+                                                             aria-valuenow="<?= $performancePercent ?>" 
+                                                             aria-valuemin="0" aria-valuemax="100">
+                                                            <?= round($performancePercent) ?>%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráficos para vista de ranking -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">📈 Propinas por Mozo</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="chartPropinas" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">📊 Pedidos por Mozo</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="chartPedidos" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                <?php else: ?>
+                    <!-- Vista Agrupada (por día o mes) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                📅 Rendimiento por <?= $agrupar === 'dia' ? 'Día' : 'Mes' ?>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Mozo</th>
+                                            <th>Período</th>
+                                            <th class="text-center">Pedidos</th>
+                                            <th class="text-end">Total Vendido</th>
+                                            <th class="text-end">Total Propinas</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php 
+                                        $currentMozo = '';
+                                        foreach ($kpis as $kpi): 
+                                            $showMozo = $currentMozo !== $kpi['mozo'];
+                                            $currentMozo = $kpi['mozo'];
+                                            ?>
+                                            <tr <?= $showMozo ? 'class="border-top border-2"' : '' ?>>
+                                                <td>
+                                                    <?php if ($showMozo): ?>
+                                                        <strong><?= htmlspecialchars($kpi['mozo']) ?></strong>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        <?php
+                                                        if ($agrupar === 'dia') {
+                                                            echo date('d/m/Y', strtotime($kpi['periodo']));
+                                                        } else {
+                                                            echo date('M Y', strtotime($kpi['periodo']));
+                                                        }
+                                                        ?>
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary"><?= $kpi['pedidos'] ?></span>
+                                                </td>
+                                                <td class="text-end">
+                                                    $<?= number_format($kpi['total_vendido'], 2) ?>
+                                                </td>
+                                                <td class="text-end text-success">
+                                                    <strong>$<?= number_format($kpi['propina_total'], 2) ?></strong>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+            <?php endif; ?>
+            
+            <!-- Botón volver -->
+            <div class="mt-4 text-center">
+                <a href="?route=reportes" class="back-btn">
+                    ← Volver a Reportes
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-function updateFilters() {
-    const periodo = document.getElementById('periodo').value;
+<?php if (!empty($kpis) && $agrupar === 'ninguno'): ?>
+    // Datos para gráficos de ranking
+    const mozos = <?= json_encode(array_column($kpis, 'mozo')) ?>;
+    const propinas = <?= json_encode(array_column($kpis, 'propina_total')) ?>;
+    const pedidos = <?= json_encode(array_column($kpis, 'pedidos')) ?>;
     
-    const url = new URL(window.location);
-    url.searchParams.set('periodo', periodo);
+    // Gráfico de propinas
+    new Chart(document.getElementById('chartPropinas'), {
+        type: 'bar',
+        data: {
+            labels: mozos.slice(0, 10), // Top 10
+            datasets: [{
+                label: 'Propinas ($)',
+                data: propinas.slice(0, 10),
+                backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '$' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
     
-    window.location.href = url.toString();
-}
+    // Gráfico de pedidos
+    new Chart(document.getElementById('chartPedidos'), {
+        type: 'bar',
+        data: {
+            labels: mozos.slice(0, 10), // Top 10
+            datasets: [{
+                label: 'Pedidos',
+                data: pedidos.slice(0, 10),
+                backgroundColor: 'rgba(0, 123, 255, 0.8)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+<?php endif; ?>
 
-function applyFilters() {
-    updateFilters();
+// Función para exportar a CSV
+function exportarCSV() {
+    // Crear CSV en cliente
+    let csv = 'Mozo,Pedidos,Total Vendido,Total Propinas,Propina Promedio,Tasa Propina\n';
+    
+    <?php if (!empty($kpis) && $agrupar === 'ninguno'): ?>
+        <?php foreach ($kpis as $kpi): ?>
+            csv += '<?= addslashes($kpi['mozo']) ?>,';
+            csv += '<?= $kpi['pedidos'] ?>,';
+            csv += '<?= $kpi['total_vendido'] ?>,';
+            csv += '<?= $kpi['propina_total'] ?>,';
+            csv += '<?= $kpi['propina_promedio_por_pedido'] ?>,';
+            csv += '<?= number_format($kpi['tasa_propina'] * 100, 2) ?>%\n';
+        <?php endforeach; ?>
+    <?php endif; ?>
+    
+    // Descargar archivo
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'rendimiento_mozos_<?= date('Y-m-d') ?>.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 </script>
-
-<div style="margin-top: 2rem; text-align: center;">
-    <a href="<?= url('reportes') ?>" class="back-btn">← Volver a Reportes</a>
-</div>

@@ -1015,17 +1015,8 @@ $iconosCategorias = [
                     <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
                 </div>
                 
-                <div class="form-group">
-                    <label>Forma de pago:</label>
-                    <select id="forma-pago" name="forma_pago" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="tarjeta">💳 Tarjeta crédito/débito</option>
-                    </select>
-                </div>
-                
                 <button type="submit" id="btn-confirmar" class="btn-confirmar" disabled>
-                    Confirmar Pedido
+                    Continuar al Pago →
                 </button>
             </form>
         </div>
@@ -1364,11 +1355,10 @@ $iconosCategorias = [
         const modoConsumo = document.getElementById('modo-consumo').value;
         const nombreCompleto = document.getElementById('nombre-completo').value.trim();
         const email = document.getElementById('email').value.trim();
-        const formaPago = document.getElementById('forma-pago').value;
         
         let isValid = true;
         
-        if (!modoConsumo || !nombreCompleto || !email || !formaPago) {
+        if (!modoConsumo || !nombreCompleto || !email) {
             isValid = false;
         }
         
@@ -1498,7 +1488,7 @@ $iconosCategorias = [
         });
         
         // Validación en tiempo real
-        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email', 'forma-pago'];
+        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email'];
         formFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
@@ -1508,7 +1498,7 @@ $iconosCategorias = [
         });
         
         // Envío del formulario
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
+        document.getElementById('checkout-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const cart = loadCart();
@@ -1528,24 +1518,68 @@ $iconosCategorias = [
                 }
             }
             
-            console.log('Mesa final para pedido:', mesaFinal);
+            // Preparar datos para enviar
+            const formData = new FormData();
+            formData.append('modo_consumo', modoConsumo);
+            formData.append('numero_mesa', mesaFinal || '');
+            formData.append('nombre_completo', document.getElementById('nombre-completo').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('items', JSON.stringify(cart.map(item => ({
+                id_item: item.id,
+                cantidad: item.qty
+            }))));
             
-            // Mostrar mensaje de éxito
-            showToast('✅ ¡Pedido confirmado! En breve nos comunicaremos contigo.');
-            
-            // Limpiar carrito y cerrar modal
-            localStorage.removeItem(CART_KEY);
-            modal.style.display = 'none';
-            this.reset();
-            
-            if (isQRMode) {
-                setupQRMode();
-            } else {
-                document.getElementById('mesa-manual-field').style.display = 'none';
+            try {
+                // Mostrar indicador de carga
+                const btnConfirmar = document.getElementById('btn-confirmar');
+                const btnText = btnConfirmar.textContent;
+                btnConfirmar.disabled = true;
+                btnConfirmar.textContent = 'Procesando...';
+                
+                // Enviar pedido al servidor
+                const response = await fetch('<?= url('cliente/crear-pedido') ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const responseText = await response.text();
+                console.log('Response status:', response.status);
+                console.log('Response text:', responseText);
+                
+                // Intentar parsear como JSON
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Error parsing JSON:', e);
+                    console.error('Response was:', responseText);
+                    // Si no es JSON, probablemente hay un error PHP
+                    alert('Error del servidor. Revisa la consola para más detalles.');
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.textContent = btnText;
+                    return;
+                }
+                
+                if (response.ok && data.success && data.redirect_url) {
+                    console.log('Redirigiendo a:', data.redirect_url);
+                    // Limpiar el carrito antes de redirigir
+                    localStorage.removeItem(CART_KEY);
+                    // Cerrar modal antes de redirigir
+                    modal.style.display = 'none';
+                    // Redirigir a la página de pago
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Mostrar mensaje de error específico
+                    alert(data.message || 'Error al procesar el pedido. Por favor intenta nuevamente.');
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.textContent = btnText;
+                }
+            } catch (error) {
+                console.error('Error completo:', error);
+                alert('Error: ' + error.message);
+                document.getElementById('btn-confirmar').disabled = false;
+                document.getElementById('btn-confirmar').textContent = 'Continuar al Pago →';
             }
-            
-            updateCartCounter();
-            validateFormQR();
         });
         
         // Cerrar modal al hacer clic fuera
