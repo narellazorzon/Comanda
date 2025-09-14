@@ -2,8 +2,19 @@
 // public/index.php - Punto de entrada principal con routing MVC
 session_start();
 
-// Cargar autoload
-require_once __DIR__ . '/../vendor/autoload.php';
+// Cargar autoload si existe, o hacer autoload manual básico
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+} else {
+    // Autoload básico para el proyecto
+    spl_autoload_register(function ($className) {
+        $className = str_replace('App\\', '', $className);
+        $path = __DIR__ . '/../src/' . str_replace('\\', '/', $className) . '.php';
+        if (file_exists($path)) {
+            require_once $path;
+        }
+    });
+}
 
 // Obtener la ruta solicitada
 $route = $_GET['route'] ?? 'cliente';
@@ -210,7 +221,8 @@ switch ($route) {
 
     case 'reportes/rendimiento-mozos':
         requireAdmin();
-        include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
+        require_once __DIR__ . '/../src/controllers/ReporteController.php';
+        \App\Controllers\ReporteController::rendimientoMozos();
         break;
 
     case 'reportes/propina':
