@@ -89,8 +89,8 @@ class Pedido {
             
             // 1. Crear el pedido
             $stmt = $db->prepare("
-                INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago)
-                VALUES (?,?,?,?,?,?)
+                INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago, observaciones, cliente_nombre, cliente_email)
+                VALUES (?,?,?,?,?,?,?,?,?)
             ");
             $stmt->execute([
                 $data['id_mesa'] ?? null,
@@ -98,7 +98,10 @@ class Pedido {
                 0.00, // Temporal, se actualizará después
                 'pendiente',
                 $_SESSION['user']['id_usuario'] ?? null,
-                $data['forma_pago'] ?? null
+                $data['forma_pago'] ?? null,
+                $data['observaciones'] ?? null,
+                $data['cliente_nombre'] ?? null,
+                $data['cliente_email'] ?? null
             ]);
             
             $pedidoId = (int)$db->lastInsertId();

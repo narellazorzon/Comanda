@@ -360,10 +360,24 @@ $items = CartaItem::allIncludingUnavailable();
 .mobile-card {
   background: white;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  padding: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  border-color: #8B4513;
+}
+
+.mobile-card.unavailable {
+  opacity: 0.6;
+  filter: grayscale(50%);
 }
 
 .card-header {
@@ -444,39 +458,14 @@ $items = CartaItem::allIncludingUnavailable();
     font-size: 1.3rem;
   }
   
+  /* Ocultar vista desktop en móvil */
   .menu-grid {
-    max-height: 60vh;
+    display: none;
   }
   
-  .menu-item {
-    min-height: 120px;
-  }
-  
-  .item-image, .item-image-placeholder {
-    width: 120px;
-    height: 120px;
-  }
-  
-  .item-content {
-    padding: 10px;
-  }
-  
-  .item-name {
-    font-size: 1rem;
-  }
-  
-  .item-description {
-    font-size: 0.8rem;
-    margin-bottom: 8px;
-  }
-  
-  .item-category {
-    font-size: 0.7rem;
-    padding: 2px 8px;
-  }
-  
-  .price-final, .price-normal {
-    font-size: 1.1rem;
+  /* Mostrar vista móvil */
+  .mobile-cards {
+    display: block;
   }
   
   .categorias-nav {
@@ -501,8 +490,40 @@ $items = CartaItem::allIncludingUnavailable();
     font-size: 0.85rem;
   }
   
-  .mobile-cards {
-    display: none;
+  /* Mejorar tarjetas móviles */
+  .mobile-card {
+    margin-bottom: 16px;
+    padding: 16px;
+  }
+  
+  .card-title strong {
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
+  
+  .card-category {
+    font-size: 0.7rem;
+    margin-top: 4px;
+  }
+  
+  .card-description {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  
+  .card-price {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+  
+  .card-actions {
+    margin-top: 12px;
+  }
+  
+  .card-actions .btn-modern {
+    font-size: 0.75rem;
+    padding: 6px 12px;
   }
 }
 
@@ -664,7 +685,7 @@ $items = CartaItem::allIncludingUnavailable();
             $precioFinal = $item['precio'] - $descuentoCalculado;
         }
         ?>
-        <div class="mobile-card" 
+        <div class="mobile-card <?= !$item['disponibilidad'] ? 'unavailable' : '' ?>" 
              data-categoria="<?= htmlspecialchars($item['categoria'] ?? 'Sin categoría') ?>"
              data-item-id="<?= $item['id_item'] ?>">
           
@@ -723,6 +744,8 @@ $items = CartaItem::allIncludingUnavailable();
 <script>
 // Filtros de categoría
 function filtrarCategoria(categoria) {
+  console.log('Filtrando por categoría:', categoria);
+  
   // Actualizar botones activos
   document.querySelectorAll('.categoria-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -731,6 +754,7 @@ function filtrarCategoria(categoria) {
   
   // Filtrar items en desktop
   const menuItems = document.querySelectorAll('.menu-item');
+  console.log('Filtrando', menuItems.length, 'items de desktop');
   menuItems.forEach(item => {
     const itemCategoria = item.getAttribute('data-categoria');
     if (categoria === 'todas' || itemCategoria === categoria) {
@@ -742,6 +766,7 @@ function filtrarCategoria(categoria) {
   
   // Filtrar tarjetas móviles
   const mobileCards = document.querySelectorAll('.mobile-card');
+  console.log('Filtrando', mobileCards.length, 'tarjetas móviles');
   mobileCards.forEach(card => {
     const cardCategoria = card.getAttribute('data-categoria');
     if (categoria === 'todas' || cardCategoria === categoria) {
@@ -752,8 +777,43 @@ function filtrarCategoria(categoria) {
   });
 }
 
+// Función para confirmar borrado de items de carta
+function confirmarBorradoCarta(itemId, itemName) {
+  if (confirm(`¿Estás seguro de que quieres eliminar el item "${itemName}"?`)) {
+    // Crear formulario para enviar la solicitud de eliminación
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= url('carta/delete') ?>';
+    
+    const idInput = document.createElement('input');
+    idInput.type = 'hidden';
+    idInput.name = 'id';
+    idInput.value = itemId;
+    
+    form.appendChild(idInput);
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+
 // Inicializar filtros
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('Inicializando filtros de carta');
+  
+  // Verificar si estamos en móvil o desktop
+  const isMobile = window.innerWidth <= 768;
+  console.log('Es móvil:', isMobile);
+  
+  // Aplicar filtro inicial
   filtrarCategoria('todas');
+  
+  // Manejar redimensionamiento de ventana
+  window.addEventListener('resize', function() {
+    const newIsMobile = window.innerWidth <= 768;
+    if (newIsMobile !== isMobile) {
+      console.log('Cambio de vista detectado, reaplicando filtros');
+      filtrarCategoria('todas');
+    }
+  });
 });
 </script>

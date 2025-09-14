@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
         $nuevo_estado = $_POST['nuevo_estado'];
         
         // Validar que el estado sea válido
-        $estados_validos = ['pendiente', 'en_preparacion', 'pagado', 'cerrado'];
+        $estados_validos = ['pendiente', 'en_preparacion', 'servido', 'cerrado'];
         if (in_array($nuevo_estado, $estados_validos)) {
             // Verificar que el pedido no esté cerrado
             $pedido = Pedido::find($id_pedido);
@@ -58,7 +58,15 @@ if ($rol === 'mozo') {
 
 ?>
 
-<h2><?= $rol === 'administrador' ? 'Gestión de Pedidos' : 'Pedidos del Día' ?></h2>
+<!-- Header de gestión -->
+<div class="management-header">
+  <h1><?= $rol === 'administrador' ? '📋 Gestión de Pedidos' : '📋 Pedidos del Día' ?></h1>
+  <div class="header-actions">
+    <a href="<?= url('pedidos/create') ?>" class="header-btn">
+      ➕ Nuevo Pedido
+    </a>
+  </div>
+</div>
 
 <?php if ($rol === 'mozo'): ?>
   <div style="background: #d1ecf1; padding: 8px; border-radius: 4px; margin-bottom: 0.8rem; color: #0c5460; font-size: 0.85rem;">
@@ -90,26 +98,15 @@ if ($rol === 'mozo') {
     </div>
 <?php endif; ?>
 
-<?php if ($rol === 'administrador'): ?>
-  <div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 0.6rem; align-items: center;">
-    <a href="<?= url('pedidos/create') ?>" class="button" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; white-space: nowrap;">
-      ➕ Nuevo Pedido
-    </a>
-  </div>
-<?php else: ?>
-  <div style="background: #d1ecf1; padding: 6px; border-radius: 4px; margin-bottom: 0.6rem; color: #0c5460; font-size: 0.8rem; text-align: center;">
-    🍽️ Vista de pedidos - Gestiona los pedidos de las mesas
-  </div>
-<?php endif; ?>
 
 <!-- Filtros de búsqueda -->
 <div class="filters-container">
-  <!-- Botón para mostrar/ocultar filtros en móvil -->
+  <!-- Botón para mostrar/ocultar filtros -->
   <button id="toggleFilters" class="toggle-filters-btn" onclick="toggleFilters()">
     🔍 Filtros
   </button>
   
-  <div id="filtersContent" class="search-filter" style="background: rgb(247, 235, 202); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 0.8rem;">
+  <div id="filtersContent" class="search-filter" style="background: rgb(247, 235, 202); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 0.8rem; display: none; transition: all 0.3s ease;">
   <!-- Primera fila: Filtros de texto -->
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; margin-bottom: 0.6rem;">
     <!-- Filtro por ID -->
@@ -178,8 +175,8 @@ if ($rol === 'mozo') {
       <button class="status-filter-btn" data-status="en_preparacion" style="padding: 4px 8px; border: none; background: #cce5ff; color: #004085; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         👨‍🍳 En Preparación
       </button>
-      <button class="status-filter-btn" data-status="pagado" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
-        💰 Pagado
+      <button class="status-filter-btn" data-status="servido" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
+        ✅ Servido
       </button>
       <button class="status-filter-btn" data-status="cerrado" style="padding: 4px 8px; border: none; background: #e2e3e5; color: #383d41; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         🔒 Cerrado
@@ -198,8 +195,8 @@ if ($rol === 'mozo') {
       <th>Mesa</th>
       <th>Mozo</th>
       <th>Estado</th>
-      <th>Forma de Pago</th>
       <th>Total</th>
+      <th>Método de Pago</th>
       <th>Fecha</th>
       <th>Cambiar Estado</th>
       <?php if ($rol === 'administrador'): ?>
@@ -233,10 +230,10 @@ if ($rol === 'mozo') {
                     $text_color = '#004085';
                     $icon = '👨‍🍳';
                     break;
-                case 'pagado':
+                case 'servido':
                     $bg_color = '#d4edda';
                     $text_color = '#155724';
-                    $icon = '💰';
+                    $icon = '✅';
                     break;
                 case 'cerrado':
                     $bg_color = '#e2e3e5';
@@ -255,31 +252,25 @@ if ($rol === 'mozo') {
               <?= $icon ?> <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $pedido['estado']))) ?>
             </span>
           </td>
+          <td><strong>$<?= number_format($pedido['total'] ?? 0, 2) ?></strong></td>
           <td>
             <?php
-            $forma_pago = $pedido['forma_pago'] ?? null;
-            if ($forma_pago) {
-                $iconos_pago = [
-                    'efectivo' => '💵',
-                    'tarjeta' => '💳',
-                    'transferencia' => '🏦'
-                ];
-                $nombres_pago = [
-                    'efectivo' => 'Efectivo',
-                    'tarjeta' => 'Tarjeta',
-                    'transferencia' => 'Transferencia'
-                ];
-                $icono = $iconos_pago[$forma_pago] ?? '❓';
-                $nombre = $nombres_pago[$forma_pago] ?? ucfirst($forma_pago);
-                echo '<span style="padding: 2px 6px; border-radius: 8px; font-size: 0.75em; font-weight: 500; background: #e9ecef; color: #495057;">';
-                echo $icono . ' ' . $nombre;
-                echo '</span>';
-            } else {
-                echo '<span style="color: #6c757d; font-style: italic; font-size: 0.8em;">No definida</span>';
+            $forma_pago = $pedido['forma_pago'] ?? '';
+            switch ($forma_pago) {
+                case 'efectivo':
+                    echo '<span style="color: #28a745; font-weight: bold;">💵 Efectivo</span>';
+                    break;
+                case 'tarjeta':
+                    echo '<span style="color: #007bff; font-weight: bold;">💳 Tarjeta</span>';
+                    break;
+                case 'transferencia':
+                    echo '<span style="color: #6f42c1; font-weight: bold;">🏦 Transferencia</span>';
+                    break;
+                default:
+                    echo '<span style="color: #6c757d; font-style: italic;">Sin definir</span>';
             }
             ?>
           </td>
-          <td><strong>$<?= number_format($pedido['total'] ?? 0, 2) ?></strong></td>
           <td><?= !empty($pedido['fecha_creacion']) ? date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) : 'N/A' ?></td>
           <td class="action-cell">
             <div class="state-shortcuts">
@@ -290,8 +281,8 @@ if ($rol === 'mozo') {
                 <button class="state-btn en_preparacion" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'en_preparacion')" title="Cambiar a En Preparación">
                   👨‍🍳
                 </button>
-                <button class="state-btn pagado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'pagado')" title="Cambiar a Pagado">
-                  💰
+                <button class="state-btn servido" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'servido')" title="Cambiar a Servido">
+                  ✅
                 </button>
                 <button class="state-btn cerrado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cerrado')" title="Cambiar a Cerrado">
                   🔒
@@ -352,8 +343,8 @@ if ($rol === 'mozo') {
               <button class="state-btn en_preparacion" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'en_preparacion')" title="Cambiar a En Preparación">
                 👨‍🍳
               </button>
-              <button class="state-btn pagado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'pagado')" title="Cambiar a Pagado">
-                💰
+              <button class="state-btn servido" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'servido')" title="Cambiar a Servido">
+                ✅
               </button>
               <button class="state-btn cerrado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cerrado')" title="Cambiar a Cerrado">
                 🔒
@@ -393,10 +384,10 @@ if ($rol === 'mozo') {
                   $text_color = '#004085';
                   $icono = '👨‍🍳';
                   break;
-                case 'pagado':
+                case 'servido':
                   $bg_color = '#d4edda';
                   $text_color = '#155724';
-                  $icono = '💰';
+                  $icono = '✅';
                   break;
                 case 'cerrado':
                   $bg_color = '#e2e3e5';
@@ -417,35 +408,29 @@ if ($rol === 'mozo') {
             </div>
           </div>
           <div class="mobile-card-item">
-            <div class="mobile-card-label">Forma de Pago</div>
+            <div class="mobile-card-label">Total</div>
+            <div class="mobile-card-value"><strong>$<?= number_format($pedido['total'] ?? 0, 2) ?></strong></div>
+          </div>
+          <div class="mobile-card-item">
+            <div class="mobile-card-label">Método de Pago</div>
             <div class="mobile-card-value">
               <?php
-              $forma_pago = $pedido['forma_pago'] ?? null;
-              if ($forma_pago) {
-                  $iconos_pago = [
-                      'efectivo' => '💵',
-                      'tarjeta' => '💳',
-                      'transferencia' => '🏦'
-                  ];
-                  $nombres_pago = [
-                      'efectivo' => 'Efectivo',
-                      'tarjeta' => 'Tarjeta',
-                      'transferencia' => 'Transferencia'
-                  ];
-                  $icono = $iconos_pago[$forma_pago] ?? '❓';
-                  $nombre = $nombres_pago[$forma_pago] ?? ucfirst($forma_pago);
-                  echo '<span style="padding: 2px 6px; border-radius: 8px; font-size: 0.75em; font-weight: 500; background: #e9ecef; color: #495057;">';
-                  echo $icono . ' ' . $nombre;
-                  echo '</span>';
-              } else {
-                  echo '<span style="color: #6c757d; font-style: italic; font-size: 0.8em;">No definida</span>';
+              $forma_pago = $pedido['forma_pago'] ?? '';
+              switch ($forma_pago) {
+                  case 'efectivo':
+                      echo '<span style="color: #28a745; font-weight: bold;">💵 Efectivo</span>';
+                      break;
+                  case 'tarjeta':
+                      echo '<span style="color: #007bff; font-weight: bold;">💳 Tarjeta</span>';
+                      break;
+                  case 'transferencia':
+                      echo '<span style="color: #6f42c1; font-weight: bold;">🏦 Transferencia</span>';
+                      break;
+                  default:
+                      echo '<span style="color: #6c757d; font-style: italic;">Sin definir</span>';
               }
               ?>
             </div>
-          </div>
-          <div class="mobile-card-item">
-            <div class="mobile-card-label">Total</div>
-            <div class="mobile-card-value"><strong>$<?= number_format($pedido['total'] ?? 0, 2) ?></strong></div>
           </div>
           <div class="mobile-card-item">
             <div class="mobile-card-label">Fecha</div>
@@ -514,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'pendiente': 'pendiente',
                 'en preparación': 'en_preparacion',
                 'en preparacion': 'en_preparacion', // Agregar sin tilde también
-                'pagado': 'pagado',
+                'servido': 'servido',
                 'cerrado': 'cerrado'
             };
             
@@ -674,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (status === 'en_preparacion') {
                     btn.style.background = '#cce5ff';
                     btn.style.color = '#004085';
-                } else if (status === 'pagado') {
+                } else if (status === 'servido') {
                     btn.style.background = '#d4edda';
                     btn.style.color = '#155724';
                 } else if (status === 'cerrado') {
@@ -697,7 +682,7 @@ document.addEventListener('DOMContentLoaded', function() {
     filterPedidos();
 });
 
-// Función para mostrar/ocultar filtros en móvil
+// Función para mostrar/ocultar filtros
 function toggleFilters() {
     const filtersContent = document.getElementById('filtersContent');
     const toggleBtn = document.getElementById('toggleFilters');
@@ -727,7 +712,7 @@ function confirmarCambioEstado(idPedido, nuevoEstado) {
     const nombresEstados = {
         'pendiente': 'Pendiente',
         'en_preparacion': 'En Preparación',
-        'pagado': 'Pagado',
+         'servido': 'Servido',
         'cerrado': 'Cerrado'
     };
     
@@ -789,41 +774,39 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-/* Estilos para filtros desplegables en móvil */
+/* Estilos para filtros desplegables */
 .toggle-filters-btn {
-    display: none;
+    display: block;
     width: 100%;
-    padding: 0.5rem;
-    background: var(--secondary);
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg,rgb(233, 193, 130),rgb(146, 114, 60));
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.9rem;
-    font-weight: normal;
+    font-weight: 500;
     cursor: pointer;
     margin-bottom: 0.5rem;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
 }
 
 .toggle-filters-btn:hover {
-    background: #5a6268;
-    transform: translateY(-1px);
+    background: linear-gradient(135deg,rgb(135, 103, 65),rgb(86, 66, 35));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .filters-container {
     margin-bottom: 1rem;
 }
 
-/* En móvil, ocultar filtros por defecto y mostrar botón */
+/* Estilos responsivos para filtros */
 @media (max-width: 768px) {
     .toggle-filters-btn {
-        display: block;
         padding: 0.3rem !important;
         font-size: 0.8rem !important;
-    }
-    
-    #filtersContent {
-        display: none;
     }
     
     /* Cuando se muestran los filtros en móvil, hacer que ocupen menos espacio */
@@ -910,12 +893,12 @@ document.addEventListener('DOMContentLoaded', function() {
   color: #cce5ff;
 }
 
-.state-btn.pagado {
+.state-btn.servido {
   background-color: #d4edda;
   color: #155724;
 }
 
-.state-btn.pagado:hover {
+.state-btn.servido:hover {
   background-color: #155724;
   color: #d4edda;
 }
@@ -931,16 +914,6 @@ document.addEventListener('DOMContentLoaded', function() {
   color: #e2e3e5;
 }
 
-/* En desktop, mostrar filtros normalmente */
-@media (min-width: 769px) {
-    .toggle-filters-btn {
-        display: none;
-    }
-    
-    #filtersContent {
-        display: block !important;
-    }
-}
 
 /* Reglas específicas para pedidos - control estricto de visualización dual */
 
@@ -1000,6 +973,98 @@ document.addEventListener('DOMContentLoaded', function() {
         left: -9999px !important;
         top: -9999px !important;
     }
+}
+
+/* Estilos para el header de gestión */
+.management-header {
+  background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
+  color: white !important;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.management-header * {
+  color: white !important;
+}
+
+.management-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white !important;
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  color: white !important;
+}
+
+.header-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+  .management-header {
+    padding: 8px;
+    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .management-header h1 {
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .header-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
 }
 </style>
 

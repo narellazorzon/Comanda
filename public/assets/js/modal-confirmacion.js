@@ -124,25 +124,97 @@ function confirmarBorradoCarta(id, nombre) {
 function confirmarBorradoMozo(id, nombre) {
     console.log('confirmarBorradoMozo llamado con:', id, nombre);
     
-    if (confirm('¿Estás seguro de que quieres eliminar al mozo "' + nombre + '"?\n\nEsta acción no se puede deshacer.')) {
-        // Usar window.location.href directamente
-        const actionUrl = window.location.origin + window.location.pathname + '?delete=' + id;
-        
-        console.log('URL generada para eliminación de mozo:', actionUrl);
-        window.location.href = actionUrl;
-    }
+    ModalConfirmacion.show({
+        title: '⚠️ Eliminar Mozo',
+        message: '¿Estás seguro de que quieres eliminar este mozo?',
+        itemName: nombre,
+        note: 'Esta acción no se puede deshacer y se eliminarán todos los datos asociados al mozo.',
+        confirmText: '🗑️ Eliminar',
+        cancelText: '❌ Cancelar',
+        onConfirm: () => {
+            const actionUrl = window.location.origin + window.location.pathname + '?delete=' + id;
+            console.log('URL generada para eliminación de mozo:', actionUrl);
+            window.location.href = actionUrl;
+        },
+        onCancel: () => {
+            console.log('Eliminación de mozo cancelada');
+        }
+    });
 }
 
 function confirmarBorradoPedido(id, nombre) {
     console.log('confirmarBorradoPedido llamado con:', id, nombre);
     
-    if (confirm('¿Estás seguro de que quieres eliminar el "' + nombre + '"?\n\nEsta acción no se puede deshacer.')) {
-        // Usar window.location.href directamente
-        const actionUrl = window.location.origin + window.location.pathname + '?route=pedidos/delete&delete=' + id;
-        
-        console.log('URL generada para eliminación de pedido:', actionUrl);
-        window.location.href = actionUrl;
-    }
+    ModalConfirmacion.show({
+        title: '⚠️ Eliminar Pedido',
+        message: '¿Estás seguro de que quieres eliminar este pedido?',
+        itemName: nombre,
+        note: 'Esta acción no se puede deshacer y se eliminarán todos los datos asociados al pedido.',
+        confirmText: '🗑️ Eliminar',
+        cancelText: '❌ Cancelar',
+        onConfirm: () => {
+            const actionUrl = window.location.origin + window.location.pathname + '?route=pedidos/delete&delete=' + id;
+            console.log('URL generada para eliminación de pedido:', actionUrl);
+            window.location.href = actionUrl;
+        },
+        onCancel: () => {
+            console.log('Eliminación de pedido cancelada');
+        }
+    });
+}
+
+function confirmarBorradoMesa(id, numero) {
+    console.log('confirmarBorradoMesa llamado con:', id, numero);
+    
+    ModalConfirmacion.show({
+        title: '⚠️ Eliminar Mesa',
+        message: '¿Estás seguro de que quieres eliminar esta mesa?',
+        itemName: `Mesa #${numero}`,
+        note: 'Esta acción no se puede deshacer. Asegúrate de que la mesa no tenga pedidos activos.',
+        confirmText: '🗑️ Eliminar',
+        cancelText: '❌ Cancelar',
+        onConfirm: () => {
+            const actionUrl = window.location.origin + window.location.pathname + '?delete=' + id;
+            console.log('URL generada para eliminación de mesa:', actionUrl);
+            window.location.href = actionUrl;
+        },
+        onCancel: () => {
+            console.log('Eliminación de mesa cancelada');
+        }
+    });
+}
+
+function confirmarCambioEstadoMesa(idMesa, nuevoEstado, onConfirm) {
+    console.log('confirmarCambioEstadoMesa llamado con:', idMesa, nuevoEstado);
+    
+    const estadoLabels = {
+        'libre': 'Libre',
+        'ocupada': 'Ocupada', 
+        'reservada': 'Reservada'
+    };
+    
+    const estadoIconos = {
+        'libre': '🟢',
+        'ocupada': '🔴',
+        'reservada': '🟡'
+    };
+    
+    ModalConfirmacion.show({
+        title: '🔄 Cambiar Estado de Mesa',
+        message: '¿Estás seguro de que quieres cambiar el estado de esta mesa?',
+        itemName: `Mesa #${idMesa} → ${estadoIconos[nuevoEstado]} ${estadoLabels[nuevoEstado]}`,
+        note: 'El cambio de estado se aplicará inmediatamente y afectará la disponibilidad de la mesa.',
+        confirmText: '✅ Cambiar Estado',
+        cancelText: '❌ Cancelar',
+        onConfirm: () => {
+            if (onConfirm) {
+                onConfirm(idMesa, nuevoEstado);
+            }
+        },
+        onCancel: () => {
+            console.log('Cambio de estado de mesa cancelado');
+        }
+    });
 }
 
 // Hacer las funciones disponibles globalmente
@@ -150,5 +222,7 @@ window.ModalConfirmacion = ModalConfirmacion;
 window.confirmarBorradoCarta = confirmarBorradoCarta;
 window.confirmarBorradoMozo = confirmarBorradoMozo;
 window.confirmarBorradoPedido = confirmarBorradoPedido;
+window.confirmarBorradoMesa = confirmarBorradoMesa;
+window.confirmarCambioEstadoMesa = confirmarCambioEstadoMesa;
 
 console.log('Funciones del modal asignadas a window');

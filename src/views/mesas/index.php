@@ -74,7 +74,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
 $mesas = Mesa::all();
 ?>
 
-<h2><?= $rol === 'administrador' ? 'Gestión de Mesas' : 'Consulta de Mesas' ?></h2>
+<!-- Header de gestión -->
+<div class="management-header">
+  <h1><?= $rol === 'administrador' ? '🍽️ Gestión de Mesas' : '👁️ Consulta de Mesas' ?></h1>
+  <?php if ($rol === 'administrador'): ?>
+    <div class="header-actions">
+      <a href="<?= url('mesas/create') ?>" class="header-btn">
+        ➕ Nueva Mesa
+      </a>
+      <a href="<?= url('mesas/cambiar-mozo') ?>" class="header-btn secondary">
+        🔄 Gestionar asignaciones
+      </a>
+    </div>
+  <?php endif; ?>
+</div>
 
 <?php if (isset($_GET['success'])): ?>
     <div class="success" style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
@@ -104,16 +117,7 @@ $mesas = Mesa::all();
     </div>
 <?php endif; ?>
 
-<?php if ($rol === 'administrador'): ?>
-  <div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1rem; align-items: center;">
-    <a href="<?= url('mesas/create') ?>" class="button" style="padding: 0.6rem 1rem; font-size: 0.9rem; white-space: nowrap;">
-      ➕ Nueva Mesa
-    </a>
-    <a href="<?= url('mesas/cambiar-mozo') ?>" class="button" style="background:rgb(237, 221, 172); color: #212529; padding: 0.6rem 1rem; font-size: 0.9rem; white-space: nowrap;">
-      🔄 Gestionar asignaciones de mesas
-    </a>
-  </div>
-<?php else: ?>
+<?php if ($rol !== 'administrador'): ?>
   <div style="background: #d1ecf1; padding: 8px; border-radius: 4px; margin-bottom: 1rem; color: #0c5460; font-size: 0.9rem; text-align: center;">
     👁️ Vista de solo lectura - Consulta las mesas disponibles
   </div>
@@ -126,15 +130,17 @@ $mesas = Mesa::all();
     🔍 Filtros
   </button>
   
-  <div id="filtersContent" class="search-filter" style="background: rgb(250, 238, 193); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 1rem;">
+  <div id="filtersContent" class="search-filter" style="background: rgb(250, 238, 193); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 1rem; position: relative; z-index: 1;">
   <!-- Filtro por número -->
   <div style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: nowrap; margin-bottom: 0.5rem;">
     <label for="mesaSearch" style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">🔍 Buscar:</label>
     <input type="text" 
            id="mesaSearch" 
+           name="mesaSearch"
            placeholder="Número..." 
            style="padding: 0.3rem 0.5rem; border: 1px solid var(--accent); border-radius: 3px; font-size: 0.8rem; min-width: 120px; height: 28px;">
     <button id="clearSearch" 
+            type="button"
             style="padding: 0.3rem 0.6rem; background: var(--secondary); color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.75rem; height: 28px;">
       Limpiar
     </button>
@@ -240,7 +246,7 @@ $mesas = Mesa::all();
             </a>
             <?php if ($m['estado'] === 'libre'): ?>
               <a href="#" class="btn-action delete"
-                 onclick="confirmarBorrado(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>)"
+                 onclick="confirmarBorradoMesa(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>)"
                  title="Eliminar mesa">
                 ❌
               </a>
@@ -271,7 +277,7 @@ $mesas = Mesa::all();
             </a>
             <?php if ($m['estado'] === 'libre'): ?>
               <a href="#" class="btn-action delete"
-                 onclick="confirmarBorrado(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>)"
+                 onclick="confirmarBorradoMesa(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>)"
                  title="Eliminar mesa">
                 ❌
               </a>
@@ -355,81 +361,12 @@ $mesas = Mesa::all();
   <?php endforeach; ?>
 </div>
 
-<!-- Modal de confirmación -->
-<div id="modalConfirmacion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 1rem;">
-  <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 400px; width: 100%; text-align: center;">
-    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
-    <h3 style="margin: 0 0 1rem 0; color: #333; font-size: 1.5rem;">Confirmar Eliminación</h3>
-    <p style="margin: 0 0 2rem 0; color: #666; line-height: 1.5;">
-      ¿Estás seguro de que quieres eliminar la mesa <strong id="numeroMesa"></strong>?<br>
-      <small style="color: #999;">Esta acción no se puede deshacer.</small>
-    </p>
-    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-      <button id="btnCancelar" style="padding: 0.75rem 1.5rem; border: 2px solid #6c757d; background: white; color: #6c757d; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s; min-width: 120px; box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);">
-        Cancelar
-      </button>
-      <button id="btnConfirmar" style="padding: 0.75rem 1.5rem; border: 2px solid #dc3545; background: #dc3545; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s; min-width: 120px; box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);">
-        Sí, Eliminar
-      </button>
-    </div>
-  </div>
-</div>
 
-<!-- Modal de confirmación para cambio de estado -->
-<div id="modalCambioEstado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 1rem;">
-  <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 400px; width: 100%; text-align: center;">
-    <h3 style="margin: 0 0 1rem 0; color: #333; font-size: 1.2rem;">🔄 Cambiar Estado de Mesa</h3>
-    <p id="mensajeCambioEstado" style="margin: 0 0 2rem 0; color: #666; line-height: 1.5;">
-      ¿Estás seguro de que quieres cambiar el estado de la mesa?
-    </p>
-    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-      <button onclick="cancelarCambioEstado()" style="padding: 0.75rem 1.5rem; border: 2px solid #6c757d; background: white; color: #6c757d; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s; min-width: 120px; box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);">
-        Cancelar
-      </button>
-      <button onclick="confirmarCambioEstado()" style="padding: 0.75rem 1.5rem; border: 2px solid #28a745; background: #28a745; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s; min-width: 120px; box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);">
-        Sí, Cambiar
-      </button>
-    </div>
-  </div>
-</div>
 
 <script>
-let mesaIdAEliminar = null;
-
-function confirmarBorrado(id, numero) {
-    mesaIdAEliminar = id;
-    document.getElementById('numeroMesa').textContent = numero;
-    document.getElementById('modalConfirmacion').style.display = 'flex';
-}
-
-function cerrarModal() {
-    document.getElementById('modalConfirmacion').style.display = 'none';
-    mesaIdAEliminar = null;
-}
-
-function eliminarMesa() {
-    if (mesaIdAEliminar) {
-        window.location.href = '<?= url('mesas', ['delete' => '']) ?>' + mesaIdAEliminar;
-    }
-}
-
-// Event listeners
-document.getElementById('btnCancelar').addEventListener('click', cerrarModal);
-document.getElementById('btnConfirmar').addEventListener('click', eliminarMesa);
-
-// Cerrar modal al hacer clic fuera
-document.getElementById('modalConfirmacion').addEventListener('click', function(e) {
-    if (e.target === this) {
-        cerrarModal();
-    }
-});
-
-// Cerrar modal con tecla Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        cerrarModal();
-    }
-});
+// Variables globales para el modal de cambio de estado
+let mesaIdParaCambiar = null;
+let nuevoEstadoParaCambiar = null;
 
 // Efectos hover para los botones
 document.getElementById('btnCancelar').addEventListener('mouseenter', function() {
@@ -463,7 +400,10 @@ document.getElementById('btnConfirmar').addEventListener('mouseleave', function(
 });
 
 // Funcionalidad de búsqueda y filtrado de mesas
-document.addEventListener('DOMContentLoaded', function() {
+function initMesasFilters() {
+    console.log('=== INICIANDO FILTROS DE MESAS ===');
+    
+    // Buscar elementos con timeout para asegurar que el DOM esté listo
     const searchInput = document.getElementById('mesaSearch');
     const clearButton = document.getElementById('clearSearch');
     const searchResults = document.getElementById('searchResults');
@@ -471,36 +411,74 @@ document.addEventListener('DOMContentLoaded', function() {
     const mobileCards = document.querySelectorAll('.mobile-card');
     const statusButtons = document.querySelectorAll('.status-filter-btn');
     
+    console.log('=== ELEMENTOS ENCONTRADOS ===');
+    console.log('searchInput:', searchInput);
+    console.log('clearButton:', clearButton);
+    console.log('searchResults:', searchResults);
+    console.log('tableRows count:', tableRows.length);
+    console.log('mobileCards count:', mobileCards.length);
+    console.log('statusButtons count:', statusButtons.length);
+    
+    // Verificar si los elementos existen
+    if (!searchInput || !clearButton || !searchResults) {
+        console.error('❌ ERROR: Elementos de filtro no encontrados');
+        console.log('Elementos disponibles:', document.querySelectorAll('[id]'));
+        return false;
+    }
+    
     let currentSearchTerm = '';
     let currentStatusFilter = 'all';
     
     function getMesaStatus(row) {
-        const statusSpan = row.querySelector('td:nth-child(3) span');
+        // Buscar el span de estado en la tercera columna
+        const statusCell = row.querySelector('td:nth-child(3)');
+        if (statusCell) {
+            const statusSpan = statusCell.querySelector('span');
         if (statusSpan) {
-            return statusSpan.textContent.toLowerCase().trim();
+                const statusText = statusSpan.textContent.toLowerCase().trim();
+                return statusText;
+            }
         }
         return '';
     }
     
     function getMesaStatusFromCard(card) {
-        const statusSpan = card.querySelector('.mobile-card-value span');
+        // Buscar el estado en la tarjeta móvil
+        const statusItems = card.querySelectorAll('.mobile-card-item');
+        for (let item of statusItems) {
+            const label = item.querySelector('.mobile-card-label');
+            if (label && label.textContent.includes('Estado')) {
+                const statusSpan = item.querySelector('.mobile-card-value span');
         if (statusSpan) {
-            return statusSpan.textContent.toLowerCase().trim();
+                    const statusText = statusSpan.textContent.toLowerCase().trim();
+                    return statusText;
+                }
+            }
         }
         return '';
     }
     
     function filterMesas() {
+        console.log('=== FILTRANDO MESAS ===');
+        console.log('Término de búsqueda:', currentSearchTerm);
+        console.log('Filtro de estado:', currentStatusFilter);
+        
         const searchTerm = currentSearchTerm.toLowerCase().trim();
         const statusFilter = currentStatusFilter;
         let visibleCount = 0;
         
         // Filtrar filas de la tabla
-        tableRows.forEach(row => {
-            const mesaNumber = row.querySelector('td:first-child').textContent.toLowerCase();
+        tableRows.forEach((row, index) => {
+            const firstCell = row.querySelector('td:first-child');
+            if (!firstCell) {
+                console.error(`Fila ${index}: No se encontró la primera celda`);
+                return;
+            }
+            
+            const mesaNumber = firstCell.textContent.toLowerCase();
             const mesaStatus = getMesaStatus(row);
             
-            const matchesSearch = mesaNumber.includes(searchTerm);
+            const matchesSearch = searchTerm === '' || mesaNumber.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || mesaStatus === statusFilter;
             
             if (matchesSearch && matchesStatus) {
@@ -512,11 +490,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Filtrar tarjetas móviles
-        mobileCards.forEach(card => {
-            const mesaNumber = card.querySelector('.mobile-card-number').textContent.toLowerCase();
+        mobileCards.forEach((card, index) => {
+            const numberElement = card.querySelector('.mobile-card-number');
+            if (!numberElement) {
+                console.error(`Tarjeta ${index}: No se encontró el elemento de número`);
+                return;
+            }
+            
+            const mesaNumber = numberElement.textContent.toLowerCase();
             const mesaStatus = getMesaStatusFromCard(card);
             
-            const matchesSearch = mesaNumber.includes(searchTerm);
+            const matchesSearch = searchTerm === '' || mesaNumber.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || mesaStatus === statusFilter;
             
             if (matchesSearch && matchesStatus) {
@@ -527,27 +511,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Mostrar resultados de filtrado
-        let resultText = '';
+        // Mostrar resultados
+        let resultText = `Mostrando ${visibleCount} mesa(s)`;
         if (searchTerm !== '' && statusFilter !== 'all') {
-            resultText = `Mostrando ${visibleCount} mesa(s) que coinciden con "${searchTerm}" y estado "${statusFilter}"`;
+            resultText += ` que coinciden con "${searchTerm}" y estado "${statusFilter}"`;
         } else if (searchTerm !== '') {
-            resultText = `Mostrando ${visibleCount} mesa(s) que coinciden con "${searchTerm}"`;
+            resultText += ` que coinciden con "${searchTerm}"`;
         } else if (statusFilter !== 'all') {
-            resultText = `Mostrando ${visibleCount} mesa(s) con estado "${statusFilter}"`;
+            resultText += ` con estado "${statusFilter}"`;
         }
         
         searchResults.textContent = resultText;
+        console.log('=== RESULTADO FINAL ===');
+        console.log('Mesas visibles:', visibleCount);
     }
     
     // Event listener para el input de búsqueda
     searchInput.addEventListener('input', function() {
+        console.log('Input cambiado:', this.value);
         currentSearchTerm = this.value;
         filterMesas();
     });
     
     // Event listener para el botón limpiar
     clearButton.addEventListener('click', function() {
+        console.log('Botón limpiar clickeado');
         searchInput.value = '';
         currentSearchTerm = '';
         filterMesas();
@@ -555,8 +543,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Event listeners para los botones de estado
-    statusButtons.forEach(button => {
-        button.addEventListener('click', function() {
+    statusButtons.forEach((button, index) => {
+        console.log(`Configurando botón ${index}:`, button.dataset.status);
+        
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Botón de estado clickeado:', this.dataset.status);
+            
             // Remover clase active de todos los botones
             statusButtons.forEach(btn => {
                 btn.classList.remove('active');
@@ -579,11 +573,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Agregar clase active al botón clickeado
             this.classList.add('active');
-            // Mantener el estilo original para el botón activo
             
             // Actualizar filtro de estado
             currentStatusFilter = this.dataset.status;
+            console.log('Filtro de estado actualizado a:', currentStatusFilter);
             filterMesas();
+        });
+        
+        // También agregar un event listener de mouse para debugging
+        button.addEventListener('mousedown', function() {
+            console.log('Botón presionado:', this.dataset.status);
         });
     });
     
@@ -595,33 +594,86 @@ document.addEventListener('DOMContentLoaded', function() {
             filterMesas();
         }
     });
+    
+    // Ejecutar filtro inicial
+    console.log('Ejecutando filtro inicial...');
+    filterMesas();
+    
+    return true;
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado, inicializando filtros...');
+    
+    // Test simple para verificar que JavaScript funciona
+    console.log('✅ JavaScript funcionando correctamente');
+    
+    // Intentar inicializar inmediatamente
+    if (!initMesasFilters()) {
+        // Si falla, intentar después de un pequeño delay
+        console.log('Filtros no inicializados, reintentando en 100ms...');
+        setTimeout(function() {
+            if (!initMesasFilters()) {
+                console.log('Filtros no inicializados, reintentando en 500ms...');
+                setTimeout(function() {
+                    initMesasFilters();
+                }, 500);
+            }
+        }, 100);
+    }
 });
 
-// Variables globales para el modal de cambio de estado
-let mesaIdParaCambiar = null;
-let nuevoEstadoParaCambiar = null;
+// Función de prueba global
+function testFilters() {
+    console.log('=== TEST DE FILTROS ===');
+    const searchInput = document.getElementById('mesaSearch');
+    const clearButton = document.getElementById('clearSearch');
+    const statusButtons = document.querySelectorAll('.status-filter-btn');
+    
+    console.log('searchInput:', searchInput);
+    console.log('clearButton:', clearButton);
+    console.log('statusButtons:', statusButtons.length);
+    
+    if (searchInput) {
+        console.log('✅ Campo de búsqueda encontrado');
+    } else {
+        console.log('❌ Campo de búsqueda NO encontrado');
+    }
+    
+    if (clearButton) {
+        console.log('✅ Botón limpiar encontrado');
+    } else {
+        console.log('❌ Botón limpiar NO encontrado');
+    }
+    
+    if (statusButtons.length > 0) {
+        console.log('✅ Botones de estado encontrados:', statusButtons.length);
+    } else {
+        console.log('❌ Botones de estado NO encontrados');
+    }
+}
 
 // Función para cambiar el estado de una mesa
 function cambiarEstado(idMesa, nuevoEstado) {
     mesaIdParaCambiar = idMesa;
     nuevoEstadoParaCambiar = nuevoEstado;
     
-    // Mostrar el modal de confirmación personalizado
-    document.getElementById('modalCambioEstado').style.display = 'flex';
-    document.getElementById('mensajeCambioEstado').textContent = `¿Estás seguro de que quieres cambiar el estado de la mesa a "${nuevoEstado}"?`;
+    // Usar el modal personalizado estilizado
+    confirmarCambioEstadoMesa(idMesa, nuevoEstado, (id, estado) => {
+        // Función callback que se ejecuta al confirmar
+        cambiarEstadoConfirmado(id, estado);
+    });
 }
 
-// Función para confirmar el cambio de estado
-function confirmarCambioEstado() {
-    if (mesaIdParaCambiar && nuevoEstadoParaCambiar) {
-        // Cerrar el modal
-        document.getElementById('modalCambioEstado').style.display = 'none';
-        
+// Función para confirmar el cambio de estado (llamada desde el modal)
+function cambiarEstadoConfirmado(idMesa, nuevoEstado) {
+    if (idMesa && nuevoEstado) {
         // Enviar petición AJAX
         const formData = new FormData();
         formData.append('cambiar_estado', '1');
-        formData.append('id_mesa', mesaIdParaCambiar);
-        formData.append('nuevo_estado', nuevoEstadoParaCambiar);
+        formData.append('id_mesa', idMesa);
+        formData.append('nuevo_estado', nuevoEstado);
         
         fetch(window.location.href, {
             method: 'POST',
@@ -663,55 +715,6 @@ function confirmarCambioEstado() {
     }
 }
 
-// Función para cancelar el cambio de estado
-function cancelarCambioEstado() {
-    document.getElementById('modalCambioEstado').style.display = 'none';
-    mesaIdParaCambiar = null;
-    nuevoEstadoParaCambiar = null;
-}
-
-
-
-// Efectos hover para los botones del modal de cambio de estado
-document.addEventListener('DOMContentLoaded', function() {
-    // Botón cancelar del modal de cambio de estado
-    const btnCancelarCambio = document.querySelector('#modalCambioEstado button[onclick="cancelarCambioEstado()"]');
-    if (btnCancelarCambio) {
-        btnCancelarCambio.addEventListener('mouseenter', function() {
-            this.style.background = '#6c757d';
-            this.style.color = 'white';
-            this.style.borderColor = '#5a6268';
-            this.style.boxShadow = '0 4px 8px rgba(108, 117, 125, 0.3)';
-            this.style.opacity = '0.95';
-        });
-        
-        btnCancelarCambio.addEventListener('mouseleave', function() {
-            this.style.background = 'white';
-            this.style.color = '#6c757d';
-            this.style.borderColor = '#6c757d';
-            this.style.boxShadow = '0 2px 4px rgba(108, 117, 125, 0.2)';
-            this.style.opacity = '1';
-        });
-    }
-    
-    // Botón confirmar del modal de cambio de estado
-    const btnConfirmarCambio = document.querySelector('#modalCambioEstado button[onclick="confirmarCambioEstado()"]');
-    if (btnConfirmarCambio) {
-        btnConfirmarCambio.addEventListener('mouseenter', function() {
-            this.style.background = '#1e7e34';
-            this.style.borderColor = '#1c7430';
-            this.style.boxShadow = '0 4px 8px rgba(40, 167, 69, 0.4)';
-            this.style.opacity = '0.95';
-        });
-        
-        btnConfirmarCambio.addEventListener('mouseleave', function() {
-            this.style.background = '#28a745';
-            this.style.borderColor = '#28a745';
-            this.style.boxShadow = '0 2px 4px rgba(40, 167, 69, 0.3)';
-            this.style.opacity = '1';
-        });
-    }
-});
 
 // Función para mostrar/ocultar filtros en móvil
 function toggleFilters() {
@@ -727,6 +730,10 @@ function toggleFilters() {
     }
 }
 </script>
+
+<!-- Incluir CSS y JS del modal de confirmación -->
+<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
+<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
 /* Estilos para filtros desplegables en móvil */
@@ -855,5 +862,97 @@ function toggleFilters() {
     #filtersContent {
         display: block !important;
     }
+}
+
+/* Estilos para el header de gestión */
+.management-header {
+  background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
+  color: white !important;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.management-header * {
+  color: white !important;
+}
+
+.management-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white !important;
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  color: white !important;
+}
+
+.header-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+  .management-header {
+    padding: 8px;
+    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .management-header h1 {
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .header-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
 }
 </style>

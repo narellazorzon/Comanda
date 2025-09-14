@@ -47,13 +47,23 @@ class CartaController {
                     exit;
                 }
                 
+                $imagenUrl = trim($_POST['imagen_url'] ?? '');
+                
+                // Validar URL de imagen si se proporciona
+                if (!empty($imagenUrl)) {
+                    if (!filter_var($imagenUrl, FILTER_VALIDATE_URL)) {
+                        header('Location: ' . url('carta/create', ['error' => 'URL de imagen inválida']));
+                        exit;
+                    }
+                }
+                
                 $data = [
                     'nombre' => trim($_POST['nombre']),
                     'descripcion' => trim($_POST['descripcion'] ?? ''),
                     'precio' => (float) $_POST['precio'],
                     'categoria' => trim($_POST['categoria']),
                     'disponibilidad' => (int) ($_POST['disponibilidad'] ?? 1),
-                    'imagen_url' => trim($_POST['imagen_url'] ?? ''),
+                    'imagen_url' => $imagenUrl,
                     'descuento' => (float) ($_POST['descuento'] ?? 0.00)
                 ];
                 
@@ -92,13 +102,23 @@ class CartaController {
         }
 
         // Preparar datos para actualización
+        $imagenUrl = trim($_POST['imagen_url'] ?? '');
+        
+        // Validar URL de imagen si se proporciona
+        if (!empty($imagenUrl)) {
+            if (!filter_var($imagenUrl, FILTER_VALIDATE_URL)) {
+                header('Location: ' . url('carta', ['error' => 'URL de imagen inválida']));
+                exit;
+            }
+        }
+        
         $data = [
             'nombre' => trim($_POST['nombre']),
             'descripcion' => trim($_POST['descripcion'] ?? ''),
             'precio' => (float) $_POST['precio'],
             'categoria' => trim($_POST['categoria']),
             'disponibilidad' => (int) ($_POST['disponibilidad'] ?? 1),
-            'imagen_url' => trim($_POST['imagen_url'] ?? ''),
+            'imagen_url' => $imagenUrl,
             'descuento' => (float) ($_POST['descuento'] ?? 0.00)
         ];
 

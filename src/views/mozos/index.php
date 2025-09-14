@@ -33,7 +33,15 @@ $mozos = Usuario::allByRole('mozo');
 
 ?>
 
-<h2>Gestión de Mozos</h2>
+<!-- Header de gestión -->
+<div class="management-header">
+  <h1>👥 Gestión de Mozos</h1>
+  <div class="header-actions">
+    <a href="<?= url('mozos/create') ?>" class="header-btn">
+      ➕ Nuevo Mozo
+    </a>
+  </div>
+</div>
 
 <?php if (isset($_GET['success'])): ?>
     <div class="success" style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
@@ -47,11 +55,6 @@ $mozos = Usuario::allByRole('mozo');
     </div>
 <?php endif; ?>
 
-<div class="action-buttons" style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1rem; align-items: center;">
-  <a href="<?= url('mozos/create') ?>" class="button" style="padding: 0.6rem 1rem; font-size: 0.9rem; white-space: nowrap;">
-    ➕ Nuevo Mozo
-  </a>
-</div>
 
 <!-- Filtros de búsqueda y estado -->
 <div class="filters-container">
@@ -64,7 +67,7 @@ $mozos = Usuario::allByRole('mozo');
   <!-- Filtro por nombre -->
   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
     <label style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">👤 Nombre:</label>
-    <input type="text" id="searchNombre" placeholder="Buscar por nombre..." 
+    <input type="text" id="searchNombre" placeholder="Buscar por inicial del nombre..." 
            style="flex: 1; min-width: 200px; padding: 0.4rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem;">
     <button id="clearNombreSearch" 
             style="padding: 0.4rem 0.6rem; background: var(--secondary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
@@ -134,12 +137,12 @@ $mozos = Usuario::allByRole('mozo');
           </span>
         </td>
         <td>
-          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #007bff; color: white; border-radius: 4px; transition: all 0.2s ease;">
-            ✏️ Editar
+          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;">
+            ✏️
           </a>
-          <a href="#" class="btn-action delete" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 4px; transition: all 0.2s ease;"
+          <a href="#" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
              onclick="confirmarBorradoMozo(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>')">
-            ❌ Eliminar
+            ❌
           </a>
         </td>
       </tr>
@@ -191,12 +194,12 @@ $mozos = Usuario::allByRole('mozo');
           </div>
         </div>
         <div class="card-actions">
-          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action">
-            ✏️ Editar
+          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;">
+            ✏️
           </a>
-          <a href="#" class="btn-action delete"
+          <a href="#" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
              onclick="confirmarBorradoMozo(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>')">
-            ❌ Eliminar
+            ❌
           </a>
         </div>
       </div>
@@ -211,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchNombre = document.getElementById('searchNombre');
     const clearNombreSearch = document.getElementById('clearNombreSearch');
     const tableRows = document.querySelectorAll('.table tbody tr');
+    const mobileCards = document.querySelectorAll('.mobile-card');
     const statusButtons = document.querySelectorAll('.status-filter-btn');
     
     let currentNombreSearch = '';
@@ -225,18 +229,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function filterMozos() {
+        console.log('Filtrando con:', currentNombreSearch);
+        
+        // Filtrar filas de la tabla
         tableRows.forEach(row => {
             const nombreCell = row.querySelector('td:nth-child(2)');
-            const nombreText = nombreCell ? nombreCell.textContent.toLowerCase() : '';
+            const nombreText = nombreCell ? nombreCell.textContent.toLowerCase().trim() : '';
             const estadoText = getMozoStatus(row);
             
-            const matchesNombre = nombreText.includes(currentNombreSearch);
+            console.log('Nombre en tabla:', nombreText, 'Búsqueda:', currentNombreSearch);
+            
+            // Buscar solo al inicio del nombre
+            const matchesNombre = currentNombreSearch === '' || nombreText.startsWith(currentNombreSearch);
             const matchesStatus = currentStatusFilter === 'all' || estadoText === currentStatusFilter;
             
             if (matchesNombre && matchesStatus) {
                 row.style.display = '';
+                console.log('Mostrando:', nombreText);
             } else {
                 row.style.display = 'none';
+                console.log('Ocultando:', nombreText);
+            }
+        });
+        
+        // Filtrar tarjetas móviles
+        mobileCards.forEach(card => {
+            const nombreElement = card.querySelector('.card-title strong');
+            const nombreText = nombreElement ? nombreElement.textContent.toLowerCase().trim() : '';
+            const estadoElement = card.querySelector('.card-status span');
+            const estadoText = estadoElement ? estadoElement.textContent.toLowerCase().trim().replace(/[✅❌]/g, '').trim() : '';
+            
+            console.log('Nombre en tarjeta móvil:', nombreText, 'Búsqueda:', currentNombreSearch);
+            
+            // Buscar solo al inicio del nombre
+            const matchesNombre = currentNombreSearch === '' || nombreText.startsWith(currentNombreSearch);
+            const matchesStatus = currentStatusFilter === 'all' || estadoText === currentStatusFilter;
+            
+            if (matchesNombre && matchesStatus) {
+                card.style.display = '';
+                console.log('Mostrando tarjeta:', nombreText);
+            } else {
+                card.style.display = 'none';
+                console.log('Ocultando tarjeta:', nombreText);
             }
         });
     }
@@ -298,6 +332,10 @@ function toggleFilters() {
     }
 }
 </script>
+
+<!-- Incluir CSS y JS del modal de confirmación -->
+<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
+<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
 /* Estilos para filtros desplegables en móvil */
@@ -415,8 +453,9 @@ function toggleFilters() {
     }
     
     .mobile-card {
-        background: rgb(247, 239, 207);
-        border: 1px solidrgb(240, 230, 208);
+        background: rgb(245, 236, 198
+        );
+        border: 1px solid #e0e0e0;
         border-radius: 8px;
         margin-bottom: 0.5rem;
         padding: 1rem;
@@ -467,29 +506,39 @@ function toggleFilters() {
     }
     
     .card-actions .btn-action {
-        padding: 0.4rem 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 32px;
         font-size: 0.8rem;
         text-decoration: none;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        background:rgb(176, 227, 249);
-        color: #333;
+        border-radius: 6px;
+        border: 1px solid transparent;
         transition: all 0.2s ease;
     }
     
     .card-actions .btn-action:hover {
-        background: #e9ecef;
         transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
-    .card-actions .btn-action.delete {
-        background: #f8d7da;
-        color: #721c24;
-        border-color: #f5c6cb;
+    .card-actions .edit-btn {
+        background: #6c757d;
+        color: white;
     }
     
-    .card-actions .btn-action.delete:hover {
-        background: #f1b0b7;
+    .card-actions .edit-btn:hover {
+        background: #5a6268;
+    }
+    
+    .card-actions .delete-btn {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .card-actions .delete-btn:hover {
+        background: #c82333;
     }
 }
 
@@ -519,35 +568,42 @@ function toggleFilters() {
 
 /* Estilos para botones de acción */
 .btn-action {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     margin: 0 0.1rem;
     text-decoration: none;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 0.875rem;
     font-weight: 500;
     transition: all 0.2s ease;
     cursor: pointer;
     border: 1px solid transparent;
-    background: #f8f9fa;
-    color: #333;
+    width: 40px;
+    height: 32px;
 }
 
 .btn-action:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    background: #e9ecef;
 }
 
-.btn-action.delete {
-    background: #f8d7da;
-    color: #721c24;
-    border-color: #f5c6cb;
+.edit-btn {
+    background: #6c757d;
+    color: white;
 }
 
-.btn-action.delete:hover {
-    background: #f1b0b7;
-    color: #721c24;
+.edit-btn:hover {
+    background: #5a6268;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #c82333;
 }
 
 .btn-action.disabled {
@@ -570,6 +626,98 @@ function toggleFilters() {
     .mobile-cards {
         display: none;
     }
+}
+
+/* Estilos para el header de gestión */
+.management-header {
+  background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
+  color: white !important;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.management-header * {
+  color: white !important;
+}
+
+.management-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white !important;
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  color: white !important;
+}
+
+.header-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+  .management-header {
+    padding: 8px;
+    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .management-header h1 {
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .header-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
 }
 </style>
 
