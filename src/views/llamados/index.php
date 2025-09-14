@@ -46,6 +46,38 @@ if (isset($_GET['atender'])) {
 // Verificar si se acaba de atender un llamado
 $mensaje_atendido = isset($_GET['atendido']) && $_GET['atendido'] == '1';
 
+// Eliminar llamados antiguos (más de 20 minutos) automáticamente
+$llamados_eliminados = LlamadoMesa::deleteOldCalls();
+if ($llamados_eliminados > 0) {
+    error_log("Llamados eliminados automáticamente: " . $llamados_eliminados);
+}
+
+// Manejar acción de atender llamado
+if (isset($_GET['atender'])) {
+    $id_llamado = (int)$_GET['atender'];
+    error_log("Intentando atender llamado ID: " . $id_llamado);
+    
+    if (LlamadoMesa::delete($id_llamado)) {
+        error_log("Llamado eliminado exitosamente: " . $id_llamado);
+        // Usar JavaScript para recargar la página con mensaje de éxito
+        echo "<script>
+            alert('✅ Llamado atendido exitosamente');
+            window.location.href = 'index.php?route=llamados';
+        </script>";
+        exit;
+    } else {
+        error_log("Error al eliminar llamado: " . $id_llamado);
+        echo "<script>
+            alert('❌ Error al atender el llamado');
+            window.location.href = 'index.php?route=llamados';
+        </script>";
+        exit;
+    }
+}
+
+// Verificar si se acaba de atender un llamado
+$mensaje_atendido = isset($_GET['atendido']) && $_GET['atendido'] == '1';
+
 // Si es un mozo, solo mostrar sus llamados; si es admin, mostrar todos
 $user_id = $_SESSION['user']['id_usuario'];
 $user_rol = $_SESSION['user']['rol'];
