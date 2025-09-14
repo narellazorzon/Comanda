@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Usuario;
 use App\Models\Mesa;
+use App\Models\LlamadoMesa;
 
 function url($route = '', $params = []) {
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
@@ -205,6 +206,131 @@ class MozoController {
             Usuario::delete($id);
         }
         header('Location: ' . url('mozos'));
+        exit;
+    }
+
+    /**
+     * Maneja el llamado de mozo desde el cliente
+     */
+    public static function llamarMozo() {
+        // Limpiar cualquier salida previa
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        // Configurar headers para JSON
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        
+        // Solo permitir POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+        
+        try {
+            // Obtener datos del JSON
+            $raw_input = file_get_contents('php://input');
+            $input = json_decode($raw_input, true);
+            
+            // Log para debug
+            error_log("LlamarMozo - Raw input: " . $raw_input);
+            error_log("LlamarMozo - Decoded input: " . print_r($input, true));
+            
+            if (!$input || !isset($input['numero_mesa'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Número de mesa requerido']);
+                exit;
+            }
+            
+            $numero_mesa = (int) $input['numero_mesa'];
+            error_log("LlamarMozo - Número de mesa: " . $numero_mesa);
+            
+            // Buscar la mesa por número
+            $db = (new \App\Config\Database)->getConnection();
+            $stmt = $db->prepare("
+                SELECT m.*, 
+                       u.nombre as mozo_nombre,
+                       u.apellido as mozo_apellido,
+                       CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
+                FROM mesas m
+                LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
+                WHERE m.numero = ?
+            ");
+            $stmt->execute([$numero_mesa]);
+            $mesa = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            error_log("LlamarMozo - Mesa encontrada: " . print_r($mesa, true));
+            
+            if (!$mesa) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Mesa no encontrada']);
+                exit;
+            }
+            
+            // Verificar que la mesa tenga un mozo asignado
+            if (!$mesa['id_mozo']) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Esta mesa no tiene un mozo asignado']);
+                exit;
+            }
+            
+            // Verificar si hay un llamado reciente (menos de 3 minutos)
+            $stmt_reciente = $db->prepare("
+                SELECT id_llamado, hora_solicitud, 
+                       TIMESTAMPDIFF(MINUTE, hora_solicitud, NOW()) as minutos_transcurridos
+                FROM llamados_mesa 
+                WHERE id_mesa = ? AND estado = 'pendiente'
+                ORDER BY hora_solicitud DESC 
+                LIMIT 1
+            ");
+            $stmt_reciente->execute([$mesa['id_mesa']]);
+            $llamado_reciente = $stmt_reciente->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($llamado_reciente && $llamado_reciente['minutos_transcurridos'] < 3) {
+                $minutos_restantes = 3 - $llamado_reciente['minutos_transcurridos'];
+                echo json_encode([
+                    'success' => false, 
+                    'message' => "Usted ya llamó al mozo hace menos de 3 minutos, por favor aguarde {$minutos_restantes} minuto(s) más",
+                    'type' => 'warning'
+                ]);
+                exit;
+            }
+            
+            // Si hay un llamado anterior (más de 3 minutos), eliminarlo
+            if ($llamado_reciente && $llamado_reciente['minutos_transcurridos'] >= 3) {
+                $stmt_eliminar = $db->prepare("DELETE FROM llamados_mesa WHERE id_llamado = ?");
+                $stmt_eliminar->execute([$llamado_reciente['id_llamado']]);
+                error_log("LlamarMozo - Llamado anterior eliminado: " . $llamado_reciente['id_llamado']);
+            }
+            
+            // Crear el nuevo llamado
+            error_log("LlamarMozo - Creando llamado para mesa ID: " . $mesa['id_mesa']);
+            $resultado = LlamadoMesa::create($mesa['id_mesa']);
+            error_log("LlamarMozo - Resultado del llamado: " . ($resultado ? 'true' : 'false'));
+            
+            if ($resultado) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Llamado generado correctamente',
+                    'mozo' => $mesa['mozo_nombre_completo'],
+                    'mesa' => $numero_mesa,
+                    'type' => 'success'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al crear el llamado']);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("LlamarMozo - Error: " . $e->getMessage());
+            error_log("LlamarMozo - Stack trace: " . $e->getTraceAsString());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()]);
+        }
+        
         exit;
     }
 }

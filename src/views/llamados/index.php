@@ -14,6 +14,38 @@ if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'ad
     exit;
 }
 
+// Eliminar llamados antiguos (más de 20 minutos) automáticamente
+$llamados_eliminados = LlamadoMesa::deleteOldCalls();
+if ($llamados_eliminados > 0) {
+    error_log("Llamados eliminados automáticamente: " . $llamados_eliminados);
+}
+
+// Manejar acción de atender llamado
+if (isset($_GET['atender'])) {
+    $id_llamado = (int)$_GET['atender'];
+    error_log("Intentando atender llamado ID: " . $id_llamado);
+    
+    if (LlamadoMesa::delete($id_llamado)) {
+        error_log("Llamado eliminado exitosamente: " . $id_llamado);
+        // Usar JavaScript para recargar la página con mensaje de éxito
+        echo "<script>
+            alert('✅ Llamado atendido exitosamente');
+            window.location.href = 'index.php?route=llamados';
+        </script>";
+        exit;
+    } else {
+        error_log("Error al eliminar llamado: " . $id_llamado);
+        echo "<script>
+            alert('❌ Error al atender el llamado');
+            window.location.href = 'index.php?route=llamados';
+        </script>";
+        exit;
+    }
+}
+
+// Verificar si se acaba de atender un llamado
+$mensaje_atendido = isset($_GET['atendido']) && $_GET['atendido'] == '1';
+
 // Si es un mozo, solo mostrar sus llamados; si es admin, mostrar todos
 $user_id = $_SESSION['user']['id_usuario'];
 $user_rol = $_SESSION['user']['rol'];
@@ -29,6 +61,12 @@ if ($user_rol === 'mozo') {
 ?>
 
 <h2>🔔 Llamados de Mesa</h2>
+
+<?php if ($mensaje_atendido): ?>
+<div style="background: #d4edda; padding: 10px; border-radius: 4px; margin-bottom: 1rem; color: #155724; border: 1px solid #c3e6cb;">
+  ✅ Llamado atendido exitosamente
+</div>
+<?php endif; ?>
 
 <div class="info-banner" style="background: #d1ecf1; padding: 0.75rem; border-radius: 6px; margin-bottom: 1.5rem; color: #0c5460; font-size: 0.9rem; border-left: 4px solid #17a2b8;">
   📞 Gestiona las solicitudes de atención de las mesas

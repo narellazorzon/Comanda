@@ -186,20 +186,16 @@ switch ($route) {
         include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
         break;
 
-    case 'reportes/propina':
-        requireAdmin();
-        include __DIR__ . '/../src/views/reportes/propina.php';
-        break;
-
-    case 'reportes/recaudacion':
-        requireAdmin();
-        include __DIR__ . '/../src/views/reportes/recaudacion_mensual.php';
-        break;
-
     // Rutas de Llamados (mozos y administradores)
     case 'llamados':
         requireMozoOrAdmin();
         include __DIR__ . '/../src/views/llamados/index.php';
+        break;
+
+    // Ruta para llamar mozo desde cliente
+    case 'llamar-mozo':
+        require_once __DIR__ . '/../src/controllers/MozoController.php';
+        \App\Controllers\MozoController::llamarMozo();
         break;
 
     // Ruta del generador de QRs offline (solo administrador)

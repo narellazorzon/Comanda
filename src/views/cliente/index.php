@@ -119,6 +119,7 @@ $iconosCategorias = [
         gap: 1rem;
     }
 
+
     .menu-title {
         font-size: 2rem;
         font-weight: 700;
@@ -419,6 +420,126 @@ $iconosCategorias = [
         justify-content: center;
     }
 
+    /* Modal para seleccionar mesa */
+    .mesa-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        backdrop-filter: blur(4px);
+    }
+
+    .mesa-panel {
+        background: white;
+        width: 95%;
+        max-width: 500px;
+        border-radius: 16px;
+        padding: 1.5rem;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+    }
+
+    .mesa-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .mesa-header h3 {
+        font-size: 1.5rem;
+        color: var(--color-secundario);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .mesa-content p {
+        margin-bottom: 1.5rem;
+        color: var(--color-texto);
+        font-size: 1rem;
+    }
+
+    .mesa-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .mesa-btn {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        color: var(--color-texto);
+        padding: 0.75rem 0.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .mesa-btn:hover {
+        background: var(--color-primario);
+        border-color: var(--color-primario);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .mesa-btn.selected {
+        background: var(--color-acento);
+        border-color: var(--color-acento);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+
+    .mesa-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .btn-aceptar, .btn-cancelar {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 1rem;
+    }
+
+    .btn-aceptar {
+        background: var(--color-acento);
+        color: white;
+    }
+
+    .btn-aceptar:hover:not(:disabled) {
+        background: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    .btn-aceptar:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .btn-cancelar {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-cancelar:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
     /* Modal del carrito mejorado */
     .cart-modal {
         position: fixed;
@@ -666,7 +787,6 @@ $iconosCategorias = [
         position: fixed;
         top: 2rem;
         right: 2rem;
-        background: var(--color-exito);
         color: white;
         padding: 1rem 1.5rem;
         border-radius: 8px;
@@ -679,11 +799,26 @@ $iconosCategorias = [
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        max-width: 400px;
+        word-wrap: break-word;
     }
 
     .toast-notification.show {
         opacity: 1;
         transform: translateX(0);
+    }
+
+    .toast-success {
+        background: var(--color-exito);
+    }
+
+    .toast-warning {
+        background: #ff9800;
+        color: white;
+    }
+
+    .toast-error {
+        background: #f44336;
     }
 
     /* Responsive */
@@ -793,6 +928,28 @@ $iconosCategorias = [
         🛒
         <span id="cart-counter" class="cart-counter" style="display: none;">0</span>
     </button>
+
+    <!-- Modal para seleccionar mesa -->
+    <div id="mesa-modal" class="mesa-modal" aria-hidden="true">
+        <div class="mesa-panel">
+            <div class="mesa-header">
+                <h3>🔔 Llamar Mozo</h3>
+                <button id="btn-close-mesa" class="btn-close">✕</button>
+            </div>
+            <div class="mesa-content">
+                <p>Selecciona tu mesa para llamar al mozo:</p>
+                <div class="mesa-grid">
+                    <?php for($i = 1; $i <= 15; $i++): ?>
+                    <button class="mesa-btn" data-mesa="<?= $i ?>">Mesa <?= $i ?></button>
+                    <?php endfor; ?>
+                </div>
+                <div class="mesa-actions">
+                    <button id="btn-aceptar-mesa" class="btn-aceptar" disabled>Aceptar</button>
+                    <button id="btn-cancelar-mesa" class="btn-cancelar">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal del carrito -->
     <div id="cart-modal" class="cart-modal" aria-hidden="true">
@@ -929,14 +1086,25 @@ $iconosCategorias = [
     // Función para detectar si viene desde QR
     function detectQRMode() {
         const urlParams = new URLSearchParams(window.location.search);
-        const mesaParam = urlParams.get('mesa');
+        const mesaParam = urlParams.get('mesa') || urlParams.get('qr');
+        
+        console.log('DetectQRMode - URL:', window.location.href);
+        console.log('DetectQRMode - mesaParam:', mesaParam);
         
         if (mesaParam && !isNaN(mesaParam)) {
             mesaFromQR = parseInt(mesaParam);
             isQRMode = true;
+            console.log('DetectQRMode - Modo QR activado, mesa:', mesaFromQR);
             setupQRMode();
         } else {
+            console.log('DetectQRMode - Modo manual activado');
             setupManualMode();
+        }
+        
+        // Mostrar botón llamar mozo siempre (tanto en modo QR como manual)
+        const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
+        if (btnLlamarMozo) {
+            btnLlamarMozo.style.display = 'flex';
         }
     }
 
@@ -968,6 +1136,109 @@ $iconosCategorias = [
         setupManualMode();
         document.getElementById('numero-mesa').value = '';
         validateFormQR();
+    }
+
+    // Función para llamar al mozo
+    async function llamarMozo(numeroMesa = null) {
+        let mesaParaLlamar = numeroMesa || mesaFromQR;
+        
+        console.log('LlamarMozo - numeroMesa:', numeroMesa);
+        console.log('LlamarMozo - mesaFromQR:', mesaFromQR);
+        console.log('LlamarMozo - mesaParaLlamar:', mesaParaLlamar);
+        
+        if (!mesaParaLlamar) {
+            // Mostrar popup para seleccionar mesa
+            console.log('LlamarMozo - Mostrando popup porque no hay mesa');
+            mostrarPopupMesa();
+            return;
+        }
+        
+        console.log('LlamarMozo - Llamando directamente al mozo de la mesa:', mesaParaLlamar);
+
+        const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
+        const originalText = btnLlamarMozo.innerHTML;
+        
+        // Cambiar estado del botón
+        btnLlamarMozo.classList.add('llamando');
+        btnLlamarMozo.innerHTML = '⏳ Llamando...';
+        btnLlamarMozo.disabled = true;
+
+        try {
+            console.log('Enviando petición a:', '<?= $base_url ?>/index.php?route=llamar-mozo');
+            console.log('Datos a enviar:', { numero_mesa: mesaParaLlamar });
+            
+            const response = await fetch('<?= $base_url ?>/index.php?route=llamar-mozo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    numero_mesa: mesaParaLlamar
+                })
+            });
+            
+            console.log('Respuesta recibida:', response);
+            console.log('Status:', response.status);
+
+            const result = await response.json();
+            console.log('Resultado del servidor:', result);
+
+            if (result.success) {
+                showToast('✅ ' + result.message, 'success');
+                
+                // Deshabilitar el botón por 3 minutos (180 segundos)
+                setTimeout(() => {
+                    btnLlamarMozo.classList.remove('llamando');
+                    btnLlamarMozo.innerHTML = originalText;
+                    btnLlamarMozo.disabled = false;
+                }, 180000); // 3 minutos
+            } else {
+                // Manejar diferentes tipos de mensajes
+                if (result.type === 'warning') {
+                    showToast('⚠️ ' + result.message, 'warning');
+                    // Para advertencias, no lanzar error, solo restaurar botón
+                    btnLlamarMozo.classList.remove('llamando');
+                    btnLlamarMozo.innerHTML = originalText;
+                    btnLlamarMozo.disabled = false;
+                    return; // Salir de la función sin lanzar error
+                } else {
+                    showToast('❌ ' + result.message, 'error');
+                    throw new Error(result.message || 'Error al enviar el llamado');
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            
+            // Solo mostrar error técnico en consola, no al usuario
+            if (error.message.includes('Unexpected token')) {
+                showToast('❌ Error de conexión. Por favor, intente nuevamente.', 'error');
+            } else {
+                showToast('❌ Error al llamar al mozo: ' + error.message, 'error');
+            }
+            
+            // Restaurar botón
+            btnLlamarMozo.classList.remove('llamando');
+            btnLlamarMozo.innerHTML = originalText;
+            btnLlamarMozo.disabled = false;
+        }
+    }
+
+    // Función para mostrar popup de selección de mesa
+    function mostrarPopupMesa() {
+        const modal = document.getElementById('mesa-modal');
+        modal.style.display = 'flex';
+        
+        // Limpiar selección anterior
+        document.querySelectorAll('.mesa-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        document.getElementById('btn-aceptar-mesa').disabled = true;
+    }
+
+    // Función para cerrar popup de mesa
+    function cerrarPopupMesa() {
+        const modal = document.getElementById('mesa-modal');
+        modal.style.display = 'none';
     }
 
     function addToCart(item) {
@@ -1044,17 +1315,34 @@ $iconosCategorias = [
     }
 
     // Función para mostrar notificación toast
-    function showToast(message) {
+    function showToast(message, type = 'success') {
         const toast = document.createElement('div');
         toast.className = 'toast-notification';
+        
+        // Agregar clase según el tipo
+        if (type === 'warning') {
+            toast.classList.add('toast-warning');
+        } else if (type === 'error') {
+            toast.classList.add('toast-error');
+        } else {
+            toast.classList.add('toast-success');
+        }
+        
         toast.innerHTML = message;
         document.body.appendChild(toast);
         
         setTimeout(() => toast.classList.add('show'), 100);
+        
+        // Duración diferente según el tipo
+        const duration = type === 'warning' ? 4000 : 2500;
         setTimeout(() => {
             toast.classList.remove('show');
-            setTimeout(() => document.body.removeChild(toast), 400);
-        }, 2500);
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 400);
+        }, duration);
     }
 
     // Función para actualizar contador del carrito
@@ -1139,6 +1427,58 @@ $iconosCategorias = [
         const btnCambiarMesa = document.getElementById('btn-cambiar-mesa');
         if (btnCambiarMesa) {
             btnCambiarMesa.addEventListener('click', cambiarMesaFromQR);
+        }
+        
+        // Botón llamar mozo en el nav
+        const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
+        if (btnLlamarMozo) {
+            btnLlamarMozo.addEventListener('click', () => llamarMozo());
+        }
+        
+        // Modal de selección de mesa
+        const mesaModal = document.getElementById('mesa-modal');
+        const btnCloseMesa = document.getElementById('btn-close-mesa');
+        const btnCancelarMesa = document.getElementById('btn-cancelar-mesa');
+        const btnAceptarMesa = document.getElementById('btn-aceptar-mesa');
+        
+        if (btnCloseMesa) {
+            btnCloseMesa.addEventListener('click', cerrarPopupMesa);
+        }
+        
+        if (btnCancelarMesa) {
+            btnCancelarMesa.addEventListener('click', cerrarPopupMesa);
+        }
+        
+        if (btnAceptarMesa) {
+            btnAceptarMesa.addEventListener('click', () => {
+                const mesaSeleccionada = document.querySelector('.mesa-btn.selected');
+                if (mesaSeleccionada) {
+                    const numeroMesa = parseInt(mesaSeleccionada.dataset.mesa);
+                    cerrarPopupMesa();
+                    llamarMozo(numeroMesa);
+                }
+            });
+        }
+        
+        // Selección de mesa en el popup
+        document.querySelectorAll('.mesa-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remover selección anterior
+                document.querySelectorAll('.mesa-btn').forEach(b => b.classList.remove('selected'));
+                // Seleccionar la mesa actual
+                btn.classList.add('selected');
+                // Habilitar botón aceptar
+                document.getElementById('btn-aceptar-mesa').disabled = false;
+            });
+        });
+        
+        // Cerrar modal al hacer clic fuera
+        if (mesaModal) {
+            mesaModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    cerrarPopupMesa();
+                }
+            });
         }
         
         // Lógica de campos de mesa
