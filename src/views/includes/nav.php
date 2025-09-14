@@ -31,6 +31,7 @@ $base_path = $is_in_reportes ? '../' : '';
     
     <div class="nav-menu" id="nav-menu">
       <?php if (empty($rol)): ?>
+        <button id="nav-llamar-mozo" class="nav-link btn-llamar-mozo" style="display:none;">🔔 Llamar Mozo</button>
         <button id="nav-cart-button" class="nav-link" style="background:none;border:none;cursor:pointer;">🛒 Carrito</button>
       <?php elseif ($rol === 'administrador'): ?>
         <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Mesas</a>
