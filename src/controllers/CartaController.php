@@ -71,7 +71,13 @@ class CartaController {
                 
                 if ($result) {
                     // Redirección POST-REDIRECT-GET para evitar reenvío de formulario
-                    header('Location: ' . url('carta', ['success' => 'Ítem creado exitosamente']));
+                    // Mantener el filtro de categoría si existe
+                    $categoria = $_GET['categoria'] ?? null;
+                    $params = ['success' => 'Ítem creado exitosamente'];
+                    if ($categoria) {
+                        $params['categoria'] = $categoria;
+                    }
+                    header('Location: ' . url('carta', $params));
                 } else {
                     header('Location: ' . url('carta/create', ['error' => 'Error al crear el ítem']));
                 }
@@ -97,7 +103,13 @@ class CartaController {
         
         $item = CartaItem::find($id);
         if (!$item) {
-            header('Location: ' . url('carta', ['error' => 'Ítem no encontrado']));
+            // Mantener el filtro de categoría si existe
+            $categoria = $_GET['categoria'] ?? null;
+            $params = ['error' => 'Ítem no encontrado'];
+            if ($categoria) {
+                $params['categoria'] = $categoria;
+            }
+            header('Location: ' . url('carta', $params));
             exit;
         }
 
@@ -107,7 +119,13 @@ class CartaController {
         // Validar URL de imagen si se proporciona
         if (!empty($imagenUrl)) {
             if (!filter_var($imagenUrl, FILTER_VALIDATE_URL)) {
-                header('Location: ' . url('carta', ['error' => 'URL de imagen inválida']));
+                // Mantener el filtro de categoría si existe
+                $categoria = $_GET['categoria'] ?? null;
+                $params = ['error' => 'URL de imagen inválida'];
+                if ($categoria) {
+                    $params['categoria'] = $categoria;
+                }
+                header('Location: ' . url('carta', $params));
                 exit;
             }
         }
@@ -123,19 +141,39 @@ class CartaController {
         ];
 
         if (CartaItem::update($id, $data)) {
-            header('Location: ' . url('carta', ['success' => 'Ítem actualizado exitosamente']));
+            // Mantener el filtro de categoría si existe
+            $categoria = $_GET['categoria'] ?? null;
+            $params = ['success' => 'Ítem actualizado exitosamente'];
+            if ($categoria) {
+                $params['categoria'] = $categoria;
+            }
+            header('Location: ' . url('carta', $params));
         } else {
-            header('Location: ' . url('carta', ['error' => 'Error al actualizar el ítem']));
+            // Mantener el filtro de categoría si existe
+            $categoria = $_GET['categoria'] ?? null;
+            $params = ['error' => 'Error al actualizar el ítem'];
+            if ($categoria) {
+                $params['categoria'] = $categoria;
+            }
+            header('Location: ' . url('carta', $params));
         }
         exit;
     }
 
     public static function delete() {
         self::authorize();
-        $id = (int)($_GET['delete'] ?? 0);
+        
+        // Intentar obtener el ID tanto de GET como de POST para compatibilidad
+        $id = 0;
+        if (isset($_POST['id'])) {
+            $id = (int)$_POST['id'];
+        } elseif (isset($_GET['delete'])) {
+            $id = (int)$_GET['delete'];
+        }
         
         // Debug log
         error_log("CartaController::delete() - ID recibido: " . $id);
+        error_log("CartaController::delete() - POST params: " . print_r($_POST, true));
         error_log("CartaController::delete() - GET params: " . print_r($_GET, true));
         
         if ($id > 0) {
@@ -143,13 +181,31 @@ class CartaController {
             error_log("CartaController::delete() - Resultado: " . ($resultado ? 'true' : 'false'));
             
             if ($resultado) {
-                header('Location: ' . url('carta', ['success' => 'Ítem eliminado correctamente']));
+                // Mantener el filtro de categoría si existe
+                $categoria = $_GET['categoria'] ?? null;
+                $params = ['success' => 'Ítem eliminado correctamente'];
+                if ($categoria) {
+                    $params['categoria'] = $categoria;
+                }
+                header('Location: ' . url('carta', $params));
             } else {
-                header('Location: ' . url('carta', ['error' => 'Error al eliminar el ítem']));
+                // Mantener el filtro de categoría si existe
+                $categoria = $_GET['categoria'] ?? null;
+                $params = ['error' => 'Error al eliminar el ítem'];
+                if ($categoria) {
+                    $params['categoria'] = $categoria;
+                }
+                header('Location: ' . url('carta', $params));
             }
         } else {
             error_log("CartaController::delete() - ID inválido: " . $id);
-            header('Location: ' . url('carta', ['error' => 'ID de ítem inválido']));
+            // Mantener el filtro de categoría si existe
+            $categoria = $_GET['categoria'] ?? null;
+            $params = ['error' => 'ID de ítem inválido'];
+            if ($categoria) {
+                $params['categoria'] = $categoria;
+            }
+            header('Location: ' . url('carta', $params));
         }
         exit;
     }

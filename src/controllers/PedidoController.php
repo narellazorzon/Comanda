@@ -102,6 +102,13 @@ class PedidoController {
         
         $id = (int)($_GET['delete'] ?? 0);
         if ($id > 0) {
+            // Verificar que el pedido no esté cerrado antes de eliminar
+            $pedido = Pedido::find($id);
+            if ($pedido && $pedido['estado'] === 'cerrado') {
+                header('Location: ' . url('pedidos', ['error' => 'No se puede eliminar un pedido cerrado']));
+                exit;
+            }
+            
             $resultado = Pedido::delete($id);
             if ($resultado) {
                 header('Location: ' . url('pedidos', ['success' => 'Pedido eliminado correctamente']));
@@ -112,5 +119,85 @@ class PedidoController {
             header('Location: ' . url('pedidos', ['error' => 'ID de pedido inválido']));
         }
         exit;
+    }
+
+    /**
+     * Crea un pedido desde la página del cliente (pública).
+     * No requiere autenticación.
+     */
+    public static function createFromClient() {
+        // Log para debug
+        error_log('=== PEDIDO DESDE CLIENTE ===');
+        error_log('Método: ' . $_SERVER['REQUEST_METHOD']);
+        error_log('Content-Type: ' . ($_SERVER['CONTENT_TYPE'] ?? 'No definido'));
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            // Obtener datos del JSON
+            $rawInput = file_get_contents('php://input');
+            error_log('Datos recibidos: ' . $rawInput);
+            
+            $input = json_decode($rawInput, true);
+            error_log('Datos decodificados: ' . print_r($input, true));
+            
+            if (!$input) {
+                error_log('Error: Datos inválidos o JSON malformado');
+                http_response_code(400);
+                echo json_encode(['error' => 'Datos inválidos']);
+                return;
+            }
+
+            // Validar datos requeridos
+            if (empty($input['cliente_nombre'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'El nombre del cliente es obligatorio']);
+                return;
+            }
+
+            if (empty($input['items']) || !is_array($input['items'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Debe agregar al menos un ítem al pedido']);
+                return;
+            }
+
+            // Preparar datos del pedido
+            $data = [
+                'modo_consumo' => $input['modo_consumo'] ?? 'stay',
+                'forma_pago' => $input['forma_pago'] ?? null,
+                'observaciones' => $input['observaciones'] ?? '',
+                'cliente_nombre' => trim($input['cliente_nombre']),
+                'cliente_email' => trim($input['cliente_email'] ?? ''),
+                'items' => $input['items']
+            ];
+
+            // Solo incluir mesa si es modo 'stay'
+            if ($data['modo_consumo'] === 'stay' && !empty($input['id_mesa'])) {
+                $data['id_mesa'] = (int)$input['id_mesa'];
+            }
+
+            // Crear el pedido
+            $pedidoId = Pedido::create($data);
+            
+            if ($pedidoId > 0) {
+                http_response_code(201);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Pedido creado correctamente',
+                    'pedido_id' => $pedidoId
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Error al crear el pedido']);
+            }
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Error interno: ' . $e->getMessage()]);
+        }
     }
 }

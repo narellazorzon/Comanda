@@ -21,6 +21,32 @@ $rol = $_SESSION['user']['rol'];
 $error = '';
 $success = '';
 
+// Detectar si es edición o creación
+$is_edit = isset($_GET['id']) && (int)$_GET['id'] > 0;
+$pedido_id = $is_edit ? (int)$_GET['id'] : 0;
+$pedido = null;
+$detalles = [];
+
+// Si es edición, cargar datos del pedido
+if ($is_edit) {
+    $pedido = Pedido::find($pedido_id);
+    if (!$pedido) {
+        header('Location: ' . url('pedidos', ['error' => 'Pedido no encontrado']));
+        exit;
+    }
+    
+    // Verificar que el pedido no esté cerrado
+    if ($pedido['estado'] === 'cerrado') {
+        header('Location: ' . url('pedidos', ['error' => 'No se puede editar un pedido cerrado']));
+        exit;
+    }
+    
+    // Cargar detalles del pedido
+    $detalles = Pedido::getDetalles($pedido_id);
+    // Debug: verificar qué datos se obtienen
+    error_log('Detalles del pedido ' . $pedido_id . ': ' . print_r($detalles, true));
+}
+
 // Cargar datos necesarios
 $mesas = Mesa::all();
 $items = CartaItem::all();
@@ -58,13 +84,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['id_mesa'] = $id_mesa;
             }
             
-            $pedidoId = Pedido::create($data);
-            if ($pedidoId > 0) {
-                $success = 'Pedido creado correctamente con ID: ' . $pedidoId;
-                // Limpiar formulario
-                $_POST = [];
+            if ($is_edit) {
+                // Actualizar pedido existente
+                $resultado = Pedido::update($pedido_id, $data);
+                if ($resultado) {
+                    $success = 'Pedido actualizado correctamente';
+                    // Recargar datos del pedido
+                    $pedido = Pedido::find($pedido_id);
+                    $detalles = Pedido::getDetalles($pedido_id);
+                } else {
+                    $error = 'Error al actualizar el pedido';
+                }
             } else {
-                $error = 'Error al crear el pedido';
+                // Crear nuevo pedido
+                $pedidoId = Pedido::create($data);
+                if ($pedidoId > 0) {
+                    $success = 'Pedido creado correctamente con ID: ' . $pedidoId;
+                    // Limpiar formulario
+                    $_POST = [];
+                } else {
+                    $error = 'Error al crear el pedido';
+                }
             }
         } catch (Exception $e) {
             $error = 'Error: ' . $e->getMessage();
@@ -789,7 +829,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="pedido-edit-container">
   <!-- Header del pedido -->
   <div class="pedido-header">
-    <h1>🍽️ Crear Nuevo Pedido</h1>
+    <h1><?= $is_edit ? '✏️ Editar Pedido #' . $pedido_id : '🍽️ Crear Nuevo Pedido' ?></h1>
   </div>
 
   <!-- Mensajes de error/success -->
@@ -810,20 +850,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="form-group">
         <label>Modo de Consumo *</label>
         <div class="modo-consumo-container">
-          <div class="modo-consumo-btn <?= (isset($_POST['modo_consumo']) && $_POST['modo_consumo'] === 'stay') || !isset($_POST['modo_consumo']) ? 'selected' : '' ?>" 
+          <div class="modo-consumo-btn <?= (isset($_POST['modo_consumo']) && $_POST['modo_consumo'] === 'stay') || (!isset($_POST['modo_consumo']) && (!$pedido || $pedido['modo_consumo'] === 'stay')) ? 'selected' : '' ?>" 
                onclick="selectModoConsumo('stay')">
             <div style="font-size: 1.5rem; margin-bottom: 6px;">🍽️</div>
             <div style="font-size: 0.9rem;"><strong>En el Local</strong></div>
             <div style="font-size: 0.8rem; opacity: 0.8;">Stay</div>
           </div>
-          <div class="modo-consumo-btn <?= (isset($_POST['modo_consumo']) && $_POST['modo_consumo'] === 'takeaway') ? 'selected' : '' ?>" 
+          <div class="modo-consumo-btn <?= (isset($_POST['modo_consumo']) && $_POST['modo_consumo'] === 'takeaway') || ($pedido && $pedido['modo_consumo'] === 'takeaway') ? 'selected' : '' ?>" 
                onclick="selectModoConsumo('takeaway')">
             <div style="font-size: 1.5rem; margin-bottom: 6px;">🛍️</div>
             <div style="font-size: 0.9rem;"><strong>Para Llevar</strong></div>
             <div style="font-size: 0.8rem; opacity: 0.8;">Takeaway</div>
           </div>
         </div>
-        <input type="hidden" name="modo_consumo" id="modo_consumo" value="<?= $_POST['modo_consumo'] ?? 'stay' ?>" required>
+        <input type="hidden" name="modo_consumo" id="modo_consumo" value="<?= $_POST['modo_consumo'] ?? ($pedido['modo_consumo'] ?? 'stay') ?>" required>
       </div>
 
       <!-- Campo Mesa (solo para modo stay) -->
@@ -834,7 +874,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <?php foreach ($mesas as $mesa): ?>
             <option value="<?= $mesa['id_mesa'] ?>" 
                     data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
-                    <?= (isset($_POST['id_mesa']) && $_POST['id_mesa'] == $mesa['id_mesa']) ? 'selected' : '' ?>>
+                    <?= (isset($_POST['id_mesa']) && $_POST['id_mesa'] == $mesa['id_mesa']) || ($pedido && $pedido['id_mesa'] == $mesa['id_mesa']) ? 'selected' : '' ?>>
               Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
             </option>
           <?php endforeach; ?>
@@ -848,14 +888,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="form-group">
         <label for="cliente_nombre">Nombre del Cliente *</label>
         <input type="text" name="cliente_nombre" id="cliente_nombre" 
-               value="<?= htmlspecialchars($_POST['cliente_nombre'] ?? '') ?>" 
+               value="<?= htmlspecialchars($_POST['cliente_nombre'] ?? ($pedido['cliente_nombre'] ?? '')) ?>" 
                placeholder="Ingrese el nombre del cliente" required>
       </div>
 
       <div class="form-group">
         <label for="cliente_email">Email del Cliente</label>
         <input type="email" name="cliente_email" id="cliente_email" 
-               value="<?= htmlspecialchars($_POST['cliente_email'] ?? '') ?>" 
+               value="<?= htmlspecialchars($_POST['cliente_email'] ?? ($pedido['cliente_email'] ?? '')) ?>" 
                placeholder="cliente@ejemplo.com">
                 </div>
                 
@@ -863,16 +903,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="forma_pago">Forma de Pago</label>
         <select name="forma_pago" id="forma_pago">
           <option value="">Seleccionar forma de pago...</option>
-          <option value="efectivo" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'efectivo') ? 'selected' : '' ?>>💵 Efectivo</option>
-          <option value="tarjeta" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'tarjeta') ? 'selected' : '' ?>>💳 Tarjeta</option>
-          <option value="transferencia" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'transferencia') ? 'selected' : '' ?>>🏦 Transferencia</option>
+          <option value="efectivo" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'efectivo') || ($pedido && $pedido['forma_pago'] === 'efectivo') ? 'selected' : '' ?>>💵 Efectivo</option>
+          <option value="tarjeta" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'tarjeta') || ($pedido && $pedido['forma_pago'] === 'tarjeta') ? 'selected' : '' ?>>💳 Tarjeta</option>
+          <option value="transferencia" <?= (isset($_POST['forma_pago']) && $_POST['forma_pago'] === 'transferencia') || ($pedido && $pedido['forma_pago'] === 'transferencia') ? 'selected' : '' ?>>🏦 Transferencia</option>
         </select>
       </div>
                 
       <div class="form-group">
         <label for="observaciones">Observaciones</label>
         <textarea name="observaciones" id="observaciones" rows="2" 
-                  placeholder="Observaciones especiales..."><?= htmlspecialchars($_POST['observaciones'] ?? '') ?></textarea>
+                  placeholder="Observaciones especiales..."><?= htmlspecialchars($_POST['observaciones'] ?? ($pedido['observaciones'] ?? '')) ?></textarea>
       </div>
     </div>
 
@@ -904,7 +944,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ← Volver a Pedidos
     </a>
       <button type="submit" class="btn btn-success">
-        💾 Crear Pedido
+        <?= $is_edit ? '💾 Actualizar Pedido' : '💾 Crear Pedido' ?>
       </button>
     </div>
   </form>
@@ -1284,5 +1324,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Por defecto, modo 'stay' está seleccionado
     selectModoConsumo('stay');
   }
+  
+  // Si es edición, cargar items existentes
+  <?php if ($is_edit && !empty($detalles)): ?>
+    loadExistingItems();
+  <?php endif; ?>
 });
+
+// Función para cargar items existentes en modo edición
+function loadExistingItems() {
+  console.log('=== FUNCIÓN loadExistingItems LLAMADA ===');
+  <?php if ($is_edit && !empty($detalles)): ?>
+    const existingItems = <?= json_encode($detalles) ?>;
+    console.log('=== DEBUGGING CARGA DE ITEMS ===');
+    console.log('is_edit:', <?= $is_edit ? 'true' : 'false' ?>);
+    console.log('detalles vacío:', <?= empty($detalles) ? 'true' : 'false' ?>);
+    console.log('Cantidad de detalles:', <?= count($detalles) ?>);
+    console.log('Cargando items existentes:', existingItems);
+    
+    existingItems.forEach((detalle, index) => {
+      const item = {
+        index: items.length,
+        id: detalle.id_item,
+        nombre: detalle.item_nombre, // Corregido: usar item_nombre en lugar de nombre
+        precio: parseFloat(detalle.precio_unitario),
+        cantidad: parseInt(detalle.cantidad),
+        detalle: detalle.detalle || '',
+        descuento: 0,
+        precioOriginal: parseFloat(detalle.precio_unitario)
+      };
+      
+      console.log('Agregando item:', item);
+      items.push(item);
+      createItemCard(item);
+    });
+    
+    updateTotal();
+    console.log('Items cargados:', items);
+  <?php else: ?>
+    console.log('No hay items para cargar');
+  <?php endif; ?>
+}
 </script>

@@ -53,6 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
     $nuevo_estado = trim($_POST['nuevo_estado'] ?? '');
     
     if ($id_mesa > 0 && in_array($nuevo_estado, ['libre', 'ocupada', 'reservada'])) {
+        // Validación especial: no permitir cambiar a "libre" si hay pedidos activos
+        if ($nuevo_estado === 'libre' && Mesa::tienePedidosActivos($id_mesa)) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false, 
+                'message' => 'No se puede marcar la mesa como libre porque tiene pedidos activos. Primero debe cerrar todos los pedidos de esta mesa.'
+            ]);
+            exit;
+        }
+        
         $resultado = Mesa::updateEstado($id_mesa, $nuevo_estado);
         if ($resultado) {
             // Devolver respuesta JSON para AJAX
@@ -70,8 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
     }
 }
 
-// 1) Cargamos todas las mesas
-$mesas = Mesa::all();
+// 1) Cargamos todas las mesas (activas e inactivas)
+$mesasActivas = Mesa::all();
+$mesasInactivas = Mesa::allInactive();
 ?>
 
 <!-- Header de gestión -->
@@ -89,33 +100,9 @@ $mesas = Mesa::all();
   <?php endif; ?>
 </div>
 
-<?php if (isset($_GET['success'])): ?>
-    <div class="success" style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-        <?php if ($_GET['success'] == '1'): ?>
-        Mesa eliminada correctamente.
-        <?php elseif ($_GET['success'] == '3'): ?>
-            Estado de la mesa actualizado correctamente.
-        <?php endif; ?>
-    </div>
-<?php endif; ?>
+<!-- Sistema de notificaciones temporales -->
+<div id="notification-container"></div>
 
-<?php if (isset($_GET['error'])): ?>
-    <div class="error" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-        <?php if ($_GET['error'] == '1'): ?>
-        No se puede eliminar una mesa que está ocupada.
-        <?php elseif ($_GET['error'] == '2'): ?>
-        Error al eliminar la mesa.
-        <?php elseif ($_GET['error'] == '3'): ?>
-            <?php if (isset($_GET['message'])): ?>
-                <?= htmlspecialchars(urldecode($_GET['message'])) ?>
-            <?php else: ?>
-                Error al eliminar la mesa.
-            <?php endif; ?>
-        <?php elseif ($_GET['error'] == '4'): ?>
-            Error al cambiar el estado de la mesa.
-        <?php endif; ?>
-    </div>
-<?php endif; ?>
 
 <?php if ($rol !== 'administrador'): ?>
   <div style="background: #d1ecf1; padding: 8px; border-radius: 4px; margin-bottom: 1rem; color: #0c5460; font-size: 0.9rem; text-align: center;">
@@ -127,10 +114,10 @@ $mesas = Mesa::all();
 <div class="filters-container">
   <!-- Botón para mostrar/ocultar filtros en móvil -->
   <button id="toggleFilters" class="toggle-filters-btn" onclick="toggleFilters()">
-    🔍 Filtros
+    Filtrar
   </button>
   
-  <div id="filtersContent" class="search-filter" style="background: rgb(250, 238, 193); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 1rem; position: relative; z-index: 1;">
+  <div id="filtersContent" class="search-filter" style="background: rgb(250, 238, 193); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 1rem; position: relative; z-index: 1; display: none;">
   <!-- Filtro por número -->
   <div style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: nowrap; margin-bottom: 0.5rem;">
     <label for="mesaSearch" style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">🔍 Buscar:</label>
@@ -162,6 +149,9 @@ $mesas = Mesa::all();
       <button class="status-filter-btn" data-status="reservada" style="padding: 4px 8px; border: none; background: #fff3cd; color: #856404; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
         Reservada
       </button>
+      <button class="status-filter-btn" data-status="inactiva" style="padding: 4px 8px; border: none; background: #dc3545; color: white; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
+        Inactiva
+      </button>
     </div>
   </div>
   
@@ -169,8 +159,20 @@ $mesas = Mesa::all();
   </div>
 </div>
 
+<!-- Pestañas para mesas activas e inactivas -->
+<div class="tabs-container">
+  <div class="tabs">
+    <button class="tab-button active" onclick="showTab('activas')">
+      🟢 Mesas Activas (<?= count($mesasActivas) ?>)
+    </button>
+    <button class="tab-button" onclick="showTab('inactivas')">
+      🔴 Mesas Inactivas (<?= count($mesasInactivas) ?>)
+    </button>
+  </div>
+</div>
+
 <!-- Vista de tabla para desktop -->
-<div class="table-responsive">
+<div class="table-responsive" id="mesas-activas">
 <table class="table">
   <thead>
     <tr>
@@ -185,7 +187,7 @@ $mesas = Mesa::all();
     </tr>
   </thead>
   <tbody>
-    <?php foreach ($mesas as $m): ?>
+    <?php foreach ($mesasActivas as $m): ?>
       <tr>
         <td><?= htmlspecialchars($m['numero']) ?></td>
         <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
@@ -223,7 +225,15 @@ $mesas = Mesa::all();
         <td>
           <div class="state-shortcuts">
             <?php if ($m['estado'] !== 'libre'): ?>
-              <button class="state-btn libre" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'libre')" title="Marcar como Libre">
+              <?php 
+              $tienePedidosActivos = ($m['pedidos_activos'] ?? 0) > 0;
+              $disabled = $tienePedidosActivos ? 'disabled' : '';
+              $title = $tienePedidosActivos ? 
+                'No se puede marcar como libre (tiene ' . $m['pedidos_activos'] . ' pedido(s) activo(s))' : 
+                'Marcar como Libre';
+              $class = $tienePedidosActivos ? 'state-btn libre disabled' : 'state-btn libre';
+              ?>
+              <button class="<?= $class ?>" onclick="<?= $tienePedidosActivos ? 'void(0)' : 'cambiarEstado(' . $m['id_mesa'] . ', \'libre\')' ?>" title="<?= $title ?>" <?= $disabled ?>>
                 🟢
               </button>
             <?php endif; ?>
@@ -245,9 +255,9 @@ $mesas = Mesa::all();
               ✏️
             </a>
             <?php if ($m['estado'] === 'libre'): ?>
-              <a href="#" class="btn-action delete"
-                 onclick="confirmarBorradoMesa(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>)"
-                 title="Eliminar mesa">
+              <a href="javascript:void(0)" class="btn-action delete"
+                 onclick="confirmarBorradoMesa(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>); return false;"
+                 title="Desactivar mesa">
                 ❌
               </a>
             <?php else: ?>
@@ -264,10 +274,54 @@ $mesas = Mesa::all();
 </table>
 </div>
 
+<!-- Tabla de mesas inactivas (oculta por defecto) -->
+<div class="table-responsive" id="mesas-inactivas" style="display: none;">
+<table class="table">
+  <thead>
+    <tr>
+      <th>Número</th>
+      <th>Ubicación</th>
+      <th>Estado</th>
+      <th>Mozo Asignado</th>
+      <?php if ($rol === 'administrador'): ?>
+        <th>Acciones</th>
+      <?php endif; ?>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach ($mesasInactivas as $m): ?>
+      <tr>
+        <td><?= htmlspecialchars($m['numero']) ?></td>
+        <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
+        <td>
+          <span class="status-badge status-inactiva">🔴 Inactiva</span>
+        </td>
+        <td>
+          <?php if ($m['mozo_nombre_completo']): ?>
+            <?= htmlspecialchars($m['mozo_nombre_completo']) ?>
+          <?php else: ?>
+            <span class="text-muted">Sin asignar</span>
+          <?php endif; ?>
+        </td>
+        <?php if ($rol === 'administrador'): ?>
+          <td class="actions">
+            <a href="javascript:void(0)" class="btn-action reactivate"
+               onclick="confirmarReactivacionMesa(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>); return false;"
+               title="Reactivar mesa">
+              ✅
+            </a>
+          </td>
+        <?php endif; ?>
+      </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>
+</div>
+
 <!-- Vista de tarjetas para móviles -->
 <div class="mobile-cards">
-  <?php foreach ($mesas as $m): ?>
-    <div class="mobile-card">
+  <?php foreach ($mesasActivas as $m): ?>
+    <div class="mobile-card mesa-activa">
       <div class="mobile-card-header">
         <div class="mobile-card-number">Mesa <?= htmlspecialchars($m['numero']) ?></div>
         <?php if ($rol === 'administrador'): ?>
@@ -276,9 +330,9 @@ $mesas = Mesa::all();
               ✏️
             </a>
             <?php if ($m['estado'] === 'libre'): ?>
-              <a href="#" class="btn-action delete"
-                 onclick="confirmarBorradoMesa(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>)"
-                 title="Eliminar mesa">
+              <a href="javascript:void(0)" class="btn-action delete"
+                 onclick="confirmarBorradoMesa(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>); return false;"
+                 title="Desactivar mesa">
                 ❌
               </a>
             <?php else: ?>
@@ -341,7 +395,15 @@ $mesas = Mesa::all();
         <div class="mobile-card-label" style="margin-bottom: 0.3rem;">🔄 Cambiar Estado:</div>
         <div class="state-shortcuts">
           <?php if ($m['estado'] !== 'libre'): ?>
-            <button class="state-btn libre" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'libre')" title="Marcar como Libre">
+            <?php 
+            $tienePedidosActivos = ($m['pedidos_activos'] ?? 0) > 0;
+            $disabled = $tienePedidosActivos ? 'disabled' : '';
+            $title = $tienePedidosActivos ? 
+              'No se puede marcar como libre (tiene ' . $m['pedidos_activos'] . ' pedido(s) activo(s))' : 
+              'Marcar como Libre';
+            $class = $tienePedidosActivos ? 'state-btn libre disabled' : 'state-btn libre';
+            ?>
+            <button class="<?= $class ?>" onclick="<?= $tienePedidosActivos ? 'void(0)' : 'cambiarEstado(' . $m['id_mesa'] . ', \'libre\')' ?>" title="<?= $title ?>" <?= $disabled ?>>
               🟢 Libre
             </button>
           <?php endif; ?>
@@ -355,6 +417,52 @@ $mesas = Mesa::all();
               🟡 Reservada
             </button>
           <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  <?php endforeach; ?>
+  
+  <!-- Tarjetas móviles para mesas inactivas (ocultas por defecto) -->
+  <?php foreach ($mesasInactivas as $m): ?>
+    <div class="mobile-card mesa-inactiva" style="display: none;">
+      <div class="mobile-card-header">
+        <div class="mobile-card-number">Mesa <?= htmlspecialchars($m['numero']) ?></div>
+        <?php if ($rol === 'administrador'): ?>
+          <div class="mobile-card-actions">
+            <a href="javascript:void(0)" class="btn-action reactivate"
+               onclick="confirmarReactivacionMesa(<?= $m['id_mesa'] ?>, <?= $m['numero'] ?>); return false;"
+               title="Reactivar mesa">
+              ✅
+            </a>
+          </div>
+        <?php endif; ?>
+</div>
+
+      <div class="mobile-card-body">
+        <div class="mobile-card-item">
+          <div class="mobile-card-label">📍 Ubicación</div>
+          <div class="mobile-card-value"><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></div>
+        </div>
+        
+        <div class="mobile-card-item">
+          <div class="mobile-card-label">📊 Estado</div>
+          <div class="mobile-card-value">
+            <span class="status-badge status-inactiva">🔴 Inactiva</span>
+          </div>
+        </div>
+        
+        <div class="mobile-card-item">
+          <div class="mobile-card-label">👤 Mozo</div>
+          <div class="mobile-card-value">
+            <?php if (!empty($m['mozo_nombre_completo'])): ?>
+              <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; 
+                           background: #e2e3e5; color: #383d41;">
+                <?= htmlspecialchars($m['mozo_nombre_completo']) ?>
+              </span>
+            <?php else: ?>
+              <span class="text-muted">Sin asignar</span>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
     </div>
@@ -443,7 +551,12 @@ function initMesasFilters() {
     }
     
     function getMesaStatusFromCard(card) {
-        // Buscar el estado en la tarjeta móvil
+        // Si es una tarjeta inactiva, devolver 'inactiva'
+        if (card.classList.contains('mesa-inactiva')) {
+            return 'inactiva';
+        }
+        
+        // Buscar el estado en la tarjeta móvil activa
         const statusItems = card.querySelectorAll('.mobile-card-item');
         for (let item of statusItems) {
             const label = item.querySelector('.mobile-card-label');
@@ -503,7 +616,18 @@ function initMesasFilters() {
             const matchesSearch = searchTerm === '' || mesaNumber.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || mesaStatus === statusFilter;
             
-            if (matchesSearch && matchesStatus) {
+            // Verificar si la tarjeta debe mostrarse según la pestaña activa
+            const isActiveTab = document.querySelector('.tab-button.active').onclick.toString().includes('activas');
+            const isInactiveTab = document.querySelector('.tab-button.active').onclick.toString().includes('inactivas');
+            
+            let shouldShow = false;
+            if (isActiveTab && card.classList.contains('mesa-activa')) {
+                shouldShow = true;
+            } else if (isInactiveTab && card.classList.contains('mesa-inactiva')) {
+                shouldShow = true;
+            }
+            
+            if (matchesSearch && matchesStatus && shouldShow) {
                 card.style.display = '';
                 visibleCount++;
             } else {
@@ -692,10 +816,15 @@ function cambiarEstadoConfirmado(idMesa, nuevoEstado) {
                 const data = JSON.parse(text);
                 console.log('Respuesta del servidor (JSON):', data);
                 if (data.success) {
+                    // Mostrar notificación de éxito
+                    showNotification('Estado de la mesa actualizado correctamente', 'success', 4000);
                     // Recargar la página para mostrar los cambios
-                    location.reload();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
                 } else {
-                    alert('Error: ' + data.message);
+                    // Mostrar notificación de error con el mensaje específico
+                    showNotification(data.message || 'Error al cambiar el estado de la mesa', 'error', 6000);
                 }
             } catch (e) {
                 console.error('Error parsing JSON:', e);
@@ -706,7 +835,7 @@ function cambiarEstadoConfirmado(idMesa, nuevoEstado) {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al cambiar el estado de la mesa: ' + error.message);
+            showNotification('Error al cambiar el estado de la mesa: ' + error.message, 'error', 6000);
         });
         
         // Limpiar variables
@@ -723,11 +852,216 @@ function toggleFilters() {
     
     if (filtersContent.style.display === 'none' || filtersContent.style.display === '') {
         filtersContent.style.display = 'block';
-        toggleBtn.innerHTML = '🔍 Ocultar Filtros';
+        toggleBtn.innerHTML = 'Ocultar Filtros';
     } else {
         filtersContent.style.display = 'none';
-        toggleBtn.innerHTML = '🔍 Filtros';
+        toggleBtn.innerHTML = 'Filtrar';
     }
+}
+
+// Sistema de notificaciones temporales
+function showNotification(message, type = 'success', duration = 4000) {
+  const container = document.getElementById('notification-container');
+  
+  // Crear elemento de notificación
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  
+  // Icono según el tipo y mensaje
+  let icon = '✅';
+  if (type === 'error') {
+    // Si es un mensaje de eliminación, usar icono de basura
+    if (message.toLowerCase().includes('eliminada') || message.toLowerCase().includes('eliminado')) {
+      icon = '🗑️';
+    } else {
+      icon = '❌';
+    }
+  }
+  
+  notification.innerHTML = `
+    <span class="notification-icon">${icon}</span>
+    <span class="notification-content">${message}</span>
+    <button class="notification-close" onclick="closeNotification(this)">×</button>
+  `;
+  
+  // Agregar al contenedor
+  container.appendChild(notification);
+  
+  // Mostrar con animación
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 100);
+  
+  // Auto-eliminar después del tiempo especificado
+  setTimeout(() => {
+    closeNotification(notification.querySelector('.notification-close'));
+  }, duration);
+}
+
+function closeNotification(closeButton) {
+  const notification = closeButton.closest('.notification');
+  if (notification) {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 400);
+  }
+}
+
+// Verificar si hay mensajes en la URL y mostrarlos como notificaciones
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  if (urlParams.has('success')) {
+    let message = '';
+    const successCode = urlParams.get('success');
+    
+    if (successCode == '1') {
+      message = 'Mesa desactivada correctamente.';
+    } else if (successCode == '2') {
+      message = 'Mesa reactivada correctamente.';
+    } else if (successCode == '3') {
+      message = 'Estado de la mesa actualizado correctamente.';
+    }
+    
+    if (message) {
+      // Determinar el tipo de notificación basado en el mensaje
+      let notificationType = 'success';
+      let duration = 5000;
+      
+      // Si el mensaje es de desactivación, usar estilo de error (rojo)
+      if (message.toLowerCase().includes('desactivada')) {
+        notificationType = 'error';
+        duration = 6000;
+      } else if (message.toLowerCase().includes('reactivada')) {
+        // Los mensajes de reactivación son éxito (verde)
+        notificationType = 'success';
+        duration = 5000;
+      }
+      
+      showNotification(message, notificationType, duration);
+    }
+    
+    // Limpiar la URL sin recargar la página
+    const newUrl = window.location.pathname + window.location.search.replace(/[?&]success=[^&]*/, '').replace(/[?&]error=[^&]*/, '');
+    if (newUrl.endsWith('?')) {
+      window.history.replaceState({}, '', newUrl.slice(0, -1));
+    } else {
+      window.history.replaceState({}, '', newUrl);
+    }
+  }
+  
+  if (urlParams.has('error')) {
+    let message = '';
+    const errorCode = urlParams.get('error');
+    
+    if (errorCode == '1') {
+      message = 'No se puede eliminar una mesa que está ocupada.';
+    } else if (errorCode == '2') {
+      message = 'Error al eliminar la mesa.';
+    } else if (errorCode == '3') {
+      if (urlParams.has('message')) {
+        message = decodeURIComponent(urlParams.get('message'));
+      } else {
+        message = 'Error al eliminar la mesa.';
+      }
+    } else if (errorCode == '4') {
+      message = 'Error al cambiar el estado de la mesa.';
+    }
+    
+    if (message) {
+      showNotification(message, 'error', 6000);
+    }
+    
+    // Limpiar la URL sin recargar la página
+    const newUrl = window.location.pathname + window.location.search.replace(/[?&]success=[^&]*/, '').replace(/[?&]error=[^&]*/, '');
+    if (newUrl.endsWith('?')) {
+      window.history.replaceState({}, '', newUrl.slice(0, -1));
+    } else {
+      window.history.replaceState({}, '', newUrl);
+    }
+  }
+});
+
+console.log('Script de mesas cargado correctamente');
+
+// Función para cambiar entre pestañas
+function showTab(tabName) {
+  // Ocultar todas las secciones de desktop
+  document.getElementById('mesas-activas').style.display = 'none';
+  document.getElementById('mesas-inactivas').style.display = 'none';
+  
+  // Ocultar todas las tarjetas móviles
+  const mobileCards = document.querySelectorAll('.mobile-card');
+  mobileCards.forEach(card => {
+    card.style.display = 'none';
+  });
+  
+  // Remover clase active de todos los botones
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Mostrar la sección seleccionada
+  if (tabName === 'activas') {
+    // Mostrar tabla de desktop
+    document.getElementById('mesas-activas').style.display = 'block';
+    
+    // Mostrar tarjetas móviles activas
+    mobileCards.forEach(card => {
+      if (card.classList.contains('mesa-activa')) {
+        card.style.display = 'block';
+      }
+    });
+    
+    document.querySelector('.tab-button[onclick="showTab(\'activas\')"]').classList.add('active');
+  } else if (tabName === 'inactivas') {
+    // Mostrar tabla de desktop
+    document.getElementById('mesas-inactivas').style.display = 'block';
+    
+    // Mostrar tarjetas móviles inactivas
+    mobileCards.forEach(card => {
+      if (card.classList.contains('mesa-inactiva')) {
+        card.style.display = 'block';
+      }
+    });
+    
+    document.querySelector('.tab-button[onclick="showTab(\'inactivas\')"]').classList.add('active');
+  }
+}
+
+// Función para reactivar mesa (usando el modal existente)
+function confirmarReactivacionMesa(id, numero) {
+  console.log('confirmarReactivacionMesa llamado con:', id, numero);
+  
+  ModalConfirmacion.show({
+    title: '✅ Reactivar Mesa',
+    message: '¿Estás seguro de que quieres reactivar esta mesa?',
+    itemName: `Mesa #${numero}`,
+    note: 'La mesa volverá a aparecer en las listas y estará disponible para asignar mozos y recibir pedidos.',
+    confirmText: '✅ Reactivar',
+    cancelText: '❌ Cancelar',
+    onConfirm: () => {
+      // Crear un formulario temporal para enviar la solicitud de reactivación
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = window.location.origin + window.location.pathname + '?route=mesas/reactivate';
+      
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'id';
+      input.value = id;
+      
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+    },
+    onCancel: () => {
+      console.log('Reactivación de mesa cancelada');
+    }
+  });
 }
 </script>
 
@@ -738,27 +1072,38 @@ function toggleFilters() {
 <style>
 /* Estilos para filtros desplegables en móvil */
 .toggle-filters-btn {
-    display: none;
+    display: block;
     width: 100%;
-    padding: 0.5rem;
-    background: var(--secondary);
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%);
     color: white;
     border: none;
     border-radius: 6px;
     font-size: 0.9rem;
-    font-weight: normal;
+    font-weight: 600;
     cursor: pointer;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-filters-btn:hover {
-    background: #5a6268;
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, rgb(190, 141, 56) 0%, rgb(170, 125, 50) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .filters-container {
+    background: rgb(238, 224, 191);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+#filtersContent {
+    display: none;
+    padding: 1rem;
 }
 
 /* En móvil, ocultar filtros por defecto y mostrar botón */
@@ -821,6 +1166,32 @@ function toggleFilters() {
     
     .mobile-cards {
         padding: 0.4rem !important;
+        gap: 0.5rem;
+    }
+    
+    .mobile-card {
+        padding: 0.6rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .mobile-card-header {
+        margin-bottom: 0.4rem !important;
+    }
+    
+    .mobile-card-number {
+        font-size: 0.8rem !important;
+    }
+    
+    .mobile-card-item {
+        margin-bottom: 0.3rem !important;
+    }
+    
+    .mobile-card-label {
+        font-size: 0.7rem !important;
+    }
+    
+    .mobile-card-value {
+        font-size: 0.75rem !important;
     }
     
     .mobile-cards .card-title {
@@ -853,14 +1224,14 @@ function toggleFilters() {
     }
 }
 
-/* En desktop, mostrar filtros normalmente */
+/* En desktop, mantener botón visible */
 @media (min-width: 769px) {
     .toggle-filters-btn {
-        display: none;
+        display: block;
     }
     
     #filtersContent {
-        display: block !important;
+        display: none;
     }
 }
 
@@ -930,6 +1301,22 @@ function toggleFilters() {
 }
 
 /* Responsive para móvil */
+@media (max-width: 992px) {
+  .management-header {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .management-header h1 {
+    font-size: 1.1rem;
+  }
+  
+  .header-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
 @media (max-width: 768px) {
   .management-header {
     padding: 8px;
@@ -940,7 +1327,7 @@ function toggleFilters() {
   }
   
   .management-header h1 {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     text-align: center;
     margin-bottom: 0.5rem;
   }
@@ -951,8 +1338,434 @@ function toggleFilters() {
   }
   
   .header-btn {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .table {
+    font-size: 0.85rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.5rem 0.3rem;
   }
 }
+
+@media (max-width: 480px) {
+  .management-header {
+    padding: 6px;
+    margin-bottom: 6px;
+  }
+  
+  .management-header h1 {
+    font-size: 0.8rem;
+  }
+  
+  .header-btn {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .table {
+    font-size: 0.8rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.4rem 0.2rem;
+  }
+  
+  .btn-action {
+    min-width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Estilos para notificaciones temporales */
+#notification-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2000;
+  max-width: 380px;
+}
+
+.notification {
+  background: white;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-left: 3px solid;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
+}
+
+.notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.notification.success {
+  border-left-color: #28a745;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.notification.error {
+  border-left-color: #dc3545;
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+}
+
+.notification-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+  color: #333;
+  font-weight: 500;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #666;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.notification-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* Efecto de progreso */
+.notification::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.3;
+  animation: progress 4s linear forwards;
+}
+
+.notification.success::after {
+  background: #28a745;
+}
+
+.notification.error::after {
+  background: #dc3545;
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Responsive para notificaciones */
+@media (max-width: 768px) {
+  #notification-container {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+  
+  .notification {
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+  
+  .notification-icon {
+    font-size: 1.2rem;
+  }
+  
+  .notification-content {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #notification-container {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+  }
+  
+  .notification {
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+  }
+  
+  .notification-icon {
+    font-size: 1.1rem;
+  }
+  
+  .notification-content {
+    font-size: 0.8rem;
+  }
+  
+  .notification-close {
+    font-size: 1rem;
+    padding: 2px;
+  }
+}
+
+/* Estilos para pestañas */
+.tabs-container {
+  margin-bottom: 1.2rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6c757d;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: #495057;
+  background: #f8f9fa;
+}
+
+.tab-button.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: #f8f9fa;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #007bff;
+}
+
+/* Estilos para estado inactivo */
+.status-inactiva {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Estilos para botón de reactivar */
+.btn-action.reactivate {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border-radius: 5px;
+  padding: 5px 8px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+}
+
+.btn-action.reactivate:hover {
+  background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+/* Responsive para pestañas */
+@media (max-width: 992px) {
+  .tab-button {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs-container {
+    margin-bottom: 1rem;
+  }
+  
+  .tabs {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .tab-button {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 0;
+    text-align: left;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: #007bff;
+    background: #e3f2fd;
+  }
+  
+  .tab-button:hover {
+    background: #f5f5f5;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs-container {
+    margin-bottom: 0.8rem;
+  }
+  
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
+  
+  .status-inactiva {
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 12px;
+  }
+  
+  .btn-action.reactivate {
+    min-width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+    padding: 4px 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .tabs-container {
+    margin-bottom: 0.6rem;
+  }
+  
+  .tab-button {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+  }
+  
+  .management-header h1 {
+    font-size: 0.75rem;
+  }
+  
+  .header-btn {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .table {
+    font-size: 0.75rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.3rem 0.1rem;
+  }
+  
+  .btn-action {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.6rem;
+  }
+  
+  .mobile-card {
+    padding: 0.4rem !important;
+  }
+  
+  .mobile-card-number {
+    font-size: 0.75rem !important;
+  }
+  
+  .mobile-card-label {
+    font-size: 0.65rem !important;
+  }
+  
+  .mobile-card-value {
+    font-size: 0.7rem !important;
+  }
+  
+  .status-inactiva {
+    padding: 1px 6px;
+    font-size: 0.65rem;
+    border-radius: 10px;
+  }
+  
+  .btn-action.reactivate {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.6rem;
+    padding: 3px 5px;
+  }
+}
+
+/* Estilos para botones de estado deshabilitados */
+.state-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  border: 1px solid #dee2e6 !important;
+  pointer-events: none;
+}
+
+.state-btn.disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+}
+
+/* Estilos específicos para botón libre deshabilitado */
+.state-btn.libre.disabled {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+.state-btn.libre.disabled:hover {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+}
+
 </style>

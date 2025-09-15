@@ -9,7 +9,8 @@ use App\Models\Pedido;
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Mozos y administradores pueden ver pedidos
+
+// Verificar permisos
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ' . url('login'));
     exit;
@@ -17,7 +18,62 @@ if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'ad
 
 $rol = $_SESSION['user']['rol'];
 
-// Procesar cambio de estado si es POST
+// Función para validar transiciones de estado
+function validarTransicionEstado($estado_actual, $nuevo_estado) {
+    // Definir transiciones permitidas según el flujo de negocio
+    $transiciones_permitidas = [
+        'pendiente' => ['en_preparacion', 'cerrado'], // pendiente → en_preparacion o cerrado
+        'en_preparacion' => ['servido', 'cerrado'],   // en_preparacion → servido o cerrado
+        'servido' => ['cerrado'],                     // servido → cerrado
+        'cerrado' => []                               // cerrado no puede cambiar
+    ];
+    
+    // Si el estado actual no existe en las transiciones, no permitir
+    if (!isset($transiciones_permitidas[$estado_actual])) {
+        return false;
+    }
+    
+    // Verificar si la transición está permitida
+    return in_array($nuevo_estado, $transiciones_permitidas[$estado_actual]);
+}
+
+// Función para obtener el nombre legible del estado
+function obtenerNombreEstado($estado) {
+    $nombres = [
+        'pendiente' => 'Pendiente',
+        'en_preparacion' => 'En Preparación',
+        'servido' => 'Servido',
+        'cerrado' => 'Cerrado'
+    ];
+    
+    return $nombres[$estado] ?? $estado;
+}
+
+// Función para obtener transiciones permitidas desde un estado
+function obtenerTransicionesPermitidas($estado_actual) {
+    $transiciones = [
+        'pendiente' => ['en_preparacion', 'cerrado'],
+        'en_preparacion' => ['servido', 'cerrado'],
+        'servido' => ['cerrado'],
+        'cerrado' => []
+    ];
+    
+    return $transiciones[$estado_actual] ?? [];
+}
+
+// Función para obtener iconos de estados
+function obtenerIconoEstado($estado) {
+    $iconos = [
+        'pendiente' => '⏳',
+        'en_preparacion' => '👨‍🍳',
+        'servido' => '✅',
+        'cerrado' => '🔒'
+    ];
+    
+    return $iconos[$estado] ?? '❓';
+}
+
+// Procesar cambio de estado si es POST (ANTES de cualquier salida HTML)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
     // Permitir a mozos y administradores cambiar estado
     if (in_array($rol, ['mozo', 'administrador'])) {
@@ -31,6 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
             $pedido = Pedido::find($id_pedido);
             if ($pedido && $pedido['estado'] === 'cerrado') {
                 header('Location: ' . url('pedidos', ['error' => '3']));
+                exit;
+            }
+            
+            // Verificar si el estado actual es el mismo que el nuevo estado
+            if ($pedido && $pedido['estado'] === $nuevo_estado) {
+                header('Location: ' . url('pedidos', ['error' => '4']));
                 exit;
             }
             
@@ -56,7 +118,178 @@ if ($rol === 'mozo') {
     $pedidos = Pedido::all();
 }
 
+// Incluir header DESPUÉS de procesar POST
+require_once __DIR__ . '/../includes/header.php';
 ?>
+
+<style>
+/* Estilos para filtros desplegables */
+.toggle-filters-btn {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-filters-btn:hover {
+    background: linear-gradient(135deg, rgb(190, 141, 56) 0%, rgb(170, 125, 50) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.filters-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+#filtersContent {
+    display: none;
+    padding: 1rem;
+}
+
+.filter-group {
+    margin-bottom: 1rem;
+}
+
+.filter-group:last-child {
+    margin-bottom: 0;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.status-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.status-filter-btn {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    background: #f8f9fa;
+    color: #495057;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.status-filter-btn:hover {
+    background: #e9ecef;
+}
+
+.status-filter-btn.active {
+    background: rgb(83, 52, 31);
+    color: white;
+}
+
+/* Estilos para el header de gestión */
+.management-header {
+  background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
+  color: white !important;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.management-header * {
+  color: white !important;
+}
+
+.management-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white !important;
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.header-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  color: white !important;
+}
+
+.header-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+  .management-header {
+    padding: 8px;
+    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .management-header h1 {
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-actions {
+    justify-content: center;
+  }
+  
+  .header-btn {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+</style>
+
 
 <!-- Header de gestión -->
 <div class="management-header">
@@ -74,29 +307,8 @@ if ($rol === 'mozo') {
   </div>
 <?php endif; ?>
 
-<?php if (isset($_GET['success'])): ?>
-    <div class="success" style="color: green; background: #d4edda; padding: 6px 10px; border-radius: 4px; margin-bottom: 0.6rem; font-size: 0.85rem;">
-        <?php if ($_GET['success'] == '1'): ?>
-            Estado del pedido actualizado correctamente.
-        <?php else: ?>
-            <?= htmlspecialchars($_GET['success']) ?>
-        <?php endif; ?>
-    </div>
-<?php endif; ?>
-
-<?php if (isset($_GET['error'])): ?>
-    <div class="error" style="color: red; background: #f8d7da; padding: 6px 10px; border-radius: 4px; margin-bottom: 0.6rem; font-size: 0.85rem;">
-        <?php if ($_GET['error'] == '1'): ?>
-            Error al actualizar el estado del pedido.
-        <?php elseif ($_GET['error'] == '2'): ?>
-            Estado inválido.
-        <?php elseif ($_GET['error'] == '3'): ?>
-            No se puede cambiar el estado de un pedido cerrado.
-        <?php else: ?>
-            <?= htmlspecialchars($_GET['error']) ?>
-        <?php endif; ?>
-    </div>
-<?php endif; ?>
+<!-- Sistema de notificaciones temporales -->
+<div id="notification-container"></div>
 
 
 <!-- Filtros de búsqueda -->
@@ -274,32 +486,42 @@ if ($rol === 'mozo') {
           <td><?= !empty($pedido['fecha_creacion']) ? date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) : 'N/A' ?></td>
           <td class="action-cell">
             <div class="state-shortcuts">
-              <?php if ($pedido['estado'] !== 'cerrado'): ?>
-                <button class="state-btn pendiente" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'pendiente')" title="Cambiar a Pendiente">
-                  ⏳
-                </button>
-                <button class="state-btn en_preparacion" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'en_preparacion')" title="Cambiar a En Preparación">
-                  👨‍🍳
-                </button>
-                <button class="state-btn servido" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'servido')" title="Cambiar a Servido">
-                  ✅
-                </button>
-                <button class="state-btn cerrado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cerrado')" title="Cambiar a Cerrado">
-                  🔒
-                </button>
-              <?php else: ?>
+              <?php 
+              $estado_actual = $pedido['estado'];
+              $estados_disponibles = obtenerTransicionesPermitidas($estado_actual);
+              
+              if (empty($estados_disponibles)): ?>
                 <span style="color: #6c757d; font-size: 0.8rem; font-style: italic;">Pedido cerrado</span>
+              <?php else: ?>
+                <?php foreach ($estados_disponibles as $estado): ?>
+                  <?php
+                  $icono = obtenerIconoEstado($estado);
+                  $nombre = obtenerNombreEstado($estado);
+                  ?>
+                  <button class="state-btn <?= $estado ?>" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, '<?= $estado ?>')" title="Cambiar a <?= $nombre ?>">
+                    <?= $icono ?>
+                  </button>
+                <?php endforeach; ?>
               <?php endif; ?>
             </div>
           </td>
           <?php if ($rol === 'administrador'): ?>
             <td class="action-cell">
-              <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
-                ✏️
-              </a>
-              <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
-                ❌
-              </a>
+              <?php if ($pedido['estado'] !== 'cerrado'): ?>
+                <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
+                  ✏️
+                </a>
+                <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
+                  ❌
+                </a>
+              <?php else: ?>
+                <span class="btn-action disabled" title="No se puede editar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
+                  ✏️
+                </span>
+                <span class="btn-action disabled" title="No se puede eliminar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
+                  ❌
+                </span>
+              <?php endif; ?>
             </td>
           <?php endif; ?>
         </tr>
@@ -327,30 +549,37 @@ if ($rol === 'mozo') {
               <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
                 ✏️
               </a>
-              <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
-                ❌
-              </a>
+              <?php if ($pedido['estado'] !== 'cerrado'): ?>
+                <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
+                  ❌
+                </a>
+              <?php else: ?>
+                <span class="btn-action disabled" title="No se puede eliminar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
+                  🔒
+                </span>
+              <?php endif; ?>
             <?php endif; ?>
           </div>
         </div>
         
         <div class="mobile-state-shortcuts">
           <div class="state-shortcuts">
-            <?php if ($pedido['estado'] !== 'cerrado'): ?>
-              <button class="state-btn pendiente" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'pendiente')" title="Cambiar a Pendiente">
-                ⏳
-              </button>
-              <button class="state-btn en_preparacion" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'en_preparacion')" title="Cambiar a En Preparación">
-                👨‍🍳
-              </button>
-              <button class="state-btn servido" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'servido')" title="Cambiar a Servido">
-                ✅
-              </button>
-              <button class="state-btn cerrado" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, 'cerrado')" title="Cambiar a Cerrado">
-                🔒
-              </button>
-            <?php else: ?>
+            <?php 
+            $estado_actual = $pedido['estado'];
+            $estados_disponibles = obtenerTransicionesPermitidas($estado_actual);
+            
+            if (empty($estados_disponibles)): ?>
               <span style="color: #6c757d; font-size: 0.7rem; font-style: italic; text-align: center; display: block; padding: 0.3rem;">Pedido cerrado</span>
+            <?php else: ?>
+              <?php foreach ($estados_disponibles as $estado): ?>
+                <?php
+                $icono = obtenerIconoEstado($estado);
+                $nombre = obtenerNombreEstado($estado);
+                ?>
+                <button class="state-btn <?= $estado ?>" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, '<?= $estado ?>')" title="Cambiar a <?= $nombre ?>">
+                  <?= $icono ?>
+                </button>
+              <?php endforeach; ?>
             <?php endif; ?>
           </div>
         </div>
@@ -771,6 +1000,113 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Sistema de notificaciones temporales
+function showNotification(message, type = 'success', duration = 4000) {
+  const container = document.getElementById('notification-container');
+  
+  // Crear elemento de notificación
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  
+  // Icono según el tipo y mensaje
+  let icon = '✅';
+  if (type === 'error') {
+    icon = '❌';
+  } else if (type === 'warning') {
+    icon = '⚠️';
+  }
+  
+  notification.innerHTML = `
+    <span class="notification-icon">${icon}</span>
+    <span class="notification-content">${message}</span>
+    <button class="notification-close" onclick="closeNotification(this)">×</button>
+  `;
+  
+  // Agregar al contenedor
+  container.appendChild(notification);
+  
+  // Mostrar con animación
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 100);
+  
+  // Auto-eliminar después del tiempo especificado
+  setTimeout(() => {
+    closeNotification(notification.querySelector('.notification-close'));
+  }, duration);
+}
+
+function closeNotification(closeButton) {
+  const notification = closeButton.closest('.notification');
+  if (notification) {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 400);
+  }
+}
+
+// Verificar si hay mensajes en la URL y mostrarlos como notificaciones
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  if (urlParams.has('success')) {
+    let message = '';
+    const successCode = urlParams.get('success');
+    
+    if (successCode == '1') {
+      message = 'Estado del pedido actualizado correctamente.';
+    } else {
+      message = successCode;
+    }
+    
+    if (message) {
+      showNotification(message, 'success', 5000);
+    }
+    
+    // Limpiar la URL sin recargar la página
+    const newUrl = window.location.pathname + window.location.search.replace(/[?&]success=[^&]*/, '').replace(/[?&]error=[^&]*/, '');
+    if (newUrl.endsWith('?')) {
+      window.history.replaceState({}, '', newUrl.slice(0, -1));
+    } else {
+      window.history.replaceState({}, '', newUrl);
+    }
+  }
+  
+  if (urlParams.has('error')) {
+    let message = '';
+    const errorCode = urlParams.get('error');
+    
+    if (errorCode == '1') {
+      message = 'Error al actualizar el estado del pedido.';
+    } else if (errorCode == '2') {
+      message = 'Estado inválido.';
+    } else if (errorCode == '3') {
+      message = 'No se puede cambiar el estado de un pedido cerrado.';
+    } else if (errorCode == '4') {
+      message = '⚠️ El pedido ya tiene ese estado. No se realizó ningún cambio.';
+    } else {
+      message = errorCode;
+    }
+    
+    if (message) {
+      // Usar tipo 'warning' para el error 4, 'error' para los demás
+      const notificationType = errorCode == '4' ? 'warning' : 'error';
+      showNotification(message, notificationType, 6000);
+    }
+    
+    // Limpiar la URL sin recargar la página
+    const newUrl = window.location.pathname + window.location.search.replace(/[?&]success=[^&]*/, '').replace(/[?&]error=[^&]*/, '');
+    if (newUrl.endsWith('?')) {
+      window.history.replaceState({}, '', newUrl.slice(0, -1));
+    } else {
+      window.history.replaceState({}, '', newUrl);
+    }
+  }
+});
 </script>
 
 <style>
@@ -975,97 +1311,136 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-/* Estilos para el header de gestión */
-.management-header {
-  background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
-  color: white !important;
-  padding: 12px;
-  border-radius: 8px;
+/* Estilos para notificaciones temporales */
+#notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  max-width: 400px;
+}
+
+.notification {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
   margin-bottom: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-left: 4px solid;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+  gap: 12px;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
 }
 
-.management-header * {
-  color: white !important;
+.notification.show {
+  transform: translateX(0);
+  opacity: 1;
 }
 
-.management-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: white !important;
+.notification.success {
+  border-left-color: #28a745;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.notification.error {
+  border-left-color: #dc3545;
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+}
+
+.notification.warning {
+  border-left-color: #ffc107;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+}
+
+.notification-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.notification-content {
   flex: 1;
-  min-width: 200px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.header-btn {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white !important;
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  color: #333;
   font-weight: 500;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  white-space: nowrap;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
-.header-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  color: white !important;
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.header-btn.secondary {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+.notification-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
 }
 
-.header-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
+/* Efecto de progreso */
+.notification::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.3;
+  animation: progress 4s linear forwards;
 }
 
-/* Responsive para móvil */
-@media (max-width: 768px) {
-  .management-header {
-    padding: 8px;
-    margin-bottom: 8px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
+.notification.success::after {
+  background: #28a745;
+}
+
+.notification.error::after {
+  background: #dc3545;
+}
+
+.notification.warning::after {
+  background: #ffc107;
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Responsive para notificaciones */
+@media (max-width: 480px) {
+  #notification-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
   }
   
-  .management-header h1 {
-    font-size: 1.1rem;
-    text-align: center;
-    margin-bottom: 0.5rem;
+  .notification {
+    padding: 12px 16px;
+    font-size: 0.9rem;
   }
   
-  .header-actions {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  
-  .header-btn {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
+  .notification-icon {
+    font-size: 1.3rem;
   }
 }
 </style>
 
-
+<?php
+// Incluir footer
+require_once __DIR__ . '/../includes/footer.php';
+?>

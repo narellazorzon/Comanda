@@ -167,19 +167,29 @@ function confirmarBorradoMesa(id, numero) {
     console.log('confirmarBorradoMesa llamado con:', id, numero);
     
     ModalConfirmacion.show({
-        title: '⚠️ Eliminar Mesa',
-        message: '¿Estás seguro de que quieres eliminar esta mesa?',
+        title: '⚠️ Desactivar Mesa',
+        message: '¿Estás seguro de que quieres desactivar esta mesa?',
         itemName: `Mesa #${numero}`,
-        note: 'Esta acción no se puede deshacer. Asegúrate de que la mesa no tenga pedidos activos.',
-        confirmText: '🗑️ Eliminar',
+        note: 'La mesa se marcará como inactiva y no aparecerá en las listas, pero se mantendrá en el historial. Esta acción se puede revertir.',
+        confirmText: '⚠️ Desactivar',
         cancelText: '❌ Cancelar',
         onConfirm: () => {
-            const actionUrl = window.location.origin + window.location.pathname + '?delete=' + id;
-            console.log('URL generada para eliminación de mesa:', actionUrl);
-            window.location.href = actionUrl;
+            // Crear un formulario temporal para enviar la solicitud de eliminación
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = window.location.origin + window.location.pathname + '?route=mesas/delete';
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'id';
+            input.value = id;
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
         },
         onCancel: () => {
-            console.log('Eliminación de mesa cancelada');
+            console.log('Desactivación de mesa cancelada');
         }
     });
 }
