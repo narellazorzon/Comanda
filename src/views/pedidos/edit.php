@@ -37,6 +37,12 @@ if (!$pedido) {
     exit;
 }
 
+// Verificar que el pedido no esté cerrado
+if ($pedido['estado'] === 'cerrado') {
+    header('Location: ' . url('pedidos', ['error' => 'No se puede editar un pedido cerrado']));
+    exit;
+}
+
 // Cargar detalles del pedido
 $detalles = Pedido::getDetalles($pedido_id);
 

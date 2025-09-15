@@ -43,27 +43,18 @@ $mozos = Usuario::allByRole('mozo');
   </div>
 </div>
 
-<?php if (isset($_GET['success'])): ?>
-    <div class="success" style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-        <?= htmlspecialchars($_GET['success']) ?>
-    </div>
-<?php endif; ?>
-
-<?php if (isset($_GET['error'])): ?>
-    <div class="error" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-        <?= htmlspecialchars($_GET['error']) ?>
-    </div>
-<?php endif; ?>
+<!-- Sistema de notificaciones temporales -->
+<div id="notification-container"></div>
 
 
 <!-- Filtros de búsqueda y estado -->
 <div class="filters-container">
   <!-- Botón para mostrar/ocultar filtros en móvil -->
   <button id="toggleFilters" class="toggle-filters-btn" onclick="toggleFilters()">
-    🔍 Filtros
+    Filtrar
   </button>
   
-  <div id="filtersContent" class="search-filter" style="background:rgb(245, 236, 198); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem;">
+  <div id="filtersContent" class="search-filter" style="background:rgb(245, 236, 198); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; display: none;">
   <!-- Filtro por nombre -->
   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
     <label style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">👤 Nombre:</label>
@@ -325,12 +316,105 @@ function toggleFilters() {
     
     if (filtersContent.style.display === 'none' || filtersContent.style.display === '') {
         filtersContent.style.display = 'block';
-        toggleBtn.innerHTML = '🔍 Ocultar Filtros';
+        toggleBtn.innerHTML = 'Ocultar Filtros';
     } else {
         filtersContent.style.display = 'none';
-        toggleBtn.innerHTML = '🔍 Filtros';
+        toggleBtn.innerHTML = 'Filtrar';
     }
 }
+
+// Sistema de notificaciones temporales
+function showNotification(message, type = 'success', duration = 4000) {
+  const container = document.getElementById('notification-container');
+  
+  // Crear elemento de notificación
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  
+  // Icono según el tipo y mensaje
+  let icon = '✅';
+  if (type === 'error') {
+    // Si es un mensaje de eliminación, usar icono de basura
+    if (message.toLowerCase().includes('eliminado') || message.toLowerCase().includes('inactivado')) {
+      icon = '🗑️';
+    } else {
+      icon = '❌';
+    }
+  }
+  
+  notification.innerHTML = `
+    <span class="notification-icon">${icon}</span>
+    <span class="notification-content">${message}</span>
+    <button class="notification-close" onclick="closeNotification(this)">×</button>
+  `;
+  
+  // Agregar al contenedor
+  container.appendChild(notification);
+  
+  // Mostrar con animación
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 100);
+  
+  // Auto-eliminar después del tiempo especificado
+  setTimeout(() => {
+    closeNotification(notification.querySelector('.notification-close'));
+  }, duration);
+}
+
+function closeNotification(closeButton) {
+  const notification = closeButton.closest('.notification');
+  if (notification) {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 400);
+  }
+}
+
+// Verificar si hay mensajes en la URL y mostrarlos como notificaciones
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  if (urlParams.has('success')) {
+    const message = urlParams.get('success');
+    
+    // Determinar el tipo de notificación basado en el mensaje
+    let notificationType = 'success';
+    let duration = 5000;
+    
+    // Si el mensaje es de eliminación o inactivación, usar estilo de error (rojo)
+    if (message.toLowerCase().includes('eliminado') || message.toLowerCase().includes('inactivado')) {
+      notificationType = 'error';
+      duration = 6000;
+    }
+    
+    showNotification(message, notificationType, duration);
+    
+    // Limpiar la URL sin recargar la página
+    const newUrl = window.location.pathname + window.location.search.replace(/[?&]success=[^&]*/, '').replace(/[?&]error=[^&]*/, '');
+    if (newUrl.endsWith('?')) {
+      window.history.replaceState({}, '', newUrl.slice(0, -1));
+    } else {
+      window.history.replaceState({}, '', newUrl);
+    }
+  }
+  
+  if (urlParams.has('error')) {
+    const message = urlParams.get('error');
+    showNotification(message, 'error', 6000);
+    
+    // Limpiar la URL sin recargar la página
+    const newUrl = window.location.pathname + window.location.search.replace(/[?&]success=[^&]*/, '').replace(/[?&]error=[^&]*/, '');
+    if (newUrl.endsWith('?')) {
+      window.history.replaceState({}, '', newUrl.slice(0, -1));
+    } else {
+      window.history.replaceState({}, '', newUrl);
+    }
+  }
+});
 </script>
 
 <!-- Incluir CSS y JS del modal de confirmación -->
@@ -340,27 +424,38 @@ function toggleFilters() {
 <style>
 /* Estilos para filtros desplegables en móvil */
 .toggle-filters-btn {
-    display: none;
+    display: block;
     width: 100%;
-    padding: 0.5rem;
-    background: var(--secondary);
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%);
     color: white;
     border: none;
     border-radius: 6px;
     font-size: 0.9rem;
-    font-weight: normal;
+    font-weight: 600;
     cursor: pointer;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-filters-btn:hover {
-    background: #5a6268;
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, rgb(190, 141, 56) 0%, rgb(170, 125, 50) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .filters-container {
+    background: rgb(238, 224, 191);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+#filtersContent {
+    display: none;
+    padding: 1rem;
 }
 
 /* En móvil, ocultar filtros por defecto y mostrar botón */
@@ -460,6 +555,8 @@ function toggleFilters() {
         margin-bottom: 0.5rem;
         padding: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transform: scale(0.9);
+        transform-origin: top center;
     }
     
     .card-header {
@@ -562,7 +659,7 @@ function toggleFilters() {
 }
 
 .table th {
-    background-color:rgb(150, 129, 98);
+    background-color: rgb(125, 93, 69);
     font-weight: 600;
 }
 
@@ -612,14 +709,14 @@ function toggleFilters() {
     pointer-events: none;
 }
 
-/* En desktop, mostrar filtros normalmente */
+/* En desktop, mantener botón visible */
 @media (min-width: 769px) {
     .toggle-filters-btn {
-        display: none;
+        display: block;
     }
     
     #filtersContent {
-        display: block;
+        display: none;
     }
     
     /* Ocultar tarjetas móviles en desktop */
@@ -704,7 +801,7 @@ function toggleFilters() {
   }
   
   .management-header h1 {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     text-align: center;
     margin-bottom: 0.5rem;
   }
@@ -715,8 +812,127 @@ function toggleFilters() {
   }
   
   .header-btn {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+
+/* Estilos para notificaciones temporales */
+#notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  max-width: 400px;
+}
+
+.notification {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-left: 4px solid;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
+}
+
+.notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.notification.success {
+  border-left-color: #28a745;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.notification.error {
+  border-left-color: #dc3545;
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+}
+
+.notification-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+  color: #333;
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.notification-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* Efecto de progreso */
+.notification::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.3;
+  animation: progress 4s linear forwards;
+}
+
+.notification.success::after {
+  background: #28a745;
+}
+
+.notification.error::after {
+  background: #dc3545;
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Responsive para notificaciones */
+@media (max-width: 480px) {
+  #notification-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .notification {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+  
+  .notification-icon {
+    font-size: 1.3rem;
   }
 }
 </style>

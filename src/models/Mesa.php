@@ -7,7 +7,7 @@ use PDO;
 
 class Mesa {
     /**
-     * Devuelve todas las mesas ordenadas por número con información del mozo asignado.
+     * Devuelve todas las mesas activas ordenadas por número con información del mozo asignado.
      */
     public static function all(): array {
         $db   = (new Database)->getConnection();
@@ -15,16 +15,18 @@ class Mesa {
             SELECT m.*, 
                    u.nombre as mozo_nombre,
                    u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
+                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo,
+                   (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos
             FROM mesas m
             LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
+            WHERE m.status = 1
             ORDER BY m.numero ASC
         ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Busca una mesa por su ID con información del mozo asignado, o devuelve null si no existe.
+     * Busca una mesa activa por su ID con información del mozo asignado, o devuelve null si no existe.
      */
     public static function find(int $id): ?array {
         $db   = (new Database)->getConnection();
@@ -35,7 +37,7 @@ class Mesa {
                    CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
             FROM mesas m
             LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.id_mesa = ?
+            WHERE m.id_mesa = ? AND m.status = 1
         ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -91,7 +93,7 @@ class Mesa {
         
         $estado = $data['estado'] ?? 'libre';
         
-        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, estado, id_mozo) VALUES (?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, estado, id_mozo, status) VALUES (?, ?, ?, ?, 1)");
         return $stmt->execute([
             $numero,
             $data['ubicacion'] ?? null,
@@ -191,6 +193,59 @@ class Mesa {
     }
 
     /**
+     * Devuelve todas las mesas inactivas ordenadas por número con información del mozo asignado.
+     */
+    public static function allInactive(): array {
+        $db   = (new Database)->getConnection();
+        $stmt = $db->query("
+            SELECT m.*, 
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo,
+                   (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos
+            FROM mesas m
+            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
+            WHERE m.status = 0
+            ORDER BY m.numero ASC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Reactiva una mesa (cambia status de 0 a 1).
+     */
+    public static function reactivate(int $id): array {
+        $db = (new Database)->getConnection();
+        
+        try {
+            // Verificar si la mesa existe y está inactiva
+            $checkStmt = $db->prepare("SELECT id_mesa, status FROM mesas WHERE id_mesa = ?");
+            $checkStmt->execute([$id]);
+            $mesa = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$mesa) {
+                return ['success' => false, 'message' => 'La mesa no existe'];
+            }
+            
+            if ($mesa['status'] == 1) {
+                return ['success' => false, 'message' => 'La mesa ya está activa'];
+            }
+            
+            // Reactivar la mesa
+            $stmt = $db->prepare("UPDATE mesas SET status = 1 WHERE id_mesa = ?");
+            $result = $stmt->execute([$id]);
+            
+            if ($result && $stmt->rowCount() > 0) {
+                return ['success' => true, 'message' => 'Mesa reactivada correctamente'];
+            } else {
+                return ['success' => false, 'message' => 'No se pudo reactivar la mesa'];
+            }
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Error al reactivar la mesa: ' . $e->getMessage()];
+        }
+    }
+
+    /**
      * Verifica si una mesa tiene pedidos activos.
      */
     public static function tienePedidosActivos(int $id): bool {
@@ -201,29 +256,37 @@ class Mesa {
     }
 
     /**
-     * Borra una mesa por su ID.
+     * Marca una mesa como inactiva (soft delete) por su ID.
      * @return array ['success' => bool, 'message' => string]
      */
     public static function delete(int $id): array {
         $db = (new Database)->getConnection();
         
         try {
-            $stmt = $db->prepare("DELETE FROM mesas WHERE id_mesa = ?");
+            // Verificar si la mesa existe y está activa
+            $checkStmt = $db->prepare("SELECT id_mesa, status FROM mesas WHERE id_mesa = ?");
+            $checkStmt->execute([$id]);
+            $mesa = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$mesa) {
+                return ['success' => false, 'message' => 'La mesa no existe'];
+            }
+            
+            if ($mesa['status'] == 0) {
+                return ['success' => false, 'message' => 'La mesa ya está inactiva'];
+            }
+            
+            // Marcar como inactiva (soft delete)
+            $stmt = $db->prepare("UPDATE mesas SET status = 0 WHERE id_mesa = ?");
             $result = $stmt->execute([$id]);
             
             if ($result && $stmt->rowCount() > 0) {
-                return ['success' => true, 'message' => 'Mesa eliminada correctamente'];
+                return ['success' => true, 'message' => 'Mesa desactivada correctamente'];
             } else {
-                return ['success' => false, 'message' => 'No se pudo eliminar la mesa'];
+                return ['success' => false, 'message' => 'No se pudo desactivar la mesa'];
             }
         } catch (PDOException $e) {
-            // Manejar el error específico de pedidos activos
-            if ($e->getCode() == '45000' && strpos($e->getMessage(), 'pedidos activos') !== false) {
-                return ['success' => false, 'message' => 'No se puede eliminar una mesa con pedidos activos. Primero debe cerrar todos los pedidos de esta mesa.'];
-            }
-            
-            // Otros errores de base de datos
-            return ['success' => false, 'message' => 'Error al eliminar la mesa: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Error al desactivar la mesa: ' . $e->getMessage()];
         }
     }
 }

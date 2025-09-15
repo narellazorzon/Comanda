@@ -260,7 +260,12 @@ class Pedido {
             ORDER BY dp.id_detalle
         ");
         $stmt->execute([$id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Debug: verificar qué se está devolviendo
+        error_log('getDetalles para pedido ' . $id . ': ' . print_r($result, true));
+        
+        return $result;
     }
 
     /**

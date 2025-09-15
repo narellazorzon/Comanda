@@ -46,7 +46,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 
 // Iconos para cada categoría
 $iconosCategorias = [
-    'Entradas' => '🥟',
+    'Entradas' ,
     'Platos Principales' => '🍽️',
     'Carnes' => '🥩',
     'Aves' => '🍗',
@@ -93,56 +93,63 @@ $iconosCategorias = [
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(135deg, #f7f1e1 0%, #f0e8d8 100%);
-        color: var(--color-texto);
+        color: rgb(83, 52, 31);
         min-height: 100vh;
     }
 
-    /* Header del menú */
+    /* --- Caja título --- */
     .menu-header {
-        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
-        color: white;
-        padding: 2rem 0;
-        box-shadow: var(--sombra-media);
-        position: sticky;
-        top: 0;
-        z-index: 100;
+        background: linear-gradient(135deg,rgb(83, 52, 31),rgb(137, 107, 75));
+        color: #fff;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 0 1rem 1rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-
-    .menu-header-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
+    
+    .menu-header h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.25rem;
+        color: rgb(247, 241, 226);
     }
-
-
-    .menu-title {
-        font-size: 2rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .menu-subtitle {
+    
+    .menu-header p {
         font-size: 0.9rem;
         opacity: 0.9;
-        margin-top: 0.25rem;
+        color: rgb(247, 241, 226);
     }
 
-    /* Navegación de categorías */
-    .categoria-nav {
-        background: white;
-        padding: 1rem 0 1.5rem 0; /* Más padding inferior */
-        box-shadow: var(--sombra-suave);
-        position: sticky;
-        top: 100px;
-        z-index: 90;
-        margin-bottom: 2rem;
+    /* --- Caja filtros scrollables --- */
+    .menu-filters {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding: 0.5rem 1rem;
+        margin: 0 1rem 1rem;
+        scrollbar-width: none;       /* Firefox */
+    }
+    
+    .menu-filters::-webkit-scrollbar {
+        display: none;              /* Chrome/Safari */
+    }
+    
+    .menu-filters button {
+        flex: 0 0 auto;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        border: 1px solid #b08d67;
+        background: #fff;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .menu-filters button.active,
+    .menu-filters button:hover {
+        background: #b08d67;
+        color: #fff;
     }
 
     .categoria-nav-content {
@@ -184,7 +191,7 @@ $iconosCategorias = [
 
     .categoria-btn {
         background: var(--color-superficie);
-        border: 2px solid var(--color-primario);
+        border: 2px solid rgb(83, 52, 31);
         color: var(--color-primario);
         padding: 0.5rem 1rem;
         border-radius: 20px;
@@ -196,6 +203,7 @@ $iconosCategorias = [
         align-items: center;
         gap: 0.25rem;
         font-size: 0.9rem;
+        flex-shrink: 0;
     }
 
     .categoria-btn:hover {
@@ -206,7 +214,7 @@ $iconosCategorias = [
     }
 
     .categoria-btn.active {
-        background: var(--color-primario);
+        background: rgb(83, 52, 31);
         color: white;
     }
 
@@ -240,7 +248,7 @@ $iconosCategorias = [
         gap: 0.75rem;
         margin-bottom: 1.5rem;
         padding-bottom: 0.75rem;
-        border-bottom: 3px solid var(--color-primario);
+        border-bottom: 3px solid rgb(83, 52, 31);
     }
 
     .categoria-icono {
@@ -250,23 +258,27 @@ $iconosCategorias = [
     .categoria-titulo {
         font-size: 1.75rem;
         font-weight: 700;
-        color: var(--color-secundario);
+        color: rgb(83, 52, 31);
     }
 
-    .categoria-count {
-        background: var(--color-primario);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
 
-    /* Grid de productos */
+    /* Grid de productos - Diseño mixto responsive */
     .productos-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: 1fr;   /* mobile */
+        gap: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+        .productos-grid {
+            grid-template-columns: repeat(2, 1fr); /* tablet */
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .productos-grid {
+            grid-template-columns: repeat(3, 1fr); /* desktop */
+        }
     }
 
     /* Tarjeta de producto */
@@ -278,6 +290,7 @@ $iconosCategorias = [
         transition: all 0.3s ease;
         display: flex;
         flex-direction: column;
+        height: 100%;
     }
 
     .producto-card:hover {
@@ -286,21 +299,82 @@ $iconosCategorias = [
     }
 
     .producto-header {
-        padding: 1.25rem 1.25rem 0.75rem;
+        padding: 1rem 1rem 0.5rem;
         background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
     }
 
     .producto-nombre {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 700;
         color: var(--color-texto);
         margin-bottom: 0.5rem;
+        line-height: 1.3;
     }
 
     .producto-badges {
         display: flex;
         gap: 0.5rem;
         margin-bottom: 0.75rem;
+    }
+    
+    /* Estilos para imagen del producto */
+    .producto-imagen {
+        padding: 0 1.25rem;
+        margin-bottom: 0.75rem;
+        text-align: center;
+    }
+    
+    .producto-img {
+        width: 100%;
+        height: 200px; /* Imagen grande para móvil 1 columna */
+        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    @media (min-width: 768px) {
+        .producto-img {
+            height: 100px; /* Imagen mediana para tablet 2 columnas */
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .producto-img {
+            height: 80px; /* Imagen pequeña para desktop 3 columnas */
+        }
+    }
+    
+    .producto-img:hover {
+        transform: scale(1.02);
+    }
+    
+    .producto-imagen-placeholder {
+        width: 100%;
+        height: 200px; /* Placeholder grande para móvil 1 columna */
+        background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #999;
+        margin: 0 auto;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    @media (min-width: 768px) {
+        .producto-imagen-placeholder {
+            height: 100px; /* Placeholder mediano para tablet 2 columnas */
+            font-size: 2rem;
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .producto-imagen-placeholder {
+            height: 80px; /* Placeholder pequeño para desktop 3 columnas */
+            font-size: 1.5rem;
+        }
     }
 
     .badge {
@@ -326,10 +400,27 @@ $iconosCategorias = [
         line-height: 1.4;
         padding: 0 1.25rem;
         flex-grow: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2; /* Mostrar máximo 2 líneas */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    @media (min-width: 768px) {
+        .producto-descripcion {
+            -webkit-line-clamp: 3; /* 3 líneas en tablet */
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .producto-descripcion {
+            -webkit-line-clamp: 2; /* 2 líneas en desktop */
+        }
     }
 
     .producto-footer {
-        padding: 1rem 1.25rem;
+        padding: 0.75rem 1rem;
         background: #fafafa;
         display: flex;
         justify-content: space-between;
@@ -338,28 +429,129 @@ $iconosCategorias = [
     }
 
     .producto-precio {
-        font-size: 1.5rem;
+        font-size: 1.5rem; /* Precio grande para móvil */
         font-weight: 700;
         color: var(--color-secundario);
     }
+    
+    @media (min-width: 768px) {
+        .producto-precio {
+            font-size: 1.3rem; /* Precio mediano para tablet */
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .producto-precio {
+            font-size: 1.2rem; /* Precio pequeño para desktop */
+        }
+    }
+
+    /* Estilos para precios con descuento */
+    .precio-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .precio-original {
+        font-size: 1rem;
+        color: #999;
+        text-decoration: line-through;
+        font-weight: 500;
+    }
+
+    .precio-descuento {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-exito);
+    }
+
+    .descuento-badge {
+        background: #ff4444;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .precio-descuento {
+            font-size: 1.3rem;
+        }
+        .precio-original {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .precio-descuento {
+            font-size: 1.2rem;
+        }
+        .precio-original {
+            font-size: 0.85rem;
+        }
+    }
 
     .add-btn {
-        background: var(--color-acento);
+        background: linear-gradient(135deg, #55aacc 0%, #4a9bc4 50%, #3d8bb8 100%);
         color: white;
         border: none;
-        padding: 0.75rem 1.25rem;
-        border-radius: 8px;
+        padding: 0.6rem 1rem; /* Botón grande para móvil */
+        border-radius: 12px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.25rem;
+        font-size: 0.9rem;
+        box-shadow: 0 3px 8px rgba(85, 170, 204, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    @media (min-width: 768px) {
+        .add-btn {
+            padding: 0.5rem 0.8rem; /* Botón mediano para tablet */
+            font-size: 0.85rem;
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .add-btn {
+            padding: 0.4rem 0.7rem; /* Botón pequeño para desktop */
+            font-size: 0.8rem;
+        }
     }
 
     .add-btn:hover {
-        background: #0056b3;
-        transform: scale(1.05);
+        background: linear-gradient(135deg, #6bb6ff 0%, #5aa5e8 50%, #4d94d6 100%);
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 15px rgba(85, 170, 204, 0.4);
+    }
+
+    .add-btn:active {
+        transform: translateY(0) scale(0.98);
+        box-shadow: 0 2px 5px rgba(85, 170, 204, 0.3);
+    }
+
+    /* Efecto de brillo al pasar el mouse */
+    .add-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .add-btn:hover::before {
+        left: 100%;
     }
 
     .add-btn:disabled {
@@ -368,8 +560,9 @@ $iconosCategorias = [
     }
 
     .add-btn.added {
-        background: var(--color-exito);
+        background: linear-gradient(135deg, #28a745 0%, #20c997 50%, #17a2b8 100%);
         animation: pulse 0.3s ease;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
     }
 
     @keyframes pulse {
@@ -382,7 +575,7 @@ $iconosCategorias = [
         position: fixed;
         bottom: 2rem;
         right: 2rem;
-        background: var(--color-primario);
+        background: rgb(137, 107, 75);
         color: white;
         border: none;
         padding: 1rem;
@@ -401,7 +594,37 @@ $iconosCategorias = [
 
     .cart-button-float:hover {
         transform: scale(1.1);
-        background: var(--color-secundario);
+        background: rgb(137, 107, 75);
+    }
+
+    /* Botón de volver arriba (desktop) */
+    .back-to-top {
+        position: fixed;
+        bottom: 5rem;
+        right: 2rem;
+        width: 50px;
+        height: 50px;
+        background: rgb(137, 107, 75);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 150;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .back-to-top.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .back-to-top:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.3);
     }
 
     .cart-counter {
@@ -823,53 +1046,304 @@ $iconosCategorias = [
 
     /* Responsive */
     @media (max-width: 768px) {
+        /* Ajustes generales */
+        body {
+            font-size: 14px;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Header móvil optimizado */
+        .menu-header {
+            padding: 1rem 0;
+            transform: scale(1);
+            transform-origin: top center;
+            width: 100%;
+            margin: 0;
+        }
+
+        .menu-header-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+
         .menu-title {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
         }
 
-        .productos-grid {
-            grid-template-columns: 1fr;
+        .menu-subtitle {
+            font-size: 0.75rem;
         }
 
-        .categoria-nav {
-            top: 80px;
+        /* Filtros móvil */
+        .menu-filters {
+            padding: 0.5rem 1rem;
+            margin: 0 1rem 1rem;
+            gap: 0.4rem;
+        }
+        
+        .menu-filters button {
+            padding: 0.35rem 0.7rem;
+            font-size: 0.8rem;
         }
 
+        /* Contenedor principal */
+        .menu-container {
+            padding: 1rem 0.75rem;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+        }
+
+        /* Secciones de categoría */
+        .categoria-seccion {
+            margin-bottom: 2rem;
+        }
+
+        .categoria-header {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .categoria-titulo {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+
+        /* Grid responsive ya definido arriba con media queries */
+
+        /* Estilos específicos para móvil - solo ajustes menores */
+        .producto-card {
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .producto-header {
+            padding: 1rem 1rem 0.75rem;
+        }
+
+        .producto-nombre {
+            font-size: 1.1rem;
+        }
+
+        .producto-footer {
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+
+        .add-btn {
+            width: 100%;
+        }
+
+        /* Botón flotante del carrito */
         .cart-button-float {
             bottom: 1rem;
             right: 1rem;
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .cart-button-float .cart-count {
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+        }
+
+        /* Modal del carrito móvil */
+        .cart-modal {
+            width: 100%;
+            height: 100%;
+            max-height: 100vh;
+            border-radius: 0;
+        }
+
+        .cart-content {
+            padding: 1rem;
+        }
+
+        .cart-header h3 {
+            font-size: 1.2rem;
+        }
+
+        .cart-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .cart-item-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .cart-item-price {
+            font-size: 0.8rem;
+            color: var(--color-texto-suave);
+        }
+
+        .qty button {
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
+        }
+
+        .qty span {
+            font-size: 0.9rem;
+            min-width: 30px;
+        }
+
+        .cart-summary {
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .cart-summary-header h4 {
+            font-size: 0.9rem;
+        }
+
+        .total-box {
+            font-size: 1.1rem;
+            padding: 0.75rem;
+        }
+
+        .cart-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        /* Botón de llamar mozo móvil */
+        .llamar-mozo-btn {
+            position: fixed;
+            bottom: 5rem;
+            right: 1rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            z-index: 150;
+        }
+
+        /* Toast notifications móvil */
+        .toast {
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            width: auto;
+            font-size: 0.85rem;
+        }
+
+        /* Mejoras de usabilidad táctil */
+        .categoria-btn,
+        .add-btn,
+        .btn,
+        .cart-button-float,
+        .llamar-mozo-btn {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        /* Animaciones suaves para móvil */
+        .producto-card {
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        /* Mejoras de accesibilidad */
+        .add-btn:focus,
+        .categoria-btn:focus {
+            outline: 2px solid var(--color-primario);
+            outline-offset: 2px;
+        }
+
+        /* Optimización de scroll */
+        .menu-container {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Mejoras visuales para pantallas pequeñas */
+        .producto-card {
+            margin-bottom: 0.5rem;
+        }
+
+        .categoria-seccion:last-child {
+            margin-bottom: 6rem; /* Espacio para botones flotantes */
+        }
+
+
+        /* Botón de volver arriba */
+        .back-to-top {
+            position: fixed;
+            bottom: 7rem;
+            right: 1rem;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--color-primario) 0%, rgb(137, 107, 75) 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 150;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
         }
     }
     </style>
 </head>
 <body>
     <!-- Header del menú -->
-    <header class="menu-header">
-        <div class="menu-header-content">
-            <div>
-                <h1 class="menu-title">
-                    🍽️ Nuestro Menú
-                </h1>
-                <p class="menu-subtitle">Explora nuestra deliciosa selección de platos y bebidas</p>
-            </div>
-        </div>
-    </header>
+    <div class="menu-header">
+        <h2>🍽️ Nuestro Menú</h2>
+        <p>Explora nuestra deliciosa selección de platos y bebidas</p>
+    </div>
 
     <!-- Navegación de categorías -->
-    <nav class="categoria-nav">
-        <div class="categoria-nav-content" id="categoria-nav">
-            <button class="categoria-btn active" onclick="mostrarTodas()">
-                🍴 Todas
+    <div class="menu-filters">
+        <button class="active" onclick="mostrarTodas()">🍴 Todas</button>
+        <?php foreach ($categoriasOrdenadas as $categoria => $items): ?>
+            <button onclick="filtrarCategoria('<?= htmlspecialchars($categoria) ?>')">
+                <?= $iconosCategorias[$categoria] ?? '🍴' ?> <?= htmlspecialchars($categoria) ?>
             </button>
-            <?php foreach ($categoriasOrdenadas as $categoria => $items): ?>
-                <button class="categoria-btn" onclick="filtrarCategoria('<?= htmlspecialchars($categoria) ?>')">
-                    <?= $iconosCategorias[$categoria] ?? '🍴' ?> <?= htmlspecialchars($categoria) ?>
-                </button>
-            <?php endforeach; ?>
-        </div>
-    </nav>
+        <?php endforeach; ?>
+    </div>
 
     <!-- Contenedor principal del menú -->
     <div class="menu-container">
@@ -878,7 +1352,6 @@ $iconosCategorias = [
                 <div class="categoria-header">
                     <span class="categoria-icono"><?= $iconosCategorias[$categoria] ?? '🍴' ?></span>
                     <h2 class="categoria-titulo"><?= htmlspecialchars($categoria) ?></h2>
-                    <span class="categoria-count"><?= count($itemsCategoria) ?> items</span>
                 </div>
                 
                 <div class="productos-grid">
@@ -895,17 +1368,50 @@ $iconosCategorias = [
                                 </div>
                             </div>
                             
+                            <!-- Imagen del producto -->
+                            <div class="producto-imagen">
+                                <?php if (!empty($item['imagen_url'])): ?>
+                                    <img src="<?= htmlspecialchars($item['imagen_url']) ?>" 
+                                         alt="<?= htmlspecialchars($item['nombre']) ?>"
+                                         class="producto-img"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="producto-imagen-placeholder" style="display: none;">
+                                        🍽️
+                                    </div>
+                                <?php else: ?>
+                                    <div class="producto-imagen-placeholder">
+                                        🍽️
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            
                             <?php if (!empty($item['descripcion'])): ?>
-                                <p class="producto-descripcion"><?= htmlspecialchars($item['descripcion']) ?></p>
+                                <p class="producto-descripcion" title="<?= htmlspecialchars($item['descripcion']) ?>"><?= htmlspecialchars($item['descripcion']) ?></p>
                             <?php endif; ?>
                             
                             <div class="producto-footer">
-                                <span class="producto-precio">$<?= number_format($item['precio'], 2) ?></span>
+                                <?php 
+                                $precioOriginal = $item['precio'];
+                                $descuento = $item['descuento'] ?? 0;
+                                $precioConDescuento = $precioOriginal - $descuento;
+                                $tieneDescuento = $descuento > 0;
+                                ?>
+                                
+                                <?php if ($tieneDescuento): ?>
+                                    <div class="precio-container">
+                                        <span class="precio-original">$<?= number_format($precioOriginal, 2) ?></span>
+                                        <span class="precio-descuento">$<?= number_format($precioConDescuento, 2) ?></span>
+                                        <span class="descuento-badge">-<?= number_format(($descuento / $precioOriginal) * 100, 0) ?>%</span>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="producto-precio">$<?= number_format($precioOriginal, 2) ?></span>
+                                <?php endif; ?>
+                                
                                 <?php if (!empty($item['disponibilidad'])): ?>
                                     <button class="add-btn" 
                                             data-id="<?= $item['id_item'] ?>" 
                                             data-nombre="<?= htmlspecialchars($item['nombre']) ?>" 
-                                            data-precio="<?= number_format($item['precio'], 2, '.', '') ?>">
+                                            data-precio="<?= number_format($tieneDescuento ? $precioConDescuento : $precioOriginal, 2, '.', '') ?>">
                                         <span>➕</span>
                                         <span>Agregar</span>
                                     </button>
@@ -927,6 +1433,11 @@ $iconosCategorias = [
     <button id="btn-open-cart" class="cart-button-float">
         🛒
         <span id="cart-counter" class="cart-counter" style="display: none;">0</span>
+    </button>
+
+    <!-- Botón de volver arriba -->
+    <button id="back-to-top" class="back-to-top" title="Volver arriba">
+        ↑
     </button>
 
     <!-- Modal para seleccionar mesa -->
@@ -1035,13 +1546,17 @@ $iconosCategorias = [
     // Función para filtrar por categoría
     function filtrarCategoria(categoria) {
         const secciones = document.querySelectorAll('.categoria-seccion');
-        const botones = document.querySelectorAll('.categoria-btn');
+        const botones = document.querySelectorAll('.menu-filters button');
         
         // Actualizar botones activos
         botones.forEach(btn => {
             btn.classList.remove('active');
             if (btn.textContent.includes(categoria)) {
                 btn.classList.add('active');
+                // Scroll automático al botón activo
+                if (typeof scrollToCategory === 'function') {
+                    scrollToCategory(btn);
+                }
             }
         });
         
@@ -1050,7 +1565,9 @@ $iconosCategorias = [
             if (seccion.dataset.categoria === categoria) {
                 seccion.style.display = 'block';
                 // Scroll suave a la sección
-                seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => {
+                    seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
             } else {
                 seccion.style.display = 'none';
             }
@@ -1059,11 +1576,15 @@ $iconosCategorias = [
 
     function mostrarTodas() {
         const secciones = document.querySelectorAll('.categoria-seccion');
-        const botones = document.querySelectorAll('.categoria-btn');
+        const botones = document.querySelectorAll('.menu-filters button');
         
         // Actualizar botones activos
         botones.forEach(btn => btn.classList.remove('active'));
         botones[0].classList.add('active');
+        // Scroll automático al botón "Todas"
+        if (typeof scrollToCategory === 'function') {
+            scrollToCategory(botones[0]);
+        }
         
         // Mostrar todas las secciones
         secciones.forEach(seccion => {
@@ -1356,8 +1877,16 @@ $iconosCategorias = [
         const nombreCompleto = document.getElementById('nombre-completo').value.trim();
         const email = document.getElementById('email').value.trim();
         
+        console.log('=== VALIDANDO FORMULARIO ===');
+        console.log('Modo consumo:', modoConsumo);
+        console.log('Nombre completo:', nombreCompleto);
+        console.log('Email:', email);
+        console.log('Forma pago:', formaPago);
+        
         let isValid = true;
         
+        if (!modoConsumo || !nombreCompleto || !email || !formaPago) {
+            console.log('❌ Faltan campos obligatorios');
         if (!modoConsumo || !nombreCompleto || !email) {
             isValid = false;
         }
@@ -1366,30 +1895,76 @@ $iconosCategorias = [
             let mesaValida = false;
             
             if (isQRMode && mesaFromQR) {
+                console.log('✅ Mesa desde QR:', mesaFromQR);
                 mesaValida = true;
             } else {
                 const numeroMesa = document.getElementById('numero-mesa').value;
+                console.log('Número mesa manual:', numeroMesa);
                 mesaValida = !!numeroMesa;
             }
             
             if (!mesaValida) {
+                console.log('❌ Mesa no válida');
                 isValid = false;
             }
         }
         
         const cart = loadCart();
+        console.log('Carrito:', cart);
         if (cart.length === 0) {
+            console.log('❌ Carrito vacío');
             isValid = false;
         }
         
         const btnConfirmar = document.getElementById('btn-confirmar');
         btnConfirmar.disabled = !isValid;
+        console.log('Botón habilitado:', !isValid ? 'NO' : 'SÍ');
     }
 
     // Inicialización
     document.addEventListener('DOMContentLoaded', () => {
         detectQRMode();
         updateCartCounter();
+        
+        // Inicializar filtros
+        const secciones = document.querySelectorAll('.categoria-seccion');
+        
+        // Asegurar que todas las secciones estén visibles inicialmente
+        secciones.forEach(seccion => {
+            seccion.style.display = 'block';
+        });
+        
+        // Botón de volver arriba
+        const backToTopBtn = document.getElementById('back-to-top');
+        
+        // Mostrar/ocultar botón según scroll
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+        
+        // Scroll suave al hacer clic
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Scroll automático de categorías al seleccionar
+        function scrollToCategory(button) {
+            const container = document.querySelector('.menu-filters');
+            if (container) {
+                button.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
+        }
         
         // Agregar productos al carrito
         document.querySelectorAll('.add-btn:not(:disabled)').forEach(btn => {
@@ -1499,9 +2074,12 @@ $iconosCategorias = [
         
         // Envío del formulario
         document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+        document.getElementById('checkout-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            console.log('=== FORMULARIO ENVIADO ===');
             
             const cart = loadCart();
+            console.log('Carrito:', cart);
             if (cart.length === 0) {
                 alert('Tu carrito está vacío');
                 return;
@@ -1518,6 +2096,68 @@ $iconosCategorias = [
                 }
             }
             
+            console.log('Mesa final para pedido:', mesaFinal);
+            console.log('Modo consumo:', modoConsumo);
+            
+            // Preparar datos del pedido
+            const pedidoData = {
+                cliente_nombre: document.getElementById('nombre-completo').value,
+                cliente_email: document.getElementById('email').value,
+                modo_consumo: modoConsumo,
+                forma_pago: document.getElementById('forma-pago').value,
+                observaciones: '', // No hay campo de observaciones en el formulario del cliente
+                items: cart.map(item => ({
+                    id_item: item.id,
+                    cantidad: item.cantidad,
+                    precio_unitario: item.precio,
+                    detalle: item.detalle || ''
+                }))
+            };
+            
+            console.log('Datos del pedido:', pedidoData);
+            
+            // Solo incluir mesa si es modo 'stay'
+            if (modoConsumo === 'stay' && mesaFinal) {
+                pedidoData.id_mesa = parseInt(mesaFinal);
+            }
+            
+            try {
+                // Enviar pedido al servidor
+                const response = await fetch('<?= $base_url ?>/index.php?route=cliente-pedido', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(pedidoData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Mostrar mensaje de éxito
+                    showToast(`✅ ¡Pedido confirmado! ID: ${result.pedido_id}. En breve nos comunicaremos contigo.`);
+                    
+                    // Limpiar carrito y cerrar modal
+                    localStorage.removeItem(CART_KEY);
+                    modal.style.display = 'none';
+                    this.reset();
+                    
+                    if (isQRMode) {
+                        setupQRMode();
+                    } else {
+                        document.getElementById('mesa-manual-field').style.display = 'none';
+                    }
+                    
+                    updateCartCounter();
+                    validateFormQR();
+                } else {
+                    // Mostrar error
+                    showToast(`❌ Error: ${result.error || 'No se pudo crear el pedido'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error al enviar pedido:', error);
+                showToast('❌ Error de conexión. Intenta nuevamente.', 'error');
+            }
             // Preparar datos para enviar
             const formData = new FormData();
             formData.append('modo_consumo', modoConsumo);
