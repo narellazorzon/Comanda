@@ -51,25 +51,24 @@ class Mesa extends BaseModel {
             throw new \InvalidArgumentException('El número de mesa debe ser mayor a 0');
         }
         
-        $db   = (new Database)->getConnection();
-        
+
         // Verificar si ya existe una mesa con ese número
-        $checkStmt = $db->prepare("SELECT COUNT(*) FROM mesas WHERE numero = ?");
-        $checkStmt->execute([$numero]);
-        if ($checkStmt->fetchColumn() > 0) {
+        if (self::exists('mesas', 'numero = :numero', ['numero' => $numero])) {
             error_log("Mesa::create - Error: mesa duplicada con numero: " . $numero);
             throw new \InvalidArgumentException('Ya existe una mesa con el número ' . $numero);
         }
-        
-        $estado = $data['estado'] ?? 'libre';
-        
-        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, estado, id_mozo) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([
-            $numero,
-            $data['ubicacion'] ?? null,
-            $estado,
-            !empty($data['id_mozo']) ? (int) $data['id_mozo'] : null
-        ]);
+
+        $insertData = [
+            'numero' => $numero,
+            'ubicacion' => $data['ubicacion'] ?? null,
+            'estado' => $data['estado'] ?? 'libre',
+            'id_mozo' => !empty($data['id_mozo']) ? (int) $data['id_mozo'] : null
+        ];
+
+        // Agregar status solo si la columna existe
+        $insertData['status'] = 1;
+
+        return self::insert('mesas', $insertData) > 0;
     }
 
     /**
@@ -87,12 +86,9 @@ class Mesa extends BaseModel {
             throw new \InvalidArgumentException('El número de mesa debe ser mayor a 0');
         }
         
-        $db   = (new Database)->getConnection();
-        
+
         // Verificar si ya existe otra mesa con ese número (excluyendo la mesa actual)
-        $checkStmt = $db->prepare("SELECT COUNT(*) FROM mesas WHERE numero = ? AND id_mesa != ?");
-        $checkStmt->execute([$numero, $id]);
-        if ($checkStmt->fetchColumn() > 0) {
+        if (self::exists('mesas', 'numero = :numero AND id_mesa != :id', ['numero' => $numero, 'id' => $id])) {
             throw new \InvalidArgumentException('Ya existe otra mesa con el número ' . $numero);
         }
         
@@ -104,68 +100,43 @@ class Mesa extends BaseModel {
             $estado = $data['estado'];
         }
         
-        $stmt = $db->prepare("
-            UPDATE mesas
-            SET numero   = ?,
-                ubicacion= ?,
-                estado   = ?,
-                id_mozo  = ?
-            WHERE id_mesa = ?
-        ");
-        return $stmt->execute([
-            $numero,
-            $data['ubicacion'] ?? null,
-            $estado,
-            !empty($data['id_mozo']) ? (int) $data['id_mozo'] : null,
-            $id
-        ]);
+        $updateData = [
+            'numero' => $numero,
+            'ubicacion' => $data['ubicacion'] ?? null,
+            'estado' => $estado,
+            'id_mozo' => !empty($data['id_mozo']) ? (int) $data['id_mozo'] : null
+        ];
+
+        return self::updateTable('mesas', $updateData, 'id_mesa = :id', ['id' => $id]) > 0;
     }
 
     /**
      * Actualiza solo el estado de una mesa.
      */
     public static function updateEstado(int $id, string $estado): bool {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("UPDATE mesas SET estado = ? WHERE id_mesa = ?");
-        return $stmt->execute([$estado, $id]);
+        return self::updateTable('mesas', ['estado' => $estado], 'id_mesa = :id', ['id' => $id]) > 0;
     }
 
     /**
      * Asigna o cambia el mozo de una mesa.
      */
     public static function asignarMozo(int $id_mesa, ?int $id_mozo): bool {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("UPDATE mesas SET id_mozo = ? WHERE id_mesa = ?");
-        return $stmt->execute([$id_mozo, $id_mesa]);
+        return self::updateTable('mesas', ['id_mozo' => $id_mozo], 'id_mesa = :id', ['id' => $id_mesa]) > 0;
     }
 
     /**
      * Obtiene todas las mesas asignadas a un mozo específico.
      */
     public static function getMesasByMozo(int $id_mozo): array {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            SELECT m.*, 
-                   u.nombre as mozo_nombre,
-                   u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
-            FROM mesas m
-            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.id_mozo = ?
-            ORDER BY m.numero ASC
-        ");
-        $stmt->execute([$id_mozo]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = QueryBuilder::mesasWithMozo('m.id_mozo = :id_mozo');
+        return self::fetchAll($sql, ['id_mozo' => $id_mozo]);
     }
 
     /**
      * Cuenta cuántas mesas tiene asignadas un mozo.
      */
     public static function countMesasByMozo(int $id_mozo): int {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("SELECT COUNT(*) FROM mesas WHERE id_mozo = ?");
-        $stmt->execute([$id_mozo]);
-        return (int) $stmt->fetchColumn();
+        return self::count('mesas', 'id_mozo = :id_mozo', ['id_mozo' => $id_mozo]);
     }
 
     /**
@@ -180,13 +151,10 @@ class Mesa extends BaseModel {
      * Reactiva una mesa (cambia status de 0 a 1).
      */
     public static function reactivate(int $id): array {
-        $db = (new Database)->getConnection();
         
         try {
             // Verificar si la mesa existe
-            $checkStmt = $db->prepare("SELECT id_mesa, estado FROM mesas WHERE id_mesa = ?");
-            $checkStmt->execute([$id]);
-            $mesa = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            $mesa = self::fetchOne("SELECT id_mesa, estado, status FROM mesas WHERE id_mesa = :id", ['id' => $id]);
 
             if (!$mesa) {
                 return ['success' => false, 'message' => 'La mesa no existe'];
@@ -214,10 +182,7 @@ class Mesa extends BaseModel {
      * Verifica si una mesa tiene pedidos activos.
      */
     public static function tienePedidosActivos(int $id): bool {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("SELECT COUNT(*) FROM pedidos WHERE id_mesa = ? AND estado NOT IN ('cerrado', 'cancelado')");
-        $stmt->execute([$id]);
-        return (int) $stmt->fetchColumn() > 0;
+        return self::exists('pedidos', "id_mesa = :id AND estado NOT IN ('cerrado', 'cancelado')", ['id' => $id]);
     }
 
     /**
@@ -225,13 +190,10 @@ class Mesa extends BaseModel {
      * @return array ['success' => bool, 'message' => string]
      */
     public static function delete(int $id): array {
-        $db = (new Database)->getConnection();
         
         try {
             // Verificar si la mesa existe
-            $checkStmt = $db->prepare("SELECT id_mesa, estado FROM mesas WHERE id_mesa = ?");
-            $checkStmt->execute([$id]);
-            $mesa = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            $mesa = self::fetchOne("SELECT id_mesa, estado, status FROM mesas WHERE id_mesa = :id", ['id' => $id]);
 
             if (!$mesa) {
                 return ['success' => false, 'message' => 'La mesa no existe'];
@@ -241,11 +203,10 @@ class Mesa extends BaseModel {
                 return ['success' => false, 'message' => 'La mesa ya está inactiva'];
             }
 
-            // Marcar como inactiva (usando estado reservada como soft delete)
-            $stmt = $db->prepare("UPDATE mesas SET estado = 'reservada' WHERE id_mesa = ?");
-            $result = $stmt->execute([$id]);
-            
-            if ($result && $stmt->rowCount() > 0) {
+            // Marcar como inactiva (soft delete usando status)
+            $rowsAffected = self::updateTable('mesas', ['status' => 0], 'id_mesa = :id', ['id' => $id]);
+
+            if ($rowsAffected > 0) {
                 return ['success' => true, 'message' => 'Mesa desactivada correctamente'];
             } else {
                 return ['success' => false, 'message' => 'No se pudo desactivar la mesa'];

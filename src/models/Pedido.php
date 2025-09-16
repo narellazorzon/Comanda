@@ -26,30 +26,16 @@ class Pedido extends BaseModel {
      * Devuelve todos los pedidos asignados a un mozo.
      */
     public static function allByMozo(int $mozoId): array {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            SELECT * 
-            FROM pedidos 
-            WHERE id_mozo = ? 
-            ORDER BY fecha_hora DESC
-        ");
-        $stmt->execute([$mozoId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = QueryBuilder::pedidosWithMesaAndMozo('p.id_mozo = :mozoId');
+        return self::fetchAll($sql, ['mozoId' => $mozoId]);
     }
 
     /**
      * Devuelve todos los pedidos de una mesa (cliente).
      */
     public static function allByMesa(int $mesaId): array {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            SELECT * 
-            FROM pedidos 
-            WHERE id_mesa = ? 
-            ORDER BY fecha_hora DESC
-        ");
-        $stmt->execute([$mesaId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = QueryBuilder::pedidosWithMesaAndMozo('p.id_mesa = :mesaId');
+        return self::fetchAll($sql, ['mesaId' => $mesaId]);
     }
 
     /**
