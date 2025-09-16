@@ -1,5 +1,5 @@
 <?php
-// src/views/mozos/confirmar_inactivacion.php
+// src/views/mozos/confirmar_eliminacion.php
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
@@ -28,8 +28,8 @@ if ($id_mozo <= 0) {
 
 // Obtener información del mozo
 $mozo = Usuario::find($id_mozo);
-if (!$mozo || $mozo['rol'] !== 'mozo') {
-    header('Location: ' . url('mozos', ['error' => 'Mozo no encontrado']));
+if (!$mozo || !in_array($mozo['rol'], ['mozo', 'administrador'])) {
+    header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
     exit;
 }
 
@@ -38,23 +38,23 @@ $mesas_del_mozo = Mesa::getMesasByMozo($id_mozo);
 
 // Obtener otros mozos activos para reasignación
 $mozos_activos = Usuario::getMozosActivos();
-// Filtrar el mozo que se está inactivando
+// Filtrar el mozo que se está eliminando
 $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
     return $m['id_usuario'] != $id_mozo;
 });
 
 ?>
 
-<h2>⚠️ Confirmar Inactivación del Personal</h2>
+<h2>🗑️ Confirmar Eliminación del Personal</h2>
 
-<div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin-bottom: 2rem;">
-    <h3 style="margin: 0 0 15px 0; color: #856404;">🚨 Atención: Mozo con Mesas Asignadas</h3>
-    <p style="margin: 0 0 15px 0; color: #856404; font-size: 1.1em;">
+<div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 20px; margin-bottom: 2rem;">
+    <h3 style="margin: 0 0 15px 0; color: #721c24;">⚠️ ATENCIÓN: Eliminación Permanente</h3>
+    <p style="margin: 0 0 15px 0; color: #721c24; font-size: 1.1em;">
         <strong><?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?></strong> 
         tiene <strong><?= $mesas_asignadas ?> mesa(s)</strong> asignada(s).
     </p>
-    <p style="margin: 0; color: #856404;">
-        Antes de inactivar este mozo, debes decidir qué hacer con sus mesas asignadas.
+    <p style="margin: 0; color: #721c24;">
+        <strong>Esta acción es IRREVERSIBLE.</strong> Antes de eliminar este mozo, debes decidir qué hacer con sus mesas asignadas.
     </p>
 </div>
 
@@ -63,7 +63,7 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
     <h4 style="margin: 0 0 15px 0; color: #495057;">📍 Mesas Actualmente Asignadas</h4>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <?php foreach ($mesas_del_mozo as $mesa): ?>
-            <div style="background: white; border: 2px solid #ffc107; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
+            <div style="background: white; border: 2px solid #dc3545; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
                 <strong>Mesa <?= $mesa['numero'] ?></strong>
                 <?php if (!empty($mesa['ubicacion'])): ?>
                     <span style="color: #6c757d; font-size: 0.9em;">(<?= htmlspecialchars($mesa['ubicacion']) ?>)</span>
@@ -79,15 +79,12 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
 </div>
 
 <!-- Formulario de confirmación -->
-<form method="post" action="<?= url('mozos/procesar-inactivacion') ?>" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 25px;">
+<form method="post" action="<?= url('mozos/procesar-eliminacion') ?>" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 25px;">
     <!-- Datos del mozo (hidden) -->
     <input type="hidden" name="id_mozo" value="<?= $id_mozo ?>">
     <input type="hidden" name="nombre" value="<?= htmlspecialchars($_GET['nombre'] ?? $mozo['nombre']) ?>">
     <input type="hidden" name="apellido" value="<?= htmlspecialchars($_GET['apellido'] ?? $mozo['apellido']) ?>">
     <input type="hidden" name="email" value="<?= htmlspecialchars($_GET['email'] ?? $mozo['email']) ?>">
-    <?php if (!empty($_GET['nueva_contrasenia'])): ?>
-        <input type="hidden" name="nueva_contrasenia" value="<?= htmlspecialchars($_GET['nueva_contrasenia']) ?>">
-    <?php endif; ?>
     
     <h3 style="margin: 0 0 20px 0; color: #495057;">🎯 ¿Qué hacer con las mesas asignadas?</h3>
     
@@ -131,7 +128,7 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
     
     <div style="display: flex; gap: 15px; justify-content: center; padding-top: 20px; border-top: 1px solid #dee2e6;">
         <button type="submit" class="button" style="background: #dc3545; font-size: 1.1em; padding: 12px 25px;">
-            ⚠️ Confirmar Inactivación
+            🗑️ Confirmar Eliminación
         </button>
         <a href="<?= url('mozos/edit', ['id' => $id_mozo]) ?>" class="button" style="background: #6c757d; font-size: 1.1em; padding: 12px 25px;">
             ❌ Cancelar
@@ -178,7 +175,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Confirmación final
         const mozoNombre = '<?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>';
         const mesasCount = <?= $mesas_asignadas ?>;
-        let mensaje = `¿Estás seguro de inactivar a ${mozoNombre}?\n\n`;
+        let mensaje = `⚠️ CONFIRMACIÓN FINAL ⚠️\n\n¿Estás SEGURO de eliminar PERMANENTEMENTE a ${mozoNombre}?\n\n`;
+        mensaje += `Esta acción NO se puede deshacer.\n\n`;
         
         if (accionSeleccionada.value === 'reasignar') {
             const nuevoMozoTexto = selectMozo.options[selectMozo.selectedIndex].text;
@@ -187,8 +185,12 @@ document.addEventListener('DOMContentLoaded', function() {
             mensaje += `Sus ${mesasCount} mesa(s) quedarán sin mozo asignado.`;
         }
         
-        if (!confirm(mensaje)) {
+        mensaje += `\n\nEscribe "ELIMINAR" para confirmar:`;
+        
+        const confirmacion = prompt(mensaje);
+        if (confirmacion !== 'ELIMINAR') {
             e.preventDefault();
+            alert('Eliminación cancelada. Debes escribir "ELIMINAR" para confirmar.');
         }
     });
 });

@@ -8,7 +8,7 @@ use App\Models\LlamadoMesa;
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Mozos y administradores pueden acceder
+// Personal y administradores pueden acceder
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ../../public/index.php?route=unauthorized');
     exit;
@@ -304,3 +304,4 @@ if ($user_rol === 'mozo') {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
 }
 </style>
+</main>

@@ -65,6 +65,13 @@ class MozoController {
                 exit;
             }
             
+            // Validar longitud de contraseña
+            if (strlen($_POST['contrasenia']) < 8) {
+                $_SESSION['form_data'] = $_POST;
+                header('Location: ' . url('mozos/create', ['error' => 'La contraseña debe tener al menos 8 caracteres']));
+                exit;
+            }
+            
             $data = $_POST;
             $data['rol'] = 'mozo';
             $data['contrasenia'] = password_hash($data['contrasenia'], PASSWORD_DEFAULT);
@@ -80,8 +87,8 @@ class MozoController {
         self::authorize();
         
         $mozo = Usuario::find($id);
-        if (!$mozo || $mozo['rol'] !== 'mozo') {
-            header('Location: ' . url('mozos', ['error' => 'Mozo no encontrado']));
+        if (!$mozo || !in_array($mozo['rol'], ['mozo', 'administrador'])) {
+            header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
             exit;
         }
 
@@ -127,6 +134,11 @@ class MozoController {
 
         // Solo incluir contraseña si se proporcionó
         if (!empty($_POST['contrasenia'])) {
+            // Validar longitud de contraseña
+            if (strlen($_POST['contrasenia']) < 8) {
+                header('Location: ' . url('mozos/edit', ['id' => $id, 'error' => 'La contraseña debe tener al menos 8 caracteres']));
+                exit;
+            }
             $data['contrasenia'] = $_POST['contrasenia'];
         }
 
@@ -151,8 +163,8 @@ class MozoController {
         $nuevo_mozo = !empty($_POST['nuevo_mozo']) ? (int) $_POST['nuevo_mozo'] : null;
         
         $mozo = Usuario::find($id_mozo);
-        if (!$mozo || $mozo['rol'] !== 'mozo') {
-            header('Location: ' . url('mozos', ['error' => 'Mozo no encontrado']));
+        if (!$mozo || !in_array($mozo['rol'], ['mozo', 'administrador'])) {
+            header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
             exit;
         }
         
@@ -181,7 +193,13 @@ class MozoController {
         
         // Manejar contraseña si existe
         if (!empty($_POST['nueva_contrasenia'])) {
-            $data['contrasenia'] = base64_decode($_POST['nueva_contrasenia']);
+            $contrasenia_decodificada = base64_decode($_POST['nueva_contrasenia']);
+            // Validar longitud de contraseña
+            if (strlen($contrasenia_decodificada) < 8) {
+                header('Location: ' . url('mozos', ['error' => 'La contraseña debe tener al menos 8 caracteres']));
+                exit;
+            }
+            $data['contrasenia'] = $contrasenia_decodificada;
         }
         
         if (Usuario::update($id_mozo, $data)) {
@@ -202,10 +220,97 @@ class MozoController {
     public static function delete() {
         self::authorize();
         $id = (int) ($_GET['delete'] ?? 0);
-        if ($id > 0) {
-            Usuario::delete($id);
+        
+        if ($id <= 0) {
+            header('Location: ' . url('mozos', ['error' => 'ID de usuario inválido']));
+            exit;
         }
-        header('Location: ' . url('mozos'));
+        
+        // Verificar que el usuario existe y no es administrador
+        $usuario = Usuario::find($id);
+        if (!$usuario) {
+            header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
+            exit;
+        }
+        
+        if ($usuario['rol'] === 'administrador') {
+            header('Location: ' . url('mozos', ['error' => 'No se puede eliminar un usuario administrador']));
+            exit;
+        }
+        
+        // Verificar si el mozo tiene mesas asignadas
+        $mesas_asignadas = Mesa::countMesasByMozo($id);
+        
+        if ($mesas_asignadas > 0) {
+            // Redirigir a pantalla de confirmación con los datos del mozo
+            $query_params = [
+                'confirmar_eliminacion' => '1',
+                'id_mozo' => $id,
+                'nombre' => $usuario['nombre'],
+                'apellido' => $usuario['apellido'],
+                'email' => $usuario['email'],
+                'mesas_asignadas' => $mesas_asignadas
+            ];
+            
+            header('Location: ' . url('mozos/confirmar-eliminacion', $query_params));
+            exit;
+        }
+        
+        // Si no tiene mesas asignadas, eliminar directamente
+        if (Usuario::delete($id)) {
+            header('Location: ' . url('mozos', ['success' => 'Mozo eliminado exitosamente']));
+        } else {
+            header('Location: ' . url('mozos', ['error' => 'Error al eliminar el mozo']));
+        }
+        exit;
+    }
+
+    public static function procesarEliminacion() {
+        self::authorize();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('mozos'));
+            exit;
+        }
+        
+        $id_mozo = (int) ($_POST['id_mozo'] ?? 0);
+        $accion_mesas = $_POST['accion_mesas'] ?? '';
+        $nuevo_mozo = !empty($_POST['nuevo_mozo']) ? (int) $_POST['nuevo_mozo'] : null;
+        
+        $mozo = Usuario::find($id_mozo);
+        if (!$mozo || !in_array($mozo['rol'], ['mozo', 'administrador'])) {
+            header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
+            exit;
+        }
+        
+        // Procesar las mesas según la acción elegida
+        if ($accion_mesas === 'reasignar' && $nuevo_mozo) {
+            // Reasignar todas las mesas al nuevo mozo
+            $mesas = Mesa::getMesasByMozo($id_mozo);
+            foreach ($mesas as $mesa) {
+                Mesa::asignarMozo($mesa['id_mesa'], $nuevo_mozo);
+            }
+        } elseif ($accion_mesas === 'liberar') {
+            // Liberar todas las mesas (sin mozo asignado)
+            $mesas = Mesa::getMesasByMozo($id_mozo);
+            foreach ($mesas as $mesa) {
+                Mesa::asignarMozo($mesa['id_mesa'], null);
+            }
+        }
+        
+        // Eliminar el mozo
+        if (Usuario::delete($id_mozo)) {
+            $mensaje = 'Mozo eliminado exitosamente';
+            if ($accion_mesas === 'reasignar') {
+                $nuevo_mozo_info = Usuario::find($nuevo_mozo);
+                $mensaje .= ' y sus mesas fueron reasignadas a ' . $nuevo_mozo_info['nombre'] . ' ' . $nuevo_mozo_info['apellido'];
+            } elseif ($accion_mesas === 'liberar') {
+                $mensaje .= ' y sus mesas fueron liberadas';
+            }
+            header('Location: ' . url('mozos', ['success' => $mensaje]));
+        } else {
+            header('Location: ' . url('mozos', ['error' => 'Error al eliminar el mozo']));
+        }
         exit;
     }
 

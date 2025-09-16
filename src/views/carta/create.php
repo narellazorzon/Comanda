@@ -90,8 +90,7 @@ if (isset($_GET['error'])) {
          placeholder="Ej: Hamburguesa Clásica" autocomplete="off">
 
   <label>Descripción:</label>
-  <textarea name="descripcion" placeholder="Descripción detallada del ítem..." autocomplete="off" 
-            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; line-height: 1.5; font-weight: 400; letter-spacing: 0.3px;"><?= htmlspecialchars($item['descripcion'] ?? ($usePostData ? $_POST['descripcion'] : '') ?? '') ?></textarea>
+  <textarea name="descripcion" placeholder="Descripción detallada del ítem..." autocomplete="off"><?= htmlspecialchars($item['descripcion'] ?? ($usePostData ? $_POST['descripcion'] : '') ?? '') ?></textarea>
 
   <label>Precio Base ($):</label>
   <input type="number" name="precio" id="precio" step="0.01" min="0.01" required 

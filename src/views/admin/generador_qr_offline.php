@@ -29,7 +29,7 @@ $mesas = Mesa::all();
 
 <!-- Mensaje informativo -->
 <div style="background: #d1ecf1; padding: 12px; border-radius: 6px; margin-bottom: 1.5rem; color: #0c5460; border: 1px solid #bee5eb;">
-    <strong>ℹ️ Información:</strong> Genera códigos QR para cada mesa del restaurante. Los clientes pueden escanear el código para acceder al menú y realizar pedidos.
+    <strong>ℹ️ Información:</strong> Genera códigos QR para cada mesa del restaurante (STAY) y para pedidos para llevar (TAKE AWAY). Los clientes pueden escanear el código para acceder al menú y realizar pedidos.
 </div>
 
 <!-- Configuración de QR -->
@@ -73,7 +73,7 @@ $mesas = Mesa::all();
             </div>
         </div>
         
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
             <button onclick="regenerarTodos()" class="button" style="padding: 0.6rem 1rem; font-size: 0.9rem;">
                 🔄 Regenerar Todos
             </button>
@@ -82,6 +82,17 @@ $mesas = Mesa::all();
             </button>
             <button onclick="imprimirSeleccionados()" class="button" style="background: rgb(237, 221, 172); color: #212529; padding: 0.6rem 1rem; font-size: 0.9rem;">
                 🖨️ Imprimir Seleccionados
+            </button>
+        </div>
+        
+        <!-- Selector de tipo de QR -->
+        <div style="display: flex; gap: 0.5rem; align-items: center; padding: 0.75rem; background: #f8f9fa; border-radius: 6px; border: 1px solid #e0e0e0;">
+            <span style="font-weight: 600; color: var(--secondary); font-size: 0.9rem;">Tipo de QR:</span>
+            <button id="btn-stay" onclick="mostrarTipoQR('stay')" class="button" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--secondary); color: white;">
+                🪑 STAY (Mesas)
+            </button>
+            <button id="btn-takeaway" onclick="mostrarTipoQR('takeaway')" class="button" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #6c757d; color: white;">
+                🥡 TAKE AWAY
             </button>
         </div>
     </div>
@@ -209,6 +220,94 @@ $mesas = Mesa::all();
     <?php endforeach; ?>
 </div>
 
+<!-- Sección QR TAKE AWAY -->
+<div id="qr-takeaway-section" style="display: none;">
+    <h3 style="color: var(--secondary); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+        🥡 Códigos QR para TAKE AWAY
+    </h3>
+    
+    <div class="filters-container" style="margin-bottom: 1rem;">
+        <div class="search-filter" style="background: rgb(250, 238, 193); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <label for="buscarTakeaway" style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">
+                    🔍 Buscar QR:
+                </label>
+                <input type="text" id="buscarTakeaway" placeholder="Tipo de QR..." 
+                       style="padding: 0.3rem 0.5rem; border: 1px solid var(--accent); border-radius: 3px; font-size: 0.8rem; min-width: 200px;">
+                <button onclick="limpiarBusquedaTakeaway()" 
+                        style="padding: 0.3rem 0.6rem; background: var(--secondary); color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.75rem;">
+                    Limpiar
+                </button>
+                
+                <div style="margin-left: auto;">
+                    <label style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">
+                        <input type="checkbox" id="seleccionarTodosTakeaway" onchange="toggleSeleccionarTodosTakeaway()">
+                        Seleccionar Todos
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Grid de QR TAKE AWAY -->
+    <div id="qr-takeaway-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- QR TAKE AWAY Principal -->
+        <div class="qr-card takeaway" data-tipo="takeaway-principal" 
+             style="background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease; border-left: 4px solid #28a745;">
+            
+            <!-- Header de la tarjeta -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h3 style="margin: 0; color: var(--secondary); font-size: 1.1rem;">
+                        🥡 TAKE AWAY
+                    </h3>
+                    <small style="color: #666;">Pedidos para llevar</small>
+                </div>
+                <label style="cursor: pointer;">
+                    <input type="checkbox" class="qr-checkbox-takeaway" data-tipo="takeaway-principal" onchange="actualizarContadorSeleccionadosTakeaway()">
+                </label>
+            </div>
+            
+            <!-- Estado -->
+            <div style="margin-bottom: 1rem;">
+                <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; 
+                             background: #d4edda; color: #155724;">
+                    🟢 Disponible
+                </span>
+            </div>
+            
+            <!-- Contenedor del QR -->
+            <div class="qr-container" style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 4px; min-height: 220px; display: flex; align-items: center; justify-content: center;">
+                <div class="qr-image" id="qr-takeaway-principal">
+                    <div style="color: #666;">
+                        <div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid var(--secondary); 
+                                                    border-radius: 50%; width: 40px; height: 40px; 
+                                                    animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                        <p style="margin-top: 1rem; font-size: 0.9rem;">Generando QR...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- URL del QR -->
+            <div style="margin-top: 1rem; padding: 0.5rem; background: #f8f9fa; border-radius: 4px; font-size: 0.75rem; color: #666; word-break: break-all;">
+                <strong>URL:</strong> <?= $base_url ?>/index.php?route=cliente&takeaway=1
+            </div>
+            
+            <!-- Acciones -->
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button onclick="descargarQRTakeaway('takeaway-principal', 'TAKE_AWAY')" 
+                        class="button" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: var(--accent); color: var(--text);">
+                    📥 Descargar
+                </button>
+                <button onclick="imprimirQRTakeaway('takeaway-principal', 'TAKE_AWAY')" 
+                        class="button" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: var(--secondary); color: white;">
+                    🖨️ Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de progreso -->
 <div id="modalProgreso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                                 background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
@@ -284,6 +383,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         generarTodosLosQR();
     }, 500);
+    
+    // Activar por defecto la vista STAY
+    mostrarTipoQR('stay');
 });
 
 // Función para generar todos los QR
@@ -534,5 +636,198 @@ function imprimirSeleccionados() {
         });
         limpiarBusqueda(); // Por si había filtros activos
     }, 100);
+}
+
+// ===== FUNCIONES PARA TAKE AWAY =====
+
+// Mostrar tipo de QR (STAY o TAKE AWAY)
+function mostrarTipoQR(tipo) {
+    const staySection = document.getElementById('qr-grid');
+    const takeawaySection = document.getElementById('qr-takeaway-section');
+    const btnStay = document.getElementById('btn-stay');
+    const btnTakeaway = document.getElementById('btn-takeaway');
+    
+    if (tipo === 'stay') {
+        staySection.style.display = 'grid';
+        takeawaySection.style.display = 'none';
+        btnStay.style.background = 'var(--secondary)';
+        btnTakeaway.style.background = '#6c757d';
+        
+        // Generar QR de TAKE AWAY si no está generado
+        setTimeout(() => {
+            generarQRTakeaway();
+        }, 100);
+    } else {
+        staySection.style.display = 'none';
+        takeawaySection.style.display = 'block';
+        btnStay.style.background = '#6c757d';
+        btnTakeaway.style.background = 'var(--secondary)';
+        
+        // Generar QR de TAKE AWAY
+        setTimeout(() => {
+            generarQRTakeaway();
+        }, 100);
+    }
+}
+
+// Generar QR para TAKE AWAY
+function generarQRTakeaway() {
+    const size = document.getElementById('qr-size').value;
+    const margin = document.getElementById('qr-margin').value;
+    const color = document.getElementById('qr-color').value.replace('#', '');
+    const bgcolor = document.getElementById('qr-bgcolor').value.replace('#', '');
+    
+    const url = `${baseUrl}/index.php?route=cliente&takeaway=1`;
+    const encodedUrl = encodeURIComponent(url);
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=${margin}&color=${color}&bgcolor=${bgcolor}&data=${encodedUrl}`;
+    
+    const container = document.getElementById('qr-takeaway-principal');
+    
+    // Crear imagen
+    const img = new Image();
+    img.onload = function() {
+        container.innerHTML = '';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        container.appendChild(img);
+    };
+    
+    img.onerror = function() {
+        // Fallback si falla la API
+        container.innerHTML = `
+            <div style="padding: 1rem; background: #fff3cd; border-radius: 4px; color: #856404;">
+                <p>⚠️ Error al generar QR</p>
+                <small>TAKE AWAY</small>
+            </div>
+        `;
+    };
+    
+    img.src = qrApiUrl;
+}
+
+// Buscar QRs de TAKE AWAY
+document.getElementById('buscarTakeaway').addEventListener('input', function(e) {
+    const busqueda = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('.qr-card.takeaway');
+    
+    cards.forEach(card => {
+        const tipo = card.dataset.tipo.toLowerCase();
+        
+        if (tipo.includes(busqueda)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+
+// Limpiar búsqueda TAKE AWAY
+function limpiarBusquedaTakeaway() {
+    document.getElementById('buscarTakeaway').value = '';
+    document.querySelectorAll('.qr-card.takeaway').forEach(card => {
+        card.style.display = 'block';
+    });
+}
+
+// Seleccionar todos los QRs de TAKE AWAY
+function toggleSeleccionarTodosTakeaway() {
+    const selectAll = document.getElementById('seleccionarTodosTakeaway').checked;
+    const checkboxes = document.querySelectorAll('.qr-checkbox-takeaway');
+    
+    checkboxes.forEach(cb => {
+        cb.checked = selectAll;
+        updateCardSelectionTakeaway(cb);
+    });
+    
+    actualizarContadorSeleccionadosTakeaway();
+}
+
+// Actualizar visual de selección TAKE AWAY
+function updateCardSelectionTakeaway(checkbox) {
+    const card = checkbox.closest('.qr-card');
+    if (checkbox.checked) {
+        card.classList.add('selected');
+    } else {
+        card.classList.remove('selected');
+    }
+}
+
+// Actualizar contador de seleccionados TAKE AWAY
+function actualizarContadorSeleccionadosTakeaway() {
+    const seleccionados = document.querySelectorAll('.qr-checkbox-takeaway:checked').length;
+    document.getElementById('qr-seleccionados').textContent = seleccionados;
+    
+    document.querySelectorAll('.qr-checkbox-takeaway').forEach(cb => {
+        updateCardSelectionTakeaway(cb);
+    });
+}
+
+// Descargar QR TAKE AWAY individual
+function descargarQRTakeaway(tipo, nombre) {
+    const container = document.getElementById(`qr-${tipo}`);
+    const img = container.querySelector('img');
+    
+    if (img) {
+        const link = document.createElement('a');
+        link.download = `QR_${nombre}.png`;
+        link.href = img.src;
+        link.click();
+    } else {
+        alert('El QR aún no se ha generado');
+    }
+}
+
+// Imprimir QR TAKE AWAY individual
+function imprimirQRTakeaway(tipo, nombre) {
+    const container = document.getElementById(`qr-${tipo}`);
+    const img = container.querySelector('img');
+    
+    if (img) {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>QR ${nombre}</title>
+                <style>
+                    body { 
+                        margin: 0; 
+                        padding: 20px; 
+                        text-align: center; 
+                        font-family: Arial, sans-serif;
+                    }
+                    h1 { 
+                        color: #333; 
+                        margin-bottom: 20px;
+                    }
+                    img { 
+                        max-width: 400px; 
+                        margin: 0 auto;
+                    }
+                    .info {
+                        margin-top: 20px;
+                        padding: 10px;
+                        background: #f0f0f0;
+                        border-radius: 4px;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${nombre}</h1>
+                <img src="${img.src}" />
+                <div class="info">
+                    <strong>Sistema Comanda</strong><br>
+                    Escanee el código QR para acceder al menú
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        setTimeout(() => {
+            printWindow.print();
+        }, 500);
+    } else {
+        alert('El QR aún no se ha generado');
+    }
 }
 </script>

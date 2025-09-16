@@ -134,25 +134,39 @@ class ClienteController {
         }
         
         try {
-            // Obtener datos del formulario
-            $modoConsumo = $_POST['modo_consumo'] ?? 'stay';
-            $numeroMesa = $_POST['numero_mesa'] ?? null;
-            $nombreCliente = $_POST['nombre_completo'] ?? '';
-            $emailCliente = $_POST['email'] ?? '';
-            $items = json_decode($_POST['items'] ?? '[]', true);
+            // Obtener datos JSON del cuerpo de la petición
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            if (!$data) {
+                throw new Exception('Datos inválidos');
+            }
+            
+            $modoConsumo = $data['modo_consumo'] ?? 'stay';
+            $idMesa = $data['id_mesa'] ?? null;
+            $nombreCliente = $data['cliente_nombre'] ?? '';
+            $emailCliente = $data['cliente_email'] ?? '';
+            $formaPago = $data['forma_pago'] ?? '';
+            $observaciones = $data['observaciones'] ?? '';
+            $items = $data['items'] ?? [];
             
             if (empty($items)) {
                 throw new Exception('El carrito está vacío');
             }
             
-            // Buscar mesa si es consumo en el local
-            $idMesa = null;
-            $idMozo = null;
+            if (empty($nombreCliente)) {
+                throw new Exception('El nombre del cliente es obligatorio');
+            }
             
-            if ($modoConsumo === 'stay' && $numeroMesa) {
-                $mesa = Mesa::findByNumero($numeroMesa);
+            if (empty($emailCliente)) {
+                throw new Exception('El email del cliente es obligatorio');
+            }
+            
+            // Buscar mozo si hay mesa asignada
+            $idMozo = null;
+            if ($idMesa) {
+                $mesa = Mesa::find($idMesa);
                 if ($mesa) {
-                    $idMesa = $mesa['id_mesa'];
                     $idMozo = $mesa['id_mozo'];
                 }
             }
@@ -162,6 +176,10 @@ class ClienteController {
                 'id_mesa' => $idMesa,
                 'modo_consumo' => $modoConsumo,
                 'id_mozo' => $idMozo,
+                'cliente_nombre' => $nombreCliente,
+                'cliente_email' => $emailCliente,
+                'forma_pago' => $formaPago,
+                'observaciones' => $observaciones,
                 'items' => $items
             ];
             
@@ -179,22 +197,22 @@ class ClienteController {
             
             $_SESSION['ultimo_pedido_id'] = $pedidoId;
             
-            // Enviar respuesta JSON con la URL de redirección
+            // Enviar respuesta JSON
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
-                'redirect_url' => url('cliente/pago', ['pedido' => $pedidoId]),
+                'message' => 'Pedido creado exitosamente',
                 'pedido_id' => $pedidoId
             ]);
             exit;
             
         } catch (Exception $e) {
-            // Enviar error como JSON también
+            // Enviar error como JSON
             header('Content-Type: application/json');
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'message' => $e->getMessage()
+                'error' => $e->getMessage()
             ]);
             exit;
         }

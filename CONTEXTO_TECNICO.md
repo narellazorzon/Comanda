@@ -6,12 +6,12 @@
 - **libre**: Disponible para nuevos clientes
 - **ocupada**: Con clientes activos (automático al crear pedido)
 
-### Asignación de Mozos - Funcionalidad Central
+### Asignación del Personal - Funcionalidad Central
 Cada mesa puede tener un mozo asignado específico. Esta es una funcionalidad CLAVE del sistema.
 
 #### Ventajas del Sistema de Asignación:
 1. **Responsabilidad clara**: Cada mesa tiene un responsable
-2. **Filtrado de llamados**: Mozos solo ven SUS mesas
+2. **Filtrado de llamados**: Personal solo ve SUS mesas
 3. **Distribución de carga**: Mesas distribuidas equitativamente
 4. **Seguimiento personalizado**: Continuidad en el servicio
 
@@ -48,7 +48,7 @@ CREATE TABLE mesas (
 ### Funcionamiento Inteligente
 El sistema de llamados está **integrado** con la asignación de mozos:
 
-#### Para Mozos:
+#### Para el Personal:
 - Solo ven llamados de **SUS mesas asignadas**
 - Filtrado automático por `mesa.id_mozo = usuario.id_usuario`
 - Interface simplificada con información relevante
@@ -261,7 +261,7 @@ Administrador:
 ├─ Password: admin123
 └─ Permisos: Completos
 
-Mozos Activos:
+Personal Activo:
 ├─ juan.perez@comanda.com / mozo123
 ├─ maria.garcia@comanda.com / mozo123
 ├─ carlos.lopez@comanda.com / mozo123
@@ -315,7 +315,7 @@ switch ($route) {
         requireAdmin();  // Solo administradores
         break;
     case 'pedidos':
-        requireMozoOrAdmin();  // Mozos y administradores
+        requireMozoOrAdmin();  // Personal y administradores
         break;
     case 'llamados':
         requireMozoOrAdmin();  // Con filtrado automático por rol
@@ -347,7 +347,7 @@ if ($nuevo_estado === 'inactivo' && Mesa::countMesasByMozo($id) > 0) {
 
 ### Scenarios de Prueba Críticos
 
-#### 1. Test de Asignación de Mozos
+#### 1. Test de Asignación del Personal
 ```
 GIVEN: Mesa sin mozo asignado
 WHEN: Admin asigna mozo a la mesa

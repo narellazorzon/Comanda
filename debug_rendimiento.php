@@ -1,12 +1,12 @@
 <?php
-// Script de debugging para el módulo de Rendimiento de Mozos
+// Script de debugging para el módulo de Rendimiento del Personal
 require_once __DIR__ . '/src/config/database.php';
 require_once __DIR__ . '/src/services/ReporteService.php';
 
 use App\Config\Database;
 use App\Services\ReporteService;
 
-echo "<h1>DEBUG - Rendimiento de Mozos</h1>";
+echo "<h1>DEBUG - Rendimiento del Personal</h1>";
 
 $db = (new Database)->getConnection();
 

@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/helpers.php';
 
 class PedidoController {
     /**
-     * Muestra todos los pedidos tanto para administradores como para mozos.
+     * Muestra todos los pedidos tanto para administradores como para el personal.
      */
     public static function index() {
         if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -67,21 +67,71 @@ class PedidoController {
      * Avanza el estado de un pedido (pendiente → en_preparacion → listo).
      */
     public static function updateEstado() {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
+        // Asegurar que no hay salida antes del JSON
+        ob_clean();
+        
+        // Log para debug
+        error_log('=== PEDIDO UPDATE ESTADO ===');
+        error_log('Method: ' . $_SERVER['REQUEST_METHOD']);
+        error_log('POST data: ' . print_r($_POST, true));
+        
+        try {
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+            
+            $rol = $_SESSION['user']['rol'] ?? '';
+            error_log('User role: ' . $rol);
+            
+            if (! in_array($rol, ['administrador','mozo'], true)) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'No autorizado']);
+                exit;
+            }
+            
+            $id    = (int)($_POST['id_pedido'] ?? 0);
+            $nuevo = $_POST['estado'] ?? '';
+            $map   = ['pendiente','en_preparacion','servido','cerrado'];
+            
+            error_log('ID: ' . $id . ', Estado: ' . $nuevo);
+            
+            if ($id > 0 && in_array($nuevo, $map, true)) {
+                // Verificar que el pedido no esté cerrado
+                $pedido = Pedido::find($id);
+                error_log('Pedido encontrado: ' . print_r($pedido, true));
+                
+                if ($pedido && $pedido['estado'] === 'cerrado') {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'No se puede cambiar el estado de un pedido cerrado']);
+                    exit;
+                }
+                
+                // Verificar si el estado actual es el mismo que el nuevo estado
+                if ($pedido && $pedido['estado'] === $nuevo) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'El pedido ya tiene ese estado']);
+                    exit;
+                }
+                
+                $resultado = Pedido::updateEstado($id, $nuevo);
+                error_log('Resultado update: ' . ($resultado ? 'true' : 'false'));
+                
+                if ($resultado) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Estado actualizado correctamente']);
+                } else {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
+                }
+            } else {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Datos inválidos - ID: ' . $id . ', Estado: ' . $nuevo]);
+            }
+        } catch (Exception $e) {
+            error_log('Error en updateEstado: ' . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
         }
-        $rol = $_SESSION['user']['rol'] ?? '';
-        if (! in_array($rol, ['administrador','mozo'], true)) {
-            header('Location: login.php');
-            exit;
-        }
-        $id    = (int)($_POST['id_pedido'] ?? 0);
-        $nuevo = $_POST['estado'] ?? '';
-        $map   = ['pendiente','en_preparacion','listo'];
-        if ($id > 0 && in_array($nuevo, $map, true)) {
-            Pedido::updateEstado($id, $nuevo);
-        }
-        header('Location: estado_pedidos.php');
         exit;
     }
 
@@ -199,5 +249,86 @@ class PedidoController {
             http_response_code(500);
             echo json_encode(['error' => 'Error interno: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Obtiene la información completa de un pedido incluyendo sus detalles
+     */
+    public static function info() {
+        // Forzar salida JSON desde el inicio
+        header('Content-Type: application/json; charset=utf-8');
+        
+        // Asegurar que la sesión esté iniciada
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        
+        // Verificar permisos
+        if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'No tiene permisos para acceder a esta información. Por favor, inicie sesión nuevamente.']);
+            exit;
+        }
+
+        try {
+            $pedidoId = $_GET['id'] ?? null;
+            
+            if (!$pedidoId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'ID del pedido requerido']);
+                exit;
+            }
+
+            // Obtener información del pedido
+            $pedido = Pedido::find($pedidoId);
+            
+            if (!$pedido) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Pedido no encontrado']);
+                exit;
+            }
+
+            // Obtener detalles del pedido
+            $detalles = Pedido::getDetalles($pedidoId);
+            
+            // Formatear los detalles para incluir información completa de cada item
+            $items = [];
+            foreach ($detalles as $detalle) {
+                $items[] = [
+                    'id_item' => $detalle['id_item'],
+                    'nombre' => $detalle['item_nombre'] ?? $detalle['nombre'] ?? 'Item no encontrado',
+                    'categoria' => $detalle['item_categoria'] ?? $detalle['categoria'] ?? 'Sin categoría',
+                    'precio' => $detalle['precio_actual'] ?? $detalle['precio'] ?? $detalle['precio_unitario'] ?? 0,
+                    'cantidad' => $detalle['cantidad'],
+                    'detalle' => $detalle['detalle'] ?? ''
+                ];
+            }
+
+            // Preparar respuesta
+            $pedidoInfo = [
+                'id_pedido' => $pedido['id_pedido'],
+                'estado' => $pedido['estado'],
+                'modo_consumo' => $pedido['modo_consumo'],
+                'forma_pago' => $pedido['forma_pago'],
+                'observaciones' => $pedido['observaciones'],
+                'cliente_nombre' => $pedido['cliente_nombre'],
+                'cliente_email' => $pedido['cliente_email'],
+                'total' => $pedido['total'],
+                'fecha_creacion' => $pedido['fecha_creacion'],
+                'numero_mesa' => $pedido['numero_mesa'],
+                'nombre_mozo_completo' => $pedido['nombre_mozo_completo'],
+                'items' => $items
+            ];
+
+            echo json_encode([
+                'success' => true,
+                'pedido' => $pedidoInfo
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Error interno: ' . $e->getMessage()]);
+        }
+        exit;
     }
 }

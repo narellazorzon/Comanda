@@ -20,12 +20,17 @@ $rol = $_SESSION['user']['rol'];
 
 // Función para validar transiciones de estado
 function validarTransicionEstado($estado_actual, $nuevo_estado) {
-    // Definir transiciones permitidas según el flujo de negocio
+    // Si el pedido está cerrado, no se puede cambiar
+    if ($estado_actual === 'cerrado') {
+        return false;
+    }
+    
+    // Definir transiciones permitidas (hacia adelante y hacia atrás)
     $transiciones_permitidas = [
         'pendiente' => ['en_preparacion', 'cerrado'], // pendiente → en_preparacion o cerrado
-        'en_preparacion' => ['servido', 'cerrado'],   // en_preparacion → servido o cerrado
-        'servido' => ['cerrado'],                     // servido → cerrado
-        'cerrado' => []                               // cerrado no puede cambiar
+        'en_preparacion' => ['pendiente', 'servido', 'cerrado'], // en_preparacion → pendiente, servido o cerrado
+        'servido' => ['pendiente', 'en_preparacion', 'cerrado'], // servido → pendiente, en_preparacion o cerrado
+        'cerrado' => [] // cerrado no puede cambiar
     ];
     
     // Si el estado actual no existe en las transiciones, no permitir
@@ -53,8 +58,8 @@ function obtenerNombreEstado($estado) {
 function obtenerTransicionesPermitidas($estado_actual) {
     $transiciones = [
         'pendiente' => ['en_preparacion', 'cerrado'],
-        'en_preparacion' => ['servido', 'cerrado'],
-        'servido' => ['cerrado'],
+        'en_preparacion' => ['pendiente', 'servido', 'cerrado'],
+        'servido' => ['pendiente', 'en_preparacion', 'cerrado'],
         'cerrado' => []
     ];
     
@@ -73,41 +78,7 @@ function obtenerIconoEstado($estado) {
     return $iconos[$estado] ?? '❓';
 }
 
-// Procesar cambio de estado si es POST (ANTES de cualquier salida HTML)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
-    // Permitir a mozos y administradores cambiar estado
-    if (in_array($rol, ['mozo', 'administrador'])) {
-        $id_pedido = (int) $_POST['id_pedido'];
-        $nuevo_estado = $_POST['nuevo_estado'];
-        
-        // Validar que el estado sea válido
-        $estados_validos = ['pendiente', 'en_preparacion', 'servido', 'cerrado'];
-        if (in_array($nuevo_estado, $estados_validos)) {
-            // Verificar que el pedido no esté cerrado
-            $pedido = Pedido::find($id_pedido);
-            if ($pedido && $pedido['estado'] === 'cerrado') {
-                header('Location: ' . url('pedidos', ['error' => '3']));
-                exit;
-            }
-            
-            // Verificar si el estado actual es el mismo que el nuevo estado
-            if ($pedido && $pedido['estado'] === $nuevo_estado) {
-                header('Location: ' . url('pedidos', ['error' => '4']));
-                exit;
-            }
-            
-            $resultado = Pedido::updateEstado($id_pedido, $nuevo_estado);
-            if ($resultado) {
-                header('Location: ' . url('pedidos', ['success' => '1']));
-            } else {
-                header('Location: ' . url('pedidos', ['error' => '1']));
-            }
-        } else {
-            header('Location: ' . url('pedidos', ['error' => '2']));
-        }
-        exit;
-    }
-}
+// El procesamiento de cambio de estado ahora se maneja via AJAX en el controlador
 
 // Cargar pedidos según el rol
 if ($rol === 'mozo') {
@@ -147,7 +118,7 @@ require_once __DIR__ . '/../includes/header.php';
 }
 
 .filters-container {
-    background: white;
+    background: rgb(238, 224, 191);
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     margin-bottom: 1rem;
@@ -315,10 +286,10 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="filters-container">
   <!-- Botón para mostrar/ocultar filtros -->
   <button id="toggleFilters" class="toggle-filters-btn" onclick="toggleFilters()">
-    🔍 Filtros
+    🔍 <strong>Filtrar</strong>
   </button>
   
-  <div id="filtersContent" class="search-filter" style="background: rgb(247, 235, 202); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 0.8rem; display: none; transition: all 0.3s ease;">
+  <div id="filtersContent" class="search-filter" style="background: rgb(238, 224, 191); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 0.8rem; display: none; transition: all 0.3s ease;">
   <!-- Primera fila: Filtros de texto -->
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; margin-bottom: 0.6rem;">
     <!-- Filtro por ID -->
@@ -507,13 +478,16 @@ require_once __DIR__ . '/../includes/header.php';
           </td>
           <?php if ($rol === 'administrador'): ?>
             <td class="action-cell">
+              <a href="#" class="btn-action info" title="Ver información del pedido" onclick="mostrarInfoPedido(<?= $pedido['id_pedido'] ?>)">
+                ℹ️
+              </a>
               <?php if ($pedido['estado'] !== 'cerrado'): ?>
-                <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
-                  ✏️
-                </a>
-                <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
-                  ❌
-                </a>
+              <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
+                ✏️
+              </a>
+              <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
+                ❌
+              </a>
               <?php else: ?>
                 <span class="btn-action disabled" title="No se puede editar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
                   ✏️
@@ -545,14 +519,17 @@ require_once __DIR__ . '/../includes/header.php';
             Pedido #<?= htmlspecialchars($pedido['id_pedido']) ?>
           </div>
           <div class="mobile-card-actions">
+            <a href="#" class="btn-action info" title="Ver información del pedido" onclick="mostrarInfoPedido(<?= $pedido['id_pedido'] ?>)">
+              ℹ️
+            </a>
             <?php if ($rol === 'administrador'): ?>
               <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
                 ✏️
               </a>
               <?php if ($pedido['estado'] !== 'cerrado'): ?>
-                <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
-                  ❌
-                </a>
+              <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
+                ❌
+              </a>
               <?php else: ?>
                 <span class="btn-action disabled" title="No se puede eliminar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
                   🔒
@@ -673,7 +650,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- Modal de confirmación para cambio de estado -->
 <div id="modalCambioEstado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-  <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 400px; width: 90%; text-align: center;">
+  <div style="background: rgb(247, 241, 225); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 400px; width: 90%; text-align: center;">
     <h3 style="margin-bottom: 1rem; color: var(--secondary);">Confirmar Cambio de Estado</h3>
     <p id="mensajeCambioEstado" style="margin-bottom: 1.5rem; color: #666;"></p>
     <div style="display: flex; gap: 1rem; justify-content: center;">
@@ -686,6 +663,22 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
   </div>
 </div>
+</div>
+
+<!-- Modal de información del pedido -->
+<div id="modalInfoPedido" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+  <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid #eee; padding-bottom: 1rem;">
+      <h3 style="margin: 0; color: var(--secondary); font-size: 1.5rem;">📋 Información del Pedido</h3>
+      <button id="cerrarInfoPedido" style="background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem;">
+        ✕
+      </button>
+    </div>
+    
+    <div id="contenidoInfoPedido">
+      <!-- El contenido se cargará dinámicamente -->
+    </div>
+  </div>
 </div>
 
 <script>
@@ -918,16 +911,147 @@ function toggleFilters() {
     
     if (filtersContent.style.display === 'none' || filtersContent.style.display === '') {
         filtersContent.style.display = 'block';
-        toggleBtn.innerHTML = '🔍 Ocultar Filtros';
+        toggleBtn.innerHTML = '🔍 <strong>Ocultar Filtros</strong>';
     } else {
         filtersContent.style.display = 'none';
-        toggleBtn.innerHTML = '🔍 Filtros';
+        toggleBtn.innerHTML = '🔍 <strong>Filtrar</strong>';
     }
 }
 
 // Variables globales para el cambio de estado
 let pedidoIdCambio = null;
 let nuevoEstadoCambio = null;
+
+// Función para actualizar el estado de un pedido en la interfaz
+function actualizarEstadoPedido(pedidoId, nuevoEstado) {
+    // Mapear estados a nombres e iconos
+    const nombresEstados = {
+        'pendiente': 'Pendiente',
+        'en_preparacion': 'En Preparación',
+        'servido': 'Servido',
+        'cerrado': 'Cerrado'
+    };
+    
+    const iconosEstados = {
+        'pendiente': '⏳',
+        'en_preparacion': '👨‍🍳',
+        'servido': '✅',
+        'cerrado': '🔒'
+    };
+    
+    const coloresEstados = {
+        'pendiente': { bg: '#fff3cd', text: '#856404' },
+        'en_preparacion': { bg: '#cce5ff', text: '#004085' },
+        'servido': { bg: '#d4edda', text: '#155724' },
+        'cerrado': { bg: '#e2e3e5', text: '#383d41' }
+    };
+    
+    const nombreEstado = nombresEstados[nuevoEstado];
+    const iconoEstado = iconosEstados[nuevoEstado];
+    const colores = coloresEstados[nuevoEstado];
+    
+    // Actualizar en la tabla
+    const filasTabla = document.querySelectorAll('.table tbody tr');
+    filasTabla.forEach(fila => {
+        const idCell = fila.querySelector('td:nth-child(1)');
+        if (idCell && idCell.textContent.trim() == pedidoId) {
+            // Actualizar el estado en la columna 4
+            const estadoCell = fila.querySelector('td:nth-child(4) span');
+            if (estadoCell) {
+                estadoCell.innerHTML = `${iconoEstado} ${nombreEstado}`;
+                estadoCell.style.background = colores.bg;
+                estadoCell.style.color = colores.text;
+            }
+            
+            // Actualizar los botones de estado en la columna 8
+            const botonesCell = fila.querySelector('td:nth-child(8) .state-shortcuts');
+            if (botonesCell) {
+                // Obtener transiciones permitidas para el nuevo estado
+                const transiciones = obtenerTransicionesPermitidas(nuevoEstado);
+                
+                // Limpiar botones existentes
+                botonesCell.innerHTML = '';
+                
+                if (transiciones.length === 0) {
+                    // Si no hay transiciones, mostrar mensaje
+                    const span = document.createElement('span');
+                    span.style.color = '#6c757d';
+                    span.style.fontSize = '0.8rem';
+                    span.style.fontStyle = 'italic';
+                    span.textContent = 'Pedido cerrado';
+                    botonesCell.appendChild(span);
+                } else {
+                    // Crear botones para las transiciones permitidas
+                    transiciones.forEach(estado => {
+                        const boton = document.createElement('button');
+                        boton.className = `state-btn ${estado}`;
+                        boton.onclick = () => confirmarCambioEstado(pedidoId, estado);
+                        boton.title = `Cambiar a ${nombresEstados[estado]}`;
+                        boton.innerHTML = iconosEstados[estado];
+                        botonesCell.appendChild(boton);
+                    });
+                }
+            }
+        }
+    });
+    
+    // Actualizar en las tarjetas móviles
+    const tarjetasMoviles = document.querySelectorAll('.mobile-cards .mobile-card');
+    tarjetasMoviles.forEach(tarjeta => {
+        const header = tarjeta.querySelector('.mobile-card-number');
+        if (header && header.textContent.includes(`#${pedidoId}`)) {
+            // Actualizar el estado en la tarjeta
+            const estadoItem = tarjeta.querySelector('.mobile-card-item:nth-child(3) .mobile-card-value span');
+            if (estadoItem) {
+                estadoItem.innerHTML = `${iconoEstado} ${nombreEstado}`;
+                estadoItem.style.background = colores.bg;
+                estadoItem.style.color = colores.text;
+            }
+            
+            // Actualizar los botones de estado
+            const botonesContainer = tarjeta.querySelector('.mobile-state-shortcuts .state-shortcuts');
+            if (botonesContainer) {
+                const transiciones = obtenerTransicionesPermitidas(nuevoEstado);
+                
+                // Limpiar botones existentes
+                botonesContainer.innerHTML = '';
+                
+                if (transiciones.length === 0) {
+                    const span = document.createElement('span');
+                    span.style.color = '#6c757d';
+                    span.style.fontSize = '0.7rem';
+                    span.style.fontStyle = 'italic';
+                    span.style.textAlign = 'center';
+                    span.style.display = 'block';
+                    span.style.padding = '0.3rem';
+                    span.textContent = 'Pedido cerrado';
+                    botonesContainer.appendChild(span);
+                } else {
+                    transiciones.forEach(estado => {
+                        const boton = document.createElement('button');
+                        boton.className = `state-btn ${estado}`;
+                        boton.onclick = () => confirmarCambioEstado(pedidoId, estado);
+                        boton.title = `Cambiar a ${nombresEstados[estado]}`;
+                        boton.innerHTML = iconosEstados[estado];
+                        botonesContainer.appendChild(boton);
+                    });
+                }
+            }
+        }
+    });
+}
+
+// Función auxiliar para obtener transiciones permitidas (duplicada del PHP)
+function obtenerTransicionesPermitidas(estado_actual) {
+    const transiciones = {
+        'pendiente': ['en_preparacion', 'cerrado'],
+        'en_preparacion': ['pendiente', 'servido', 'cerrado'],
+        'servido': ['pendiente', 'en_preparacion', 'cerrado'],
+        'cerrado': []
+    };
+    
+    return transiciones[estado_actual] || [];
+}
 
 // Función para confirmar cambio de estado
 function confirmarCambioEstado(idPedido, nuevoEstado) {
@@ -957,31 +1081,62 @@ document.addEventListener('DOMContentLoaded', function() {
     
     confirmarBtn.addEventListener('click', function() {
         if (pedidoIdCambio && nuevoEstadoCambio) {
-            // Crear formulario para enviar el cambio
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.style.display = 'none';
+            // Enviar petición AJAX directamente
+            const formData = new FormData();
+            formData.append('id_pedido', pedidoIdCambio);
+            formData.append('estado', nuevoEstadoCambio);
             
-            const inputPedido = document.createElement('input');
-            inputPedido.type = 'hidden';
-            inputPedido.name = 'id_pedido';
-            inputPedido.value = pedidoIdCambio;
+            console.log('Enviando petición de cambio de estado...');
+            console.log('ID:', pedidoIdCambio, 'Estado:', nuevoEstadoCambio);
             
-            const inputEstado = document.createElement('input');
-            inputEstado.type = 'hidden';
-            inputEstado.name = 'nuevo_estado';
-            inputEstado.value = nuevoEstadoCambio;
-            
-            const inputAccion = document.createElement('input');
-            inputAccion.type = 'hidden';
-            inputAccion.name = 'cambiar_estado';
-            inputAccion.value = '1';
-            
-            form.appendChild(inputPedido);
-            form.appendChild(inputEstado);
-            form.appendChild(inputAccion);
-            document.body.appendChild(form);
-            form.submit();
+            fetch('index.php?route=pedidos/update-estado', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return response.text();
+            })
+            .then(text => {
+                console.log('Response text:', text);
+                try {
+                    const data = JSON.parse(text);
+                    console.log('Parsed data:', data);
+                    
+                    if (data.success) {
+                        // Mostrar notificación de éxito
+                        showNotification(data.message, 'success', 4000);
+                        
+                        // Actualizar la interfaz sin recargar
+                        actualizarEstadoPedido(pedidoIdCambio, nuevoEstadoCambio);
+                    } else {
+                        // Mostrar notificación de error
+                        showNotification(data.message, 'error', 6000);
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON:', e);
+                    console.log('Raw response:', text);
+                    showNotification('Error al procesar la respuesta del servidor: ' + text.substring(0, 100), 'error', 6000);
+                }
+                
+                // Cerrar modal
+                modal.style.display = 'none';
+                pedidoIdCambio = null;
+                nuevoEstadoCambio = null;
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showNotification('Error de conexión: ' + error.message, 'error', 6000);
+                modal.style.display = 'none';
+                pedidoIdCambio = null;
+                nuevoEstadoCambio = null;
+            });
         }
     });
     
@@ -1107,6 +1262,193 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 });
+
+// Función para mostrar la información del pedido
+function mostrarInfoPedido(pedidoId) {
+    console.log('=== INICIANDO mostrarInfoPedido ===');
+    console.log('Pedido ID recibido:', pedidoId);
+    console.log('Tipo de pedidoId:', typeof pedidoId);
+    
+    const modal = document.getElementById('modalInfoPedido');
+    const contenido = document.getElementById('contenidoInfoPedido');
+    
+    console.log('Modal encontrado:', modal);
+    console.log('Contenido encontrado:', contenido);
+    
+    if (!modal || !contenido) {
+        console.error('No se encontraron los elementos del modal');
+        alert('Error: No se encontraron los elementos del modal');
+        return;
+    }
+    
+    // Mostrar modal con loading
+    contenido.innerHTML = '<div style="text-align: center; padding: 2rem;"><div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div><p>Cargando información del pedido...</p></div>';
+    modal.style.display = 'flex';
+    
+    // Hacer petición AJAX para obtener los detalles del pedido
+    const url = `index.php?route=pedidos/info&id=${pedidoId}`;
+    console.log('URL de petición:', url);
+    console.log('Llamando a fetch con pedido:', pedidoId);
+    
+    fetch(url, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(r => {
+            console.log('Respuesta recibida:', r);
+            console.log('Status:', r.status);
+            console.log('OK:', r.ok);
+            console.log('Content-Type:', r.headers.get('content-type'));
+            
+            // Verificar si es HTML (redirección al login)
+            if (r.headers.get('content-type')?.includes('text/html')) {
+                throw new Error('El servidor devolvió HTML en lugar de JSON. Posible problema de sesión.');
+            }
+            
+            return r.json();
+        })
+        .then(data => {
+            console.log('Respuesta JSON:', data);
+            if (data.success) {
+                mostrarContenidoPedido(data.pedido);
+            } else {
+                console.error('Error en respuesta:', data);
+                contenido.innerHTML = `<div style="text-align: center; padding: 2rem; color: #dc3545;"><div style="font-size: 2rem; margin-bottom: 1rem;">❌</div><p>Error al cargar la información del pedido: ${data.error || data.message || 'Error desconocido'}</p></div>`;
+            }
+        })
+        .catch(err => {
+            console.error('Error en fetch:', err);
+            contenido.innerHTML = `<div style="text-align: center; padding: 2rem; color: #dc3545;"><div style="font-size: 2rem; margin-bottom: 1rem;">❌</div><p>Error de conexión: ${err.message}</p></div>`;
+        });
+}
+
+// Función para mostrar el contenido del pedido
+function mostrarContenidoPedido(pedido) {
+    const contenido = document.getElementById('contenidoInfoPedido');
+    
+    // Formatear fecha
+    const fecha = new Date(pedido.fecha_creacion).toLocaleString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    // Formatear estado
+    const estados = {
+        'pendiente': '⏳ Pendiente',
+        'en_preparacion': '👨‍🍳 En Preparación',
+        'servido': '✅ Servido',
+        'cerrado': '🔒 Cerrado'
+    };
+    
+    // Formatear forma de pago
+    const formasPago = {
+        'efectivo': '💵 Efectivo',
+        'tarjeta': '💳 Tarjeta',
+        'transferencia': '🏦 Transferencia'
+    };
+    
+    let html = `
+        <div style="display: grid; gap: 1.5rem;">
+            <!-- Información básica -->
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; border-left: 4px solid var(--secondary);">
+                <h4 style="margin: 0 0 1rem 0; color: var(--secondary); font-size: 1.1rem;">📋 Información Básica</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem;">
+                    <div><strong>ID del Pedido:</strong> #${pedido.id_pedido}</div>
+                    <div><strong>Estado:</strong> ${estados[pedido.estado] || pedido.estado}</div>
+                    <div><strong>Mesa:</strong> ${pedido.numero_mesa || 'N/A'}</div>
+                    <div><strong>Mozo:</strong> ${pedido.nombre_mozo_completo || 'N/A'}</div>
+                    <div><strong>Fecha:</strong> ${fecha}</div>
+                    <div><strong>Total:</strong> $${parseFloat(pedido.total).toFixed(2)}</div>
+                    <div><strong>Forma de Pago:</strong> ${formasPago[pedido.forma_pago] || pedido.forma_pago || 'Sin definir'}</div>
+                </div>
+            </div>
+            
+            <!-- Información del cliente -->
+            ${pedido.cliente_nombre || pedido.cliente_email ? `
+            <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; border-left: 4px solid #2196f3;">
+                <h4 style="margin: 0 0 1rem 0; color: #1976d2; font-size: 1.1rem;">👤 Información del Cliente</h4>
+                <div style="display: grid; gap: 0.5rem;">
+                    ${pedido.cliente_nombre ? `<div><strong>Nombre:</strong> ${pedido.cliente_nombre}</div>` : ''}
+                    ${pedido.cliente_email ? `<div><strong>Email:</strong> ${pedido.cliente_email}</div>` : ''}
+                </div>
+            </div>
+            ` : ''}
+            
+            <!-- Observaciones -->
+            ${pedido.observaciones ? `
+            <div style="background: #fff3e0; padding: 1rem; border-radius: 6px; border-left: 4px solid #ff9800;">
+                <h4 style="margin: 0 0 1rem 0; color: #f57c00; font-size: 1.1rem;">📝 Observaciones</h4>
+                <p style="margin: 0; font-style: italic;">${pedido.observaciones}</p>
+            </div>
+            ` : ''}
+            
+            <!-- Items del pedido -->
+            <div style="background: #f1f8e9; padding: 1rem; border-radius: 6px; border-left: 4px solid #4caf50;">
+                <h4 style="margin: 0 0 1rem 0; color: #388e3c; font-size: 1.1rem;">🍽️ Items del Pedido</h4>
+                <div style="display: grid; gap: 0.8rem;">
+    `;
+    
+    // Agregar cada item del pedido
+    if (pedido.items && pedido.items.length > 0) {
+        pedido.items.forEach((item, index) => {
+            html += `
+                <div style="background: white; padding: 0.8rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: var(--secondary); margin-bottom: 0.3rem;">${item.nombre}</div>
+                            <div style="font-size: 0.9rem; color: #666;">Categoría: ${item.categoria || 'Sin categoría'}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: bold; color: var(--secondary);">$${parseFloat(item.precio).toFixed(2)}</div>
+                            <div style="font-size: 0.9rem; color: #666;">Cantidad: ${item.cantidad}</div>
+                        </div>
+                    </div>
+                    ${item.detalle ? `
+                        <div style="background: #fff3cd; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #ffc107; margin-top: 0.5rem;">
+                            <div style="font-size: 0.9rem; color: #856404; font-weight: bold; margin-bottom: 0.2rem;">📝 Detalle especial:</div>
+                            <div style="font-size: 0.9rem; color: #856404; font-style: italic;">${item.detalle}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+    } else {
+        html += '<div style="text-align: center; color: #666; font-style: italic; padding: 1rem;">No hay items en este pedido</div>';
+    }
+    
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+    
+    contenido.innerHTML = html;
+}
+
+// Event listeners para el modal de información
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('modalInfoPedido');
+    const cerrarBtn = document.getElementById('cerrarInfoPedido');
+    
+    if (cerrarBtn) {
+        cerrarBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+    
+    // Cerrar modal al hacer clic fuera de él
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
 </script>
 
 <style>
@@ -1186,6 +1528,28 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 0.7rem !important;
     }
     
+    /* Estilo específico para el botón de información */
+    .btn-action.info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white !important;
+        border: none;
+        border-radius: 4px;
+        padding: 0.3rem 0.6rem !important;
+        font-size: 0.75rem !important;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+        display: inline-block;
+        margin-right: 0.3rem;
+    }
+    
+    .btn-action.info:hover {
+        background: linear-gradient(135deg, #138496 0%, #0f6674 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        color: white !important;
+    }
+    
     .action-buttons {
         margin-bottom: 0.5rem !important;
     }
@@ -1237,6 +1601,34 @@ document.addEventListener('DOMContentLoaded', function() {
 .state-btn.servido:hover {
   background-color: #155724;
   color: #d4edda;
+}
+
+/* Estilos para botones de estado */
+.state-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 2px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.state-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.state-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 
@@ -1439,8 +1831,5 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 }
 </style>
+</main>
 
-<?php
-// Incluir footer
-require_once __DIR__ . '/../includes/footer.php';
-?>

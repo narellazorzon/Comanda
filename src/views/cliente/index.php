@@ -127,11 +127,27 @@ $iconosCategorias = [
         overflow-x: auto;
         padding: 0.5rem 1rem;
         margin: 0 1rem 1rem;
-        scrollbar-width: none;       /* Firefox */
+        scrollbar-width: thin;
+        scrollbar-color: #a1866f #f0f0f0;
     }
     
     .menu-filters::-webkit-scrollbar {
-        display: none;              /* Chrome/Safari */
+        height: 6px;
+    }
+
+    .menu-filters::-webkit-scrollbar-track {
+        background: linear-gradient(90deg, #f0f0f0 0%, #e9ecef 100%);
+        border-radius: 3px;
+    }
+
+    .menu-filters::-webkit-scrollbar-thumb {
+        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 100%);
+        border-radius: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .menu-filters::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(90deg, #8b5e46 0%, #6d4c3a 100%);
     }
     
     .menu-filters button {
@@ -162,31 +178,36 @@ $iconosCategorias = [
         overflow-x: auto;
         overflow-y: hidden;
         scrollbar-width: thin;
-        scrollbar-color: var(--color-primario) #f0f0f0;
+        scrollbar-color: #a1866f #f0f0f0;
         scrollbar-gutter: stable;
     }
 
     .categoria-nav-content::-webkit-scrollbar {
-        height: 6px;
+        height: 8px;
         margin-top: 8px; /* Separación clara del contenido */
     }
 
     .categoria-nav-content::-webkit-scrollbar-track {
-        background: #f0f0f0;
-        border-radius: 3px;
+        background: linear-gradient(90deg, #f0f0f0 0%, #e9ecef 100%);
+        border-radius: 4px;
         margin: 0 1rem;
         margin-top: 4px;
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb {
-        background: var(--color-primario);
-        border-radius: 3px;
-        opacity: 0.8;
+        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 100%);
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb:hover {
-        background: var(--color-secundario);
-        opacity: 1;
+        background: linear-gradient(90deg, #8b5e46 0%, #6d4c3a 100%);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .categoria-nav-content::-webkit-scrollbar-thumb:active {
+        background: linear-gradient(90deg, #6d4c3a 0%, #5a3f2e 100%);
     }
 
     .categoria-btn {
@@ -767,23 +788,97 @@ $iconosCategorias = [
     .cart-modal {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.7);
+        background: linear-gradient(135deg, rgba(83, 52, 31, 0.9) 0%, rgba(137, 107, 75, 0.8) 100%);
         display: none;
         align-items: center;
         justify-content: center;
         z-index: 2000;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(8px);
     }
 
     .cart-panel {
-        background: white;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
         width: 95%;
-        max-width: 600px;
-        border-radius: 16px;
-        padding: 1.5rem;
+        max-width: 650px;
+        border-radius: 20px;
+        padding: 0;
         max-height: 90vh;
         overflow-y: auto;
-        animation: slideUp 0.3s ease;
+        overflow-x: hidden;
+        animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 20px 60px rgba(83, 52, 31, 0.3), 0 8px 25px rgba(0,0,0,0.15);
+        border: 2px solid rgba(161, 134, 111, 0.2);
+        scrollbar-width: thin;
+        scrollbar-color: #a1866f #f1f1f1;
+    }
+
+    .cart-panel::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .cart-panel::-webkit-scrollbar-track {
+        background: linear-gradient(180deg, #f1f1f1 0%, #e9ecef 100%);
+        border-radius: 4px;
+        margin: 10px 5px;
+    }
+
+    .cart-panel::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #a1866f 0%, #8b5e46 100%);
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .cart-panel::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #8b5e46 0%, #6d4c3a 100%);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .cart-panel::-webkit-scrollbar-thumb:active {
+        background: linear-gradient(180deg, #6d4c3a 0%, #5a3f2e 100%);
+    }
+
+    /* Indicador de scroll para el panel completo */
+    .cart-panel::after {
+        content: '';
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, rgba(161, 134, 111, 0.9) 0%, rgba(139, 94, 70, 0.9) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        opacity: 0;
+        transition: all 0.3s ease;
+        pointer-events: none;
+        z-index: 1000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .cart-panel::after {
+        content: '↓';
+    }
+
+    .cart-panel:hover::after {
+        opacity: 1;
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-3px);
+        }
+        60% {
+            transform: translateY(-2px);
+        }
     }
 
     @keyframes slideUp {
@@ -798,78 +893,254 @@ $iconosCategorias = [
     }
 
     .cart-header {
+        background: linear-gradient(135deg, rgb(83, 52, 31) 0%, rgb(137, 107, 75) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #e9ecef;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cart-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
     }
 
     .cart-header h3 {
-        font-size: 1.5rem;
-        color: var(--color-secundario);
+        font-size: 1.6rem;
+        color: white;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        position: relative;
+        z-index: 1;
+    }
+
+    .cart-header h3::before {
+        
+        font-size: 1.8rem;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
     }
 
     .btn-close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
         cursor: pointer;
-        color: var(--color-texto-suave);
-        transition: color 0.3s ease;
+        color: white;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
     }
 
     .btn-close:hover {
-        color: var(--color-texto);
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     /* Resumen del carrito mejorado */
     .cart-summary {
-        background: linear-gradient(145deg, #ffffff, #f8f9fa);
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        border: 2px solid rgba(161, 134, 111, 0.1);
+        border-radius: 16px;
+        margin: 1.5rem;
         overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        position: relative;
+    }
+
+    .cart-summary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 50%, #a1866f 100%);
     }
 
     .cart-summary-header {
-        background: var(--color-primario);
+        background: linear-gradient(135deg, #a1866f 0%, #8b5e46 100%);
         color: white;
-        padding: 1rem;
+        padding: 1.25rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cart-summary-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20px;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
     }
 
     .cart-summary-header h4 {
         margin: 0;
-        font-size: 1rem;
+        font-size: 1.1rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+    }
+
+    .cart-summary-header h4::before {
+        content: '📋';
+        font-size: 1.3rem;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
     }
 
     .cart-items {
-        max-height: 280px;
+        max-height: 320px;
         overflow-y: auto;
-        padding: 1rem;
+        padding: 1.5rem;
+        background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+        scrollbar-width: thin;
+        scrollbar-color: #a1866f #f1f1f1;
+        position: relative;
+    }
+
+    .cart-items::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .cart-items::-webkit-scrollbar-track {
+        background: linear-gradient(180deg, #f1f1f1 0%, #e9ecef 100%);
+        border-radius: 5px;
+        margin: 10px 5px;
+        border: 1px solid rgba(161, 134, 111, 0.1);
+    }
+
+    .cart-items::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #a1866f 0%, #8b5e46 100%);
+        border-radius: 5px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .cart-items::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #8b5e46 0%, #6d4c3a 100%);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15);
+        transform: scaleX(1.1);
+    }
+
+    .cart-items::-webkit-scrollbar-thumb:active {
+        background: linear-gradient(180deg, #6d4c3a 0%, #5a3f2e 100%);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .cart-items::-webkit-scrollbar-corner {
+        background: linear-gradient(135deg, #f1f1f1 0%, #e9ecef 100%);
+    }
+
+    /* Indicador de scroll sutil */
+    .cart-items::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 10px;
+        height: 100%;
+        background: linear-gradient(180deg, transparent 0%, rgba(161, 134, 111, 0.1) 50%, transparent 100%);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .cart-items:hover::after {
+        opacity: 1;
+    }
+
+    /* Indicador de scroll en la parte inferior */
+    .cart-items::before {
+        content: '↓';
+        position: absolute;
+        bottom: 10px;
+        right: 15px;
+        color: rgba(161, 134, 111, 0.6);
+        font-size: 1.2rem;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 10;
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    }
+
+    .cart-items:hover::before {
+        opacity: 1;
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-5px);
+        }
+        60% {
+            transform: translateY(-3px);
+        }
     }
 
     .cart-item {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e9ecef;
-        transition: all 0.3s ease;
+        flex-direction: column;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        border-radius: 12px;
+        border: 2px solid rgba(161, 134, 111, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cart-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #a1866f 0%,rgb(212, 104, 46) 50%, #a1866f 100%);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
     }
 
     .cart-item:hover {
-        box-shadow: var(--sombra-suave);
+        box-shadow: 0 8px 25px rgba(161, 134, 111, 0.15), 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+        border-color: rgba(161, 134, 111, 0.3);
+    }
+
+    .cart-item:hover::before {
+        transform: scaleX(1);
     }
 
     .cart-item-info {
@@ -922,16 +1193,36 @@ $iconosCategorias = [
     }
 
     .cart-summary-footer {
-        padding: 1rem;
-        background: #f8f9fa;
-        border-top: 2px solid #e9ecef;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-top: 3px solid rgba(161, 134, 111, 0.2);
+        position: relative;
+    }
+
+    .cart-summary-footer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, rgba(161, 134, 111, 0.3) 50%, transparent 100%);
     }
 
     .cart-total-amount {
         text-align: right;
-        font-weight: 700;
+        font-weight: 800;
+        font-size: 1.8rem;
+        color: #2c5530;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        position: relative;
+    }
+
+    .cart-total-amount::before {
+        content: '💰';
+        margin-right: 0.5rem;
         font-size: 1.5rem;
-        color: var(--color-exito);
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
     }
 
     .cart-empty {
@@ -950,59 +1241,123 @@ $iconosCategorias = [
     .checkout-form {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        border-radius: 16px;
+        margin: 1.5rem;
+        border: 2px solid rgba(161, 134, 111, 0.1);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        position: relative;
+    }
+
+    .checkout-form::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 50%, #a1866f 100%);
+        border-radius: 16px 16px 0 0;
     }
 
     .form-group {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        position: relative;
     }
 
     .form-group label {
-        font-weight: 600;
-        color: var(--color-texto);
-        font-size: 0.9rem;
+        font-weight: 700;
+        color: #2c5530;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .form-group input,
     .form-group select {
-        padding: 0.75rem;
-        border: 2px solid #e9ecef;
-        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        border: 2px solid rgba(161, 134, 111, 0.2);
+        border-radius: 12px;
         font-size: 1rem;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     }
 
     .form-group input:focus,
     .form-group select:focus {
         outline: none;
-        border-color: var(--color-primario);
-        box-shadow: 0 0 0 3px rgba(161, 134, 111, 0.1);
+        border-color: #a1866f;
+        box-shadow: 0 0 0 4px rgba(161, 134, 111, 0.15), inset 0 2px 4px rgba(0,0,0,0.05);
+        transform: translateY(-1px);
+    }
+
+    .form-group input::placeholder {
+        color: #999;
+        font-style: italic;
     }
 
     .btn-confirmar {
-        background: var(--color-acento);
+        background: linear-gradient(135deg, #28a745 0%, #20c997 50%, #17a2b8 100%);
         color: white;
         border: none;
-        padding: 1rem;
-        border-radius: 8px;
-        font-size: 1.1rem;
-        font-weight: 600;
+        padding: 1.25rem 2rem;
+        border-radius: 12px;
+        font-size: 1.2rem;
+        font-weight: 700;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         margin-top: 1rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .btn-confirmar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease;
     }
 
     .btn-confirmar:hover:not(:disabled) {
-        background: #0056b3;
-        transform: translateY(-2px);
-        box-shadow: var(--sombra-media);
+        background: linear-gradient(135deg, #218838 0%, #1ea085 50%, #138496 100%);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+    }
+
+    .btn-confirmar:hover:not(:disabled)::before {
+        left: 100%;
+    }
+
+    .btn-confirmar:active:not(:disabled) {
+        transform: translateY(-1px) scale(0.98);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
     }
 
     .btn-confirmar:disabled {
-        background: #ccc;
+        background: linear-gradient(135deg, #ccc 0%, #bbb 100%);
         cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .btn-confirmar::after {
+        content: '🚀';
+        margin-left: 0.5rem;
+        font-size: 1.1rem;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
     }
 
     /* Notificación toast mejorada */
@@ -1172,19 +1527,79 @@ $iconosCategorias = [
             height: 100%;
             max-height: 100vh;
             border-radius: 0;
+            background: linear-gradient(135deg, rgba(83, 52, 31, 0.95) 0%, rgba(137, 107, 75, 0.9) 100%);
         }
 
-        .cart-content {
-            padding: 1rem;
+        .cart-panel {
+            width: 100%;
+            height: 100%;
+            max-height: 100vh;
+            border-radius: 0;
+            margin: 0;
+            box-shadow: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .cart-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .cart-panel::-webkit-scrollbar-track {
+            margin: 5px 2px;
+            border-radius: 3px;
+        }
+
+        .cart-panel::-webkit-scrollbar-thumb {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .cart-header {
+            padding: 1rem 1.5rem;
         }
 
         .cart-header h3 {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
+        }
+
+        .cart-summary {
+            margin: 1rem;
+            border-radius: 12px;
+        }
+
+        .cart-items {
+            max-height: 50vh;
+            padding: 1rem;
+        }
+
+        .cart-items::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .cart-items::-webkit-scrollbar-track {
+            margin: 5px 2px;
+            border-radius: 4px;
+        }
+
+        .cart-items::-webkit-scrollbar-thumb {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .checkout-form {
+            margin: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
         }
 
         .cart-item {
             padding: 0.75rem 0;
             border-bottom: 1px solid #e9ecef;
+        }
+
+        .cart-item-main {
+            margin-bottom: 0.5rem;
         }
 
         .cart-item-name {
@@ -1195,6 +1610,21 @@ $iconosCategorias = [
         .cart-item-price {
             font-size: 0.8rem;
             color: var(--color-texto-suave);
+        }
+
+        .cart-item-detail {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+        }
+
+        .cart-item-detail-label {
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .cart-item-detail-input {
+            padding: 0.4rem;
+            font-size: 0.8rem;
         }
 
         .qty button {
@@ -1473,7 +1903,7 @@ $iconosCategorias = [
             <!-- Resumen del carrito -->
             <div class="cart-summary">
                 <div class="cart-summary-header">
-                    <h4>📋 Resumen del pedido</h4>
+                    <h4>Resumen del pedido</h4>
                 </div>
                 <div id="cart-items" class="cart-items"></div>
                 <div class="cart-summary-footer">
@@ -1526,8 +1956,17 @@ $iconosCategorias = [
                     <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
                 </div>
                 
+                <div class="form-group">
+                    <label>Forma de pago:</label>
+                    <select id="forma-pago" name="forma_pago" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="efectivo">💵 Efectivo</option>
+                        <option value="tarjeta">💳 Tarjeta crédito/débito</option>
+                    </select>
+                </div>
+                
                 <button type="submit" id="btn-confirmar" class="btn-confirmar" disabled>
-                    Continuar al Pago →
+                    Confirmar Pedido
                 </button>
             </form>
         </div>
@@ -1599,17 +2038,16 @@ $iconosCategorias = [
     function detectQRMode() {
         const urlParams = new URLSearchParams(window.location.search);
         const mesaParam = urlParams.get('mesa') || urlParams.get('qr');
+        const takeawayParam = urlParams.get('takeaway');
         
-        console.log('DetectQRMode - URL:', window.location.href);
-        console.log('DetectQRMode - mesaParam:', mesaParam);
-        
-        if (mesaParam && !isNaN(mesaParam)) {
+        if (takeawayParam === '1') {
+            // Modo TAKE AWAY - no requiere mesa
+            setupTakeawayMode();
+        } else if (mesaParam && !isNaN(mesaParam)) {
             mesaFromQR = parseInt(mesaParam);
             isQRMode = true;
-            console.log('DetectQRMode - Modo QR activado, mesa:', mesaFromQR);
             setupQRMode();
         } else {
-            console.log('DetectQRMode - Modo manual activado');
             setupManualMode();
         }
         
@@ -1642,6 +2080,42 @@ $iconosCategorias = [
         manualField.style.display = 'block';
     }
 
+    // Configurar modo TAKE AWAY
+    function setupTakeawayMode() {
+        const qrField = document.getElementById('mesa-qr-field');
+        const manualField = document.getElementById('mesa-manual-field');
+        const qrText = document.getElementById('mesa-qr-text');
+        
+        // Ocultar campos de mesa
+        qrField.style.display = 'none';
+        manualField.style.display = 'none';
+        
+        // Mostrar información de TAKE AWAY
+        qrField.style.display = 'block';
+        qrText.innerHTML = '🥡 <strong>TAKE AWAY</strong> - Pedido para llevar';
+        qrText.style.background = '#e8f5e8';
+        qrText.style.border = '2px solid #c8e6c9';
+        qrText.style.color = '#155724';
+        
+        // Ocultar botón de cambiar mesa
+        const btnCambiarMesa = document.getElementById('btn-cambiar-mesa');
+        if (btnCambiarMesa) {
+            btnCambiarMesa.style.display = 'none';
+        }
+        
+        // Establecer modo de consumo como takeaway
+        const modoConsumo = document.getElementById('modo_consumo');
+        if (modoConsumo) {
+            modoConsumo.value = 'takeaway';
+        }
+        
+        // Ocultar botón de llamar mozo (no aplica para takeaway)
+        const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
+        if (btnLlamarMozo) {
+            btnLlamarMozo.style.display = 'none';
+        }
+    }
+
     // Cambiar a modo manual desde QR
     function cambiarMesaFromQR() {
         isQRMode = false;
@@ -1654,18 +2128,12 @@ $iconosCategorias = [
     async function llamarMozo(numeroMesa = null) {
         let mesaParaLlamar = numeroMesa || mesaFromQR;
         
-        console.log('LlamarMozo - numeroMesa:', numeroMesa);
-        console.log('LlamarMozo - mesaFromQR:', mesaFromQR);
-        console.log('LlamarMozo - mesaParaLlamar:', mesaParaLlamar);
         
         if (!mesaParaLlamar) {
             // Mostrar popup para seleccionar mesa
-            console.log('LlamarMozo - Mostrando popup porque no hay mesa');
             mostrarPopupMesa();
             return;
         }
-        
-        console.log('LlamarMozo - Llamando directamente al mozo de la mesa:', mesaParaLlamar);
 
         const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
         const originalText = btnLlamarMozo.innerHTML;
@@ -1676,8 +2144,6 @@ $iconosCategorias = [
         btnLlamarMozo.disabled = true;
 
         try {
-            console.log('Enviando petición a:', '<?= $base_url ?>/index.php?route=llamar-mozo');
-            console.log('Datos a enviar:', { numero_mesa: mesaParaLlamar });
             
             const response = await fetch('<?= $base_url ?>/index.php?route=llamar-mozo', {
                 method: 'POST',
@@ -1689,11 +2155,8 @@ $iconosCategorias = [
                 })
             });
             
-            console.log('Respuesta recibida:', response);
-            console.log('Status:', response.status);
 
             const result = await response.json();
-            console.log('Resultado del servidor:', result);
 
             if (result.success) {
                 showToast('✅ ' + result.message, 'success');
@@ -1759,7 +2222,7 @@ $iconosCategorias = [
         if (existing) { 
             existing.qty += 1; 
         } else { 
-            cart.push({...item, qty: 1}); 
+            cart.push({...item, qty: 1, detalle: ''}); 
         }
         saveCart(cart);
         renderCart();
@@ -1775,6 +2238,15 @@ $iconosCategorias = [
         }
         
         updateCartCounter();
+    }
+
+    function updateItemDetail(id, detalle) {
+        const cart = loadCart();
+        const item = cart.find(i => i.id === id);
+        if (item) {
+            item.detalle = detalle;
+            saveCart(cart);
+        }
     }
 
     function updateQty(id, delta) {
@@ -1808,14 +2280,25 @@ $iconosCategorias = [
         } else {
             list.innerHTML = cart.map(i => `
                 <div class="cart-item">
-                    <div class="cart-item-info">
-                        <div class="cart-item-name">${i.nombre}</div>
-                        <div class="cart-item-price">$${Number(i.precio).toFixed(2)} c/u</div>
+                    <div class="cart-item-main">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${i.nombre}</div>
+                            <div class="cart-item-price">$${Number(i.precio).toFixed(2)} c/u</div>
+                        </div>
+                        <div class="qty">
+                            <button onclick="updateQty(${i.id}, -1)">−</button>
+                            <span>${i.qty}</span>
+                            <button onclick="updateQty(${i.id}, 1)">+</button>
+                        </div>
                     </div>
-                    <div class="qty">
-                        <button onclick="updateQty(${i.id}, -1)">−</button>
-                        <span>${i.qty}</span>
-                        <button onclick="updateQty(${i.id}, 1)">+</button>
+                    <div class="cart-item-detail">
+                        <label class="cart-item-detail-label">Detalle/Observaciones:</label>
+                        <input type="text" 
+                               class="cart-item-detail-input" 
+                               placeholder="Ej: sin sal, bien cocido, etc." 
+                               value="${i.detalle || ''}"
+                               onchange="updateItemDetail(${i.id}, this.value)"
+                               maxlength="100">
                     </div>
                 </div>
             `).join('');
@@ -1876,18 +2359,12 @@ $iconosCategorias = [
         const modoConsumo = document.getElementById('modo-consumo').value;
         const nombreCompleto = document.getElementById('nombre-completo').value.trim();
         const email = document.getElementById('email').value.trim();
+        const formaPago = document.getElementById('forma-pago').value;
         
-        console.log('=== VALIDANDO FORMULARIO ===');
-        console.log('Modo consumo:', modoConsumo);
-        console.log('Nombre completo:', nombreCompleto);
-        console.log('Email:', email);
-        console.log('Forma pago:', formaPago);
         
         let isValid = true;
         
         if (!modoConsumo || !nombreCompleto || !email || !formaPago) {
-            console.log('❌ Faltan campos obligatorios');
-        if (!modoConsumo || !nombreCompleto || !email) {
             isValid = false;
         }
         
@@ -1895,30 +2372,24 @@ $iconosCategorias = [
             let mesaValida = false;
             
             if (isQRMode && mesaFromQR) {
-                console.log('✅ Mesa desde QR:', mesaFromQR);
                 mesaValida = true;
             } else {
                 const numeroMesa = document.getElementById('numero-mesa').value;
-                console.log('Número mesa manual:', numeroMesa);
                 mesaValida = !!numeroMesa;
             }
             
             if (!mesaValida) {
-                console.log('❌ Mesa no válida');
                 isValid = false;
             }
         }
         
         const cart = loadCart();
-        console.log('Carrito:', cart);
         if (cart.length === 0) {
-            console.log('❌ Carrito vacío');
             isValid = false;
         }
         
         const btnConfirmar = document.getElementById('btn-confirmar');
         btnConfirmar.disabled = !isValid;
-        console.log('Botón habilitado:', !isValid ? 'NO' : 'SÍ');
     }
 
     // Inicialización
@@ -2063,7 +2534,7 @@ $iconosCategorias = [
         });
         
         // Validación en tiempo real
-        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email'];
+        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email', 'forma-pago'];
         formFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
@@ -2074,14 +2545,10 @@ $iconosCategorias = [
         
         // Envío del formulario
         document.getElementById('checkout-form').addEventListener('submit', async function(e) {
-        document.getElementById('checkout-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            console.log('=== FORMULARIO ENVIADO ===');
-            
             const cart = loadCart();
-            console.log('Carrito:', cart);
             if (cart.length === 0) {
-                alert('Tu carrito está vacío');
+                showToast('Tu carrito está vacío', 'error');
                 return;
             }
             
@@ -2096,8 +2563,6 @@ $iconosCategorias = [
                 }
             }
             
-            console.log('Mesa final para pedido:', mesaFinal);
-            console.log('Modo consumo:', modoConsumo);
             
             // Preparar datos del pedido
             const pedidoData = {
@@ -2108,13 +2573,12 @@ $iconosCategorias = [
                 observaciones: '', // No hay campo de observaciones en el formulario del cliente
                 items: cart.map(item => ({
                     id_item: item.id,
-                    cantidad: item.cantidad,
+                    cantidad: item.qty,
                     precio_unitario: item.precio,
                     detalle: item.detalle || ''
                 }))
             };
             
-            console.log('Datos del pedido:', pedidoData);
             
             // Solo incluir mesa si es modo 'stay'
             if (modoConsumo === 'stay' && mesaFinal) {
@@ -2157,68 +2621,6 @@ $iconosCategorias = [
             } catch (error) {
                 console.error('Error al enviar pedido:', error);
                 showToast('❌ Error de conexión. Intenta nuevamente.', 'error');
-            }
-            // Preparar datos para enviar
-            const formData = new FormData();
-            formData.append('modo_consumo', modoConsumo);
-            formData.append('numero_mesa', mesaFinal || '');
-            formData.append('nombre_completo', document.getElementById('nombre-completo').value);
-            formData.append('email', document.getElementById('email').value);
-            formData.append('items', JSON.stringify(cart.map(item => ({
-                id_item: item.id,
-                cantidad: item.qty
-            }))));
-            
-            try {
-                // Mostrar indicador de carga
-                const btnConfirmar = document.getElementById('btn-confirmar');
-                const btnText = btnConfirmar.textContent;
-                btnConfirmar.disabled = true;
-                btnConfirmar.textContent = 'Procesando...';
-                
-                // Enviar pedido al servidor
-                const response = await fetch('<?= url('cliente/crear-pedido') ?>', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const responseText = await response.text();
-                console.log('Response status:', response.status);
-                console.log('Response text:', responseText);
-                
-                // Intentar parsear como JSON
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('Error parsing JSON:', e);
-                    console.error('Response was:', responseText);
-                    // Si no es JSON, probablemente hay un error PHP
-                    alert('Error del servidor. Revisa la consola para más detalles.');
-                    btnConfirmar.disabled = false;
-                    btnConfirmar.textContent = btnText;
-                    return;
-                }
-                
-                if (response.ok && data.success && data.redirect_url) {
-                    console.log('Redirigiendo a:', data.redirect_url);
-                    // Limpiar el carrito antes de redirigir
-                    localStorage.removeItem(CART_KEY);
-                    // Cerrar modal antes de redirigir
-                    modal.style.display = 'none';
-                    // Redirigir a la página de pago
-                    window.location.href = data.redirect_url;
-                } else {
-                    // Mostrar mensaje de error específico
-                    alert(data.message || 'Error al procesar el pedido. Por favor intenta nuevamente.');
-                    btnConfirmar.disabled = false;
-                    btnConfirmar.textContent = btnText;
-                }
-            } catch (error) {
-                console.error('Error completo:', error);
-                alert('Error: ' + error.message);
-                document.getElementById('btn-confirmar').disabled = false;
-                document.getElementById('btn-confirmar').textContent = 'Continuar al Pago →';
             }
         });
         

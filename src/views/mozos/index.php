@@ -31,11 +31,29 @@ if (isset($_GET['delete'])) {
 // 2) Cargamos todos los mozos
 $mozos = Usuario::allByRole('mozo');
 
+// Si el usuario actual es administrador, agregarlo a la lista para que pueda cambiar su contraseña
+if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
+    $adminActual = $_SESSION['user'];
+    // Verificar si el admin ya está en la lista (por si acaso)
+    $adminEnLista = false;
+    foreach ($mozos as $mozo) {
+        if ($mozo['id_usuario'] == $adminActual['id_usuario']) {
+            $adminEnLista = true;
+            break;
+        }
+    }
+    
+    // Si no está en la lista, agregarlo al principio
+    if (!$adminEnLista) {
+        array_unshift($mozos, $adminActual);
+    }
+}
+
 ?>
 
 <!-- Header de gestión -->
 <div class="management-header">
-  <h1>👥 Gestión de Mozos</h1>
+  <h1>👥 Gestión del Personal</h1>
   <div class="header-actions">
     <a href="<?= url('mozos/create') ?>" class="header-btn">
       ➕ Nuevo Mozo
@@ -51,10 +69,10 @@ $mozos = Usuario::allByRole('mozo');
 <div class="filters-container">
   <!-- Botón para mostrar/ocultar filtros en móvil -->
   <button id="toggleFilters" class="toggle-filters-btn" onclick="toggleFilters()">
-    Filtrar
+    🔍 Filtrar
   </button>
   
-  <div id="filtersContent" class="search-filter" style="background:rgb(245, 236, 198); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; display: none;">
+  <div id="filtersContent" class="search-filter" style="background: rgb(238, 224, 191); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; display: none;">
   <!-- Filtro por nombre -->
   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
     <label style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">👤 Nombre:</label>
@@ -105,9 +123,17 @@ $mozos = Usuario::allByRole('mozo');
     </tr>
   <?php else: ?>
     <?php foreach ($mozos as $m): ?>
-      <tr data-mozo-id="<?= $m['id_usuario'] ?>" style="border-bottom: 1px solid #e0e0e0;">
+      <?php $esAdminActual = ($_SESSION['user']['id_usuario'] ?? 0) == $m['id_usuario']; ?>
+      <tr data-mozo-id="<?= $m['id_usuario'] ?>" style="border-bottom: 1px solid #e0e0e0; <?= $esAdminActual ? 'background-color: #fff8e1;' : '' ?>">
         <td><?= $m['id_usuario'] ?></td>
-        <td><?= htmlspecialchars($m['nombre'].' '.$m['apellido']) ?></td>
+        <td>
+          <?= htmlspecialchars($m['nombre'].' '.$m['apellido']) ?>
+          <?php if ($esAdminActual): ?>
+            <span class="admin-badge" style="background: linear-gradient(45deg, #ffd700, #ffed4e); color: #8b6914; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; font-weight: bold; margin-left: 8px;">
+              👑 Admin
+            </span>
+          <?php endif; ?>
+        </td>
         <td><?= htmlspecialchars($m['email']) ?></td>
         <td>
           <?php
@@ -131,10 +157,16 @@ $mozos = Usuario::allByRole('mozo');
           <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;">
             ✏️
           </a>
-          <a href="#" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
-             onclick="confirmarBorradoMozo(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>')">
-            ❌
-          </a>
+          <?php if (!$esAdminActual): ?>
+            <a href="<?= url('mozos/delete', ['delete' => $m['id_usuario']]) ?>" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
+               onclick="return confirm('¿Estás seguro de eliminar a <?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>?')">
+              ❌
+            </a>
+          <?php else: ?>
+            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; background: #6c757d; color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
+              🔒
+            </span>
+          <?php endif; ?>
         </td>
       </tr>
     <?php endforeach; ?>
@@ -153,11 +185,17 @@ $mozos = Usuario::allByRole('mozo');
     </div>
   <?php else: ?>
     <?php foreach ($mozos as $m): ?>
-      <div class="mobile-card" data-mozo-id="<?= $m['id_usuario'] ?>">
+      <?php $esAdminActual = ($_SESSION['user']['id_usuario'] ?? 0) == $m['id_usuario']; ?>
+      <div class="mobile-card <?= $esAdminActual ? 'admin-current' : '' ?>" data-mozo-id="<?= $m['id_usuario'] ?>">
         <div class="card-header">
           <div class="card-title">
             <strong><?= htmlspecialchars($m['nombre'].' '.$m['apellido']) ?></strong>
             <span class="card-id">#<?= $m['id_usuario'] ?></span>
+            <?php if ($esAdminActual): ?>
+              <span class="admin-badge" style="background: linear-gradient(45deg, #ffd700, #ffed4e); color: #8b6914; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; font-weight: bold; margin-left: 8px;">
+                👑 Admin
+              </span>
+            <?php endif; ?>
           </div>
           <div class="card-status">
             <?php
@@ -188,10 +226,16 @@ $mozos = Usuario::allByRole('mozo');
           <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;">
             ✏️
           </a>
-          <a href="#" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
-             onclick="confirmarBorradoMozo(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>')">
-            ❌
-          </a>
+          <?php if (!$esAdminActual): ?>
+            <a href="<?= url('mozos/delete', ['delete' => $m['id_usuario']]) ?>" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
+               onclick="return confirm('¿Estás seguro de eliminar a <?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>?')">
+              ❌
+            </a>
+          <?php else: ?>
+            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; background: #6c757d; color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
+              🔒
+            </span>
+          <?php endif; ?>
         </div>
       </div>
     <?php endforeach; ?>
@@ -220,15 +264,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function filterMozos() {
-        console.log('Filtrando con:', currentNombreSearch);
-        
         // Filtrar filas de la tabla
         tableRows.forEach(row => {
             const nombreCell = row.querySelector('td:nth-child(2)');
             const nombreText = nombreCell ? nombreCell.textContent.toLowerCase().trim() : '';
             const estadoText = getMozoStatus(row);
-            
-            console.log('Nombre en tabla:', nombreText, 'Búsqueda:', currentNombreSearch);
             
             // Buscar solo al inicio del nombre
             const matchesNombre = currentNombreSearch === '' || nombreText.startsWith(currentNombreSearch);
@@ -236,10 +276,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (matchesNombre && matchesStatus) {
                 row.style.display = '';
-                console.log('Mostrando:', nombreText);
             } else {
                 row.style.display = 'none';
-                console.log('Ocultando:', nombreText);
             }
         });
         
@@ -250,18 +288,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const estadoElement = card.querySelector('.card-status span');
             const estadoText = estadoElement ? estadoElement.textContent.toLowerCase().trim().replace(/[✅❌]/g, '').trim() : '';
             
-            console.log('Nombre en tarjeta móvil:', nombreText, 'Búsqueda:', currentNombreSearch);
-            
             // Buscar solo al inicio del nombre
             const matchesNombre = currentNombreSearch === '' || nombreText.startsWith(currentNombreSearch);
             const matchesStatus = currentStatusFilter === 'all' || estadoText === currentStatusFilter;
             
             if (matchesNombre && matchesStatus) {
                 card.style.display = '';
-                console.log('Mostrando tarjeta:', nombreText);
             } else {
                 card.style.display = 'none';
-                console.log('Ocultando tarjeta:', nombreText);
             }
         });
     }
@@ -319,7 +353,7 @@ function toggleFilters() {
         toggleBtn.innerHTML = 'Ocultar Filtros';
     } else {
         filtersContent.style.display = 'none';
-        toggleBtn.innerHTML = 'Filtrar';
+        toggleBtn.innerHTML = '🔍 Filtrar';
     }
 }
 
@@ -422,6 +456,22 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
+/* Estilos para el administrador actual */
+.admin-current {
+    border-left: 4px solid #ffd700 !important;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3) !important;
+}
+
+.admin-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 /* Estilos para filtros desplegables en móvil */
 .toggle-filters-btn {
     display: block;

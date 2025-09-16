@@ -12,7 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Mozos y administradores pueden editar pedidos
+// Personal y administradores pueden editar pedidos
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ' . url('login'));
     exit;

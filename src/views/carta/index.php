@@ -9,7 +9,7 @@ use App\Models\CartaItem;
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Mozos y administradores pueden ver la carta
+// Personal y administradores pueden ver la carta
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ' . url('login'));
     exit;
@@ -17,8 +17,6 @@ if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'ad
 
 $rol = $_SESSION['user']['rol'];
 
-// Debug: mostrar el rol del usuario
-// echo "<!-- Rol del usuario: " . $rol . " -->";
 
 // La eliminación se maneja a través del controlador CartaController::delete()
 
@@ -78,7 +76,29 @@ $items = CartaItem::allIncludingUnavailable();
   justify-content: center;
   gap: 6px;
   margin-bottom: 12px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  padding: 0 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.categorias-nav::-webkit-scrollbar {
+  height: 6px;
+}
+
+.categorias-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.categorias-nav::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.categorias-nav::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
 .categoria-btn {
@@ -92,6 +112,8 @@ $items = CartaItem::allIncludingUnavailable();
   transition: all 0.3s ease;
   font-size: 0.8rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .categoria-btn:hover, .categoria-btn.active {
@@ -789,7 +811,33 @@ $items = CartaItem::allIncludingUnavailable();
   .categorias-nav {
     justify-content: flex-start;
     overflow-x: auto;
-    padding-bottom: 6px;
+    padding: 0 1rem 6px 1rem;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    flex-wrap: nowrap;
+    max-width: 100%;
+    position: relative;
+  }
+  
+  .categorias-nav::before,
+  .categorias-nav::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .categorias-nav::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(247, 241, 225, 1), rgba(247, 241, 225, 0));
+  }
+  
+  .categorias-nav::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(247, 241, 225, 1), rgba(247, 241, 225, 0));
   }
   
   .categoria-btn {
@@ -797,6 +845,7 @@ $items = CartaItem::allIncludingUnavailable();
     flex-shrink: 0;
     font-size: 0.65rem;
     padding: 4px 8px;
+    min-width: fit-content;
   }
   
   .admin-controls {
@@ -899,42 +948,78 @@ $items = CartaItem::allIncludingUnavailable();
         ➕ Nuevo Ítem
       </a>
     </div>
-  <?php else: ?>
-    <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.2); text-align: center; color: white;">
-      📋 Vista de solo lectura - Consulta los items del menú y precios
-    </div>
   <?php endif; ?>
 
   <?php 
+  // Definir orden específico de categorías
+  $ordenCategorias = [
+    'Entradas',
+    'Platos principales', 
+    'Carnes',
+    'Pastas',
+    'Pizzas',
+    'Ensaladas',
+    'Postres',
+    'Bebidas'
+  ];
+  
+  // Mapeo de variaciones de nombres de categorías
+  $mapeoCategorias = [
+    'entradas' => 'Entradas',
+    'platos principales' => 'Platos principales',
+    'platos principales' => 'Platos principales',
+    'Platos Principales' => 'Platos principales',
+    'carnes' => 'Carnes',
+    'pastas' => 'Pastas',
+    'pizzas' => 'Pizzas',
+    'ensaladas' => 'Ensaladas',
+    'postres' => 'Postres',
+    'bebidas' => 'Bebidas'
+  ];
+  
   // Agrupar items por categoría
   $categorias = [];
   $categoriasUnicas = [];
   
   foreach ($items as $item) {
-      $categoria = $item['categoria'] ?? 'Sin categoría';
+      $categoriaOriginal = $item['categoria'] ?? 'Sin categoría';
       
-      // Agregar a la lista de categorías únicas
+      // Normalizar el nombre de la categoría usando el mapeo
+      $categoria = $mapeoCategorias[strtolower($categoriaOriginal)] ?? $categoriaOriginal;
+      
+      // Agregar a la lista de categorías únicas (usando el nombre normalizado)
       if (!in_array($categoria, $categoriasUnicas)) {
           $categoriasUnicas[] = $categoria;
       }
       
-      // Agrupar items por categoría
+      // Agrupar items por categoría (usando el nombre normalizado)
       if (!isset($categorias[$categoria])) {
           $categorias[$categoria] = [];
       }
       $categorias[$categoria][] = $item;
   }
   
-  // Ordenar categorías alfabéticamente
-  sort($categoriasUnicas);
+  // Ordenar categorías según el orden específico definido
+  $categoriasOrdenadas = [];
+  foreach ($ordenCategorias as $categoriaOrden) {
+      if (in_array($categoriaOrden, $categoriasUnicas)) {
+          $categoriasOrdenadas[] = $categoriaOrden;
+      }
+  }
   
-  // Debug: mostrar categorías encontradas
-  // echo "<!-- Categorías encontradas: " . implode(', ', $categoriasUnicas) . " -->";
+  // Agregar categorías que no están en el orden específico al final
+  foreach ($categoriasUnicas as $categoria) {
+      if (!in_array($categoria, $categoriasOrdenadas)) {
+          $categoriasOrdenadas[] = $categoria;
+      }
+  }
+  
   ?>
 
   <div class="categorias-nav">
     <button class="categoria-btn active" data-categoria="todas" onclick="filtrarCategoria('todas')">Todas</button>
-    <?php foreach ($categoriasUnicas as $categoria): ?>
+    <button class="categoria-btn" data-categoria="descuentos" onclick="filtrarCategoria('descuentos')">🏷️ Descuentos</button>
+    <?php foreach ($categoriasOrdenadas as $categoria): ?>
       <button class="categoria-btn" data-categoria="<?= htmlspecialchars($categoria) ?>" onclick="filtrarCategoria('<?= htmlspecialchars($categoria) ?>')">
         <?= htmlspecialchars($categoria) ?>
       </button>
@@ -942,16 +1027,23 @@ $items = CartaItem::allIncludingUnavailable();
   </div>
 
   <div class="menu-grid" id="menu-grid">
-    <?php foreach ($items as $item): ?>
       <?php 
+    // Mostrar items agrupados por categoría en el orden específico
+    foreach ($categoriasOrdenadas as $categoriaOrden): 
+      if (isset($categorias[$categoriaOrden])): 
+        foreach ($categorias[$categoriaOrden] as $item): 
       $precioFinal = $item['precio'];
       if (!empty($item['descuento']) && $item['descuento'] > 0) {
           $descuentoCalculado = $item['precio'] * ($item['descuento'] / 100);
           $precioFinal = $item['precio'] - $descuentoCalculado;
       }
+      
+      // Normalizar el nombre de la categoría para el data-categoria
+      $categoriaOriginal = $item['categoria'] ?? 'Sin categoría';
+      $categoriaNormalizada = $mapeoCategorias[strtolower($categoriaOriginal)] ?? $categoriaOriginal;
       ?>
       <div class="menu-item <?= !$item['disponibilidad'] ? 'unavailable' : '' ?>" 
-           data-categoria="<?= htmlspecialchars($item['categoria'] ?? 'Sin categoría') ?>"
+           data-categoria="<?= htmlspecialchars($categoriaNormalizada) ?>"
            data-item-id="<?= $item['id_item'] ?>">
         
         <?php if (!empty($item['imagen_url'])): ?>
@@ -1008,7 +1100,11 @@ $items = CartaItem::allIncludingUnavailable();
           <?php endif; ?>
         </div>
       </div>
-    <?php endforeach; ?>
+    <?php 
+        endforeach; // Cerrar foreach de items de la categoría
+      endif; // Cerrar if de categoría existe
+    endforeach; // Cerrar foreach de categorías ordenadas
+    ?>
   </div>
 
   <!-- Tarjetas móviles (solo visibles en móvil) -->
@@ -1018,16 +1114,23 @@ $items = CartaItem::allIncludingUnavailable();
         <p>No hay items en la carta.</p>
       </div>
     <?php else: ?>
-      <?php foreach ($items as $item): ?>
         <?php 
-        $precioFinal = $item['precio'];
-        if (!empty($item['descuento']) && $item['descuento'] > 0) {
-            $descuentoCalculado = $item['precio'] * ($item['descuento'] / 100);
-            $precioFinal = $item['precio'] - $descuentoCalculado;
-        }
-        ?>
+      // Mostrar items agrupados por categoría en el orden específico (móvil)
+      foreach ($categoriasOrdenadas as $categoriaOrden): 
+        if (isset($categorias[$categoriaOrden])): 
+          foreach ($categorias[$categoriaOrden] as $item): 
+            $precioFinal = $item['precio'];
+            if (!empty($item['descuento']) && $item['descuento'] > 0) {
+                $descuentoCalculado = $item['precio'] * ($item['descuento'] / 100);
+                $precioFinal = $item['precio'] - $descuentoCalculado;
+            }
+            
+            // Normalizar el nombre de la categoría para el data-categoria
+            $categoriaOriginal = $item['categoria'] ?? 'Sin categoría';
+            $categoriaNormalizada = $mapeoCategorias[strtolower($categoriaOriginal)] ?? $categoriaOriginal;
+      ?>
         <div class="mobile-card <?= !$item['disponibilidad'] ? 'unavailable' : '' ?>" 
-             data-categoria="<?= htmlspecialchars($item['categoria'] ?? 'Sin categoría') ?>"
+             data-categoria="<?= htmlspecialchars($categoriaNormalizada) ?>"
              data-item-id="<?= $item['id_item'] ?>">
           
           <div class="card-header">
@@ -1088,7 +1191,11 @@ $items = CartaItem::allIncludingUnavailable();
             </div>
           <?php endif; ?>
         </div>
-      <?php endforeach; ?>
+      <?php 
+          endforeach; // Cerrar foreach de items de la categoría
+        endif; // Cerrar if de categoría existe
+      endforeach; // Cerrar foreach de categorías ordenadas
+      ?>
     <?php endif; ?>
   </div>
 
@@ -1127,32 +1234,35 @@ $items = CartaItem::allIncludingUnavailable();
 <script>
 // Función para aplicar filtro sin modificar URL (para inicialización)
 function aplicarFiltroCategoria(categoria) {
-  console.log('=== APLICANDO FILTRO CATEGORÍA ===');
-  console.log('Categoría:', categoria);
-  
   // Actualizar botones activos
   const allButtons = document.querySelectorAll('.categoria-btn');
-  console.log('Botones encontrados:', allButtons.length);
   allButtons.forEach(btn => {
     btn.classList.remove('active');
   });
   
   // Encontrar y activar el botón correcto
   const targetButton = document.querySelector(`[data-categoria="${categoria}"]`);
-  console.log('Botón objetivo encontrado:', !!targetButton);
   if (targetButton) {
     targetButton.classList.add('active');
-    console.log('Botón activado:', targetButton.textContent);
-  } else {
-    console.error('No se encontró botón para categoría:', categoria);
   }
   
   // Filtrar items en desktop
   const menuItems = document.querySelectorAll('.menu-item');
-  console.log('Filtrando', menuItems.length, 'items de desktop');
   menuItems.forEach(item => {
     const itemCategoria = item.getAttribute('data-categoria');
-    if (categoria === 'todas' || itemCategoria === categoria) {
+    let shouldShow = false;
+    
+    if (categoria === 'todas') {
+      shouldShow = true;
+    } else if (categoria === 'descuentos') {
+      // Mostrar solo items con descuento
+      const discountBadge = item.querySelector('.discount-badge');
+      shouldShow = discountBadge !== null;
+    } else {
+      shouldShow = itemCategoria === categoria;
+    }
+    
+    if (shouldShow) {
       item.style.display = 'flex';
     } else {
       item.style.display = 'none';
@@ -1161,10 +1271,21 @@ function aplicarFiltroCategoria(categoria) {
   
   // Filtrar tarjetas móviles
   const mobileCards = document.querySelectorAll('.mobile-card');
-  console.log('Filtrando', mobileCards.length, 'tarjetas móviles');
   mobileCards.forEach(card => {
     const cardCategoria = card.getAttribute('data-categoria');
-    if (categoria === 'todas' || cardCategoria === categoria) {
+    let shouldShow = false;
+    
+    if (categoria === 'todas') {
+      shouldShow = true;
+    } else if (categoria === 'descuentos') {
+      // Mostrar solo items con descuento
+      const discountBadge = card.querySelector('.discount-badge');
+      shouldShow = discountBadge !== null;
+    } else {
+      shouldShow = cardCategoria === categoria;
+    }
+    
+    if (shouldShow) {
       card.style.display = 'block';
     } else {
       card.style.display = 'none';
@@ -1174,7 +1295,6 @@ function aplicarFiltroCategoria(categoria) {
 
 // Función para aplicar filtro cuando el usuario hace clic
 function aplicarFiltroCategoriaConEvento(categoria, event) {
-  console.log('Aplicando filtro por categoría con evento:', categoria);
   
   // Actualizar botones activos
   document.querySelectorAll('.categoria-btn').forEach(btn => {
@@ -1183,7 +1303,7 @@ function aplicarFiltroCategoriaConEvento(categoria, event) {
   
   // Activar el botón que se hizo clic
   if (event && event.target) {
-    event.target.classList.add('active');
+  event.target.classList.add('active');
   } else {
     // Fallback si no hay evento
     const targetButton = document.querySelector(`[data-categoria="${categoria}"]`);
@@ -1194,10 +1314,21 @@ function aplicarFiltroCategoriaConEvento(categoria, event) {
   
   // Filtrar items en desktop
   const menuItems = document.querySelectorAll('.menu-item');
-  console.log('Filtrando', menuItems.length, 'items de desktop');
   menuItems.forEach(item => {
     const itemCategoria = item.getAttribute('data-categoria');
-    if (categoria === 'todas' || itemCategoria === categoria) {
+    let shouldShow = false;
+    
+    if (categoria === 'todas') {
+      shouldShow = true;
+    } else if (categoria === 'descuentos') {
+      // Mostrar solo items con descuento
+      const discountBadge = item.querySelector('.discount-badge');
+      shouldShow = discountBadge !== null;
+    } else {
+      shouldShow = itemCategoria === categoria;
+    }
+    
+    if (shouldShow) {
       item.style.display = 'flex';
     } else {
       item.style.display = 'none';
@@ -1206,10 +1337,21 @@ function aplicarFiltroCategoriaConEvento(categoria, event) {
   
   // Filtrar tarjetas móviles
   const mobileCards = document.querySelectorAll('.mobile-card');
-  console.log('Filtrando', mobileCards.length, 'tarjetas móviles');
   mobileCards.forEach(card => {
     const cardCategoria = card.getAttribute('data-categoria');
-    if (categoria === 'todas' || cardCategoria === categoria) {
+    let shouldShow = false;
+    
+    if (categoria === 'todas') {
+      shouldShow = true;
+    } else if (categoria === 'descuentos') {
+      // Mostrar solo items con descuento
+      const discountBadge = card.querySelector('.discount-badge');
+      shouldShow = discountBadge !== null;
+    } else {
+      shouldShow = cardCategoria === categoria;
+    }
+    
+    if (shouldShow) {
       card.style.display = 'block';
     } else {
       card.style.display = 'none';
@@ -1219,7 +1361,6 @@ function aplicarFiltroCategoriaConEvento(categoria, event) {
 
 // Filtros de categoría (cuando el usuario hace clic)
 function filtrarCategoria(categoria) {
-  console.log('Filtrando por categoría:', categoria);
   
   // Aplicar el filtro visual con evento
   aplicarFiltroCategoriaConEvento(categoria, event);
@@ -1354,18 +1495,12 @@ function closeNotification(closeButton) {
 
 // Inicializar todo en un solo DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('=== INICIALIZANDO CARTA COMPLETA ===');
-  console.log('URL completa:', window.location.href);
-  
   // Verificar si estamos en móvil o desktop
   const isMobile = window.innerWidth <= 768;
-  console.log('Es móvil:', isMobile);
   
   // Obtener parámetros de la URL
   const urlParams = new URLSearchParams(window.location.search);
   const categoriaFiltro = urlParams.get('categoria') || 'todas';
-  console.log('Categoría desde URL:', categoriaFiltro);
-  console.log('Todos los parámetros URL:', Object.fromEntries(urlParams));
   
   // Manejar notificaciones PRIMERO
   if (urlParams.has('success')) {
@@ -1394,22 +1529,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const newUrl = window.location.pathname + window.location.search.replace(/[?&]success=[^&]*/, '').replace(/[?&]error=[^&]*/, '');
     const cleanUrl = newUrl.endsWith('?') ? newUrl.slice(0, -1) : newUrl;
     window.history.replaceState({}, '', cleanUrl);
-    console.log('URL limpiada:', cleanUrl);
   }
   
   // Aplicar filtro inicial desde la URL SIN modificar la URL
-  console.log('Aplicando filtro inicial...');
   // Pequeño delay para asegurar que todos los elementos estén cargados
   setTimeout(() => {
     aplicarFiltroCategoria(categoriaFiltro);
-    console.log('Filtro inicial aplicado');
   }, 100);
   
   // Manejar redimensionamiento de ventana
   window.addEventListener('resize', function() {
     const newIsMobile = window.innerWidth <= 768;
     if (newIsMobile !== isMobile) {
-      console.log('Cambio de vista detectado, reaplicando filtros');
       // Mantener el filtro actual al redimensionar
       const currentCategoria = urlParams.get('categoria') || 'todas';
       aplicarFiltroCategoria(currentCategoria);

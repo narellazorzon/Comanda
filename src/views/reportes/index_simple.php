@@ -33,7 +33,7 @@ if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
     <div class="links">
         <a href="<?= url('reportes/platos-mas-vendidos') ?>">🍽️ Ver Platos Más Vendidos</a>
         <a href="<?= url('reportes/ventas-categoria') ?>">📊 Ver Ventas por Categoría</a>
-        <a href="<?= url('reportes/rendimiento-mozos') ?>">👥 Ver Rendimiento de Mozos</a>
+        <a href="<?= url('reportes/rendimiento-personal') ?>">👥 Ver Rendimiento del Personal</a>
         <a href="<?= url('reportes/propina') ?>">💰 Ver Propinas</a>
         <a href="<?= url('reportes/recaudacion') ?>">💵 Ver Recaudación</a>
         <a href="<?= url('home') ?>">🏠 Volver al inicio</a>

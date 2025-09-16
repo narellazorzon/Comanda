@@ -173,7 +173,7 @@ INSERT INTO usuarios (nombre, apellido, email, contrasenia, rol, estado) VALUES
 -- Administrador (password: admin123)
 ('Admin', 'Sistema', 'admin@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'administrador', 'activo'),
 
--- Mozos activos (password: mozo123)
+-- Personal activo (password: mozo123)
 ('Juan', 'Pérez', 'juan.perez@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'mozo', 'activo'),
 ('María', 'García', 'maria.garcia@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'mozo', 'activo'),
 ('Carlos', 'López', 'carlos.lopez@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'mozo', 'activo'),
@@ -686,7 +686,7 @@ ESQUEMA COMPLETO CON MEJORAS:
 
 CREDENCIALES DE PRUEBA:
 - Admin: admin@comanda.com / admin123
-- Mozos: [nombre.apellido]@comanda.com / mozo123
+- Personal: [nombre.apellido]@comanda.com / mozo123
 
 IMPORTANTE:
 - Solo importar este archivo (schema.sql)

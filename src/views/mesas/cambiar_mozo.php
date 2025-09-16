@@ -108,7 +108,7 @@ foreach ($mesas as $mesa) {
 }
 ?>
 
-<h2>Gestión de Mozos</h2>
+<h2>Gestión del Personal</h2>
 
 <?php if ($error): ?>
     <div class="alert error" style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; font-weight: 500; font-size: 0.85rem;">

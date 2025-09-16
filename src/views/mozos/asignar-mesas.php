@@ -109,7 +109,6 @@ foreach ($mesas as $mesa) {
 <div class="page-header" style="text-align: center; margin-bottom: 1.5rem; padding: 1rem; background: linear-gradient(135deg, var(--secondary) 0%, #8b5e46 100%); border-radius: 8px; color: white;">
     <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">🎯 Asignación Rápida de Mesas</h2>
     <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">Gestionar asignaciones de mesas a mozos de forma eficiente</p>
-    <div style="margin-top: 0.5rem; font-size: 0.7rem; opacity: 0.7;">Versión Ultra Compacta v2.0</div>
 </div>
 
 <?php if ($error): ?>
@@ -177,7 +176,7 @@ foreach ($mesas as $mesa) {
     </form>
 </div>
 
-<!-- Cambio Masivo ULTRA COMPACTO v2.0 -->
+<!-- Cambio Masivo -->
 <div class="card emergency" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 1px solid #ffc107; border-radius: 6px; padding: 0.5rem; margin-bottom: 0.75rem; box-shadow: 0 1px 4px rgba(255, 193, 7, 0.2);">
     <div class="card-header" style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem;">
         <div style="background: #ffc107; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
@@ -240,7 +239,7 @@ foreach ($mesas as $mesa) {
         <div class="stat-card" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 1rem; text-align: center;">
             <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
             <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary);"><?= count($mozos) ?></div>
-            <div style="font-size: 0.8rem; color: #6c757d;">Mozos Activos</div>
+            <div style="font-size: 0.8rem; color: #6c757d;">Personal Activo</div>
         </div>
         
         <div class="stat-card" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 1rem; text-align: center;">
@@ -312,12 +311,12 @@ foreach ($mesas as $mesa) {
 
 <div style="text-align: center; margin-top: 2rem;">
     <a href="<?= url('mozos') ?>" class="btn btn-secondary" style="background: #6c757d; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.3s ease; display: inline-block; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);">
-        ← Volver a Mozos
+        ← Volver al Personal
     </a>
 </div>
 
 <style>
-/* Estilos para la asignación rápida de mesas - v2.0 */
+/* Estilos básicos para la asignación de mesas */
 .card {
     transition: all 0.3s ease;
 }
@@ -329,50 +328,17 @@ foreach ($mesas as $mesa) {
 
 .btn {
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
 }
 
 .btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-.btn:active {
-    transform: translateY(-1px);
-}
-
-.btn-warning:hover {
-    background: #e0a800 !important;
-    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
-}
-
-.btn-primary:hover {
-    background: #8a6f5a !important;
-    box-shadow: 0 6px 20px rgba(161, 134, 111, 0.4);
-}
-
-.btn-secondary:hover {
-    background: #5a6268 !important;
-    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
-}
-
-/* Mejoras en los selects */
-select {
-    transition: all 0.2s ease;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 select:focus {
     outline: none;
     border-color: var(--secondary);
     box-shadow: 0 0 0 3px rgba(161, 134, 111, 0.15);
-    transform: translateY(-1px);
-    background: white;
-}
-
-select:hover {
-    border-color: #ced4da;
-    background: white;
 }
 
 /* Responsive design */
@@ -384,179 +350,12 @@ select:hover {
     
     .stats-grid {
         grid-template-columns: 1fr !important;
-        gap: 0.75rem !important;
     }
     
     .asignacion-item {
         flex-direction: column !important;
         align-items: flex-start !important;
         gap: 1rem !important;
-    }
-    
-    .asignacion-item > div:last-child {
-        width: 100%;
-        justify-content: flex-start;
-    }
-    
-    /* Hacer el cambio masivo aún más compacto en móvil */
-    .card.emergency {
-        padding: 0.5rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    
-    .card.emergency .card-header {
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .card.emergency h3 {
-        font-size: 0.8rem !important;
-    }
-    
-    .card.emergency p {
-        font-size: 0.7rem !important;
-    }
-    
-    .card.emergency .badge {
-        font-size: 0.55rem !important;
-        padding: 0.15rem 0.3rem !important;
-    }
-    
-    .card.emergency label {
-        font-size: 0.65rem !important;
-        margin-bottom: 0.15rem !important;
-    }
-    
-    .card.emergency select {
-        padding: 0.3rem !important;
-        font-size: 0.7rem !important;
-    }
-    
-    .card.emergency button {
-        padding: 0.3rem 0.6rem !important;
-        font-size: 0.7rem !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .page-header {
-        padding: 0.75rem !important;
-    }
-    
-    .page-header h2 {
-        font-size: 1.25rem !important;
-    }
-    
-    .page-header p {
-        font-size: 0.8rem !important;
-    }
-    
-    .card {
-        padding: 1rem !important;
-    }
-    
-    .asignacion-item {
-        padding: 0.75rem !important;
-    }
-    
-    /* Ultra compacto para pantallas muy pequeñas */
-    .card.emergency {
-        padding: 0.4rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .card.emergency .card-header {
-        margin-bottom: 0.4rem !important;
-        gap: 0.3rem !important;
-    }
-    
-    .card.emergency .card-header > div:first-child {
-        width: 24px !important;
-        height: 24px !important;
-    }
-    
-    .card.emergency .card-header > div:first-child span {
-        font-size: 0.8rem !important;
-    }
-    
-    .card.emergency h3 {
-        font-size: 0.75rem !important;
-    }
-    
-    .card.emergency p {
-        font-size: 0.65rem !important;
-    }
-    
-    .card.emergency .badge {
-        font-size: 0.5rem !important;
-        padding: 0.1rem 0.25rem !important;
-    }
-    
-    .card.emergency label {
-        font-size: 0.6rem !important;
-        margin-bottom: 0.1rem !important;
-    }
-    
-    .card.emergency select {
-        padding: 0.25rem !important;
-        font-size: 0.65rem !important;
-    }
-    
-    .card.emergency button {
-        padding: 0.25rem 0.5rem !important;
-        font-size: 0.65rem !important;
-    }
-}
-
-/* Animaciones de entrada */
-.card {
-    animation: slideInUp 0.6s ease forwards;
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.card:nth-child(1) { animation-delay: 0.1s; }
-.card:nth-child(2) { animation-delay: 0.2s; }
-.card:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes slideInUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Efectos de hover mejorados */
-.asignacion-item {
-    transition: all 0.3s ease;
-}
-
-.asignacion-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-/* Estilos para los alerts */
-.alert {
-    animation: slideInDown 0.4s ease forwards;
-    border-left: 4px solid;
-}
-
-.alert.success {
-    border-left-color: #28a745;
-}
-
-.alert.error {
-    border-left-color: #dc3545;
-}
-
-@keyframes slideInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
     }
 }
 </style>

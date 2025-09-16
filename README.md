@@ -124,7 +124,7 @@ Comanda/
 
 #### 🔧 Administrador
 **Permisos Completos:**
-- ✅ Gestión de mozos (crear, editar, inactivar con reasignación)
+- ✅ Gestión del personal (crear, editar, inactivar con reasignación)
 - ✅ Gestión de mesas (crear, editar, asignar mozos)
 - ✅ Gestión de carta (productos del menú)
 - ✅ Gestión de pedidos (todos los estados)
@@ -192,7 +192,7 @@ function requireMozoOrAdmin() {
 - **Email**: admin@comanda.com
 - **Contraseña**: admin123
 
-### Mozos
+### Personal
 - **Juan Pérez**: juan.perez@comanda.com / mozo123
 - **María García**: maria.garcia@comanda.com / mozo123
 - **Carlos López**: carlos.lopez@comanda.com / mozo123
@@ -216,7 +216,7 @@ function requireMozoOrAdmin() {
 - **Modalidades**: Stay (mesa) / Takeaway (para llevar)
 - **Automatizaciones**: Liberación de mesa al cerrar pedido
 
-### 👥 Gestión Avanzada de Mozos
+### 👥 Gestión Avanzada del Personal
 - **Inactivación inteligente**: Si un mozo tiene mesas asignadas, sistema solicita reasignación
 - **Opciones de emergencia**: Transferir a otro mozo o liberar mesas
 - **Confirmación visual**: Muestra impacto antes de procesar
@@ -273,7 +273,7 @@ function requireMozoOrAdmin() {
 ### 🔧 Correcciones de Bugs
 - ✅ Vista de pedidos corregida (sin errores de campos undefined)
 - ✅ Estados de pedidos con iconos y colores descriptivos
-- ✅ Redirecciones 404 en gestión de mozos solucionadas
+- ✅ Redirecciones 404 en gestión del personal solucionadas
 - ✅ Diseño consistente de botones y tablas
 - ✅ Sistema de reportes completamente funcional
 

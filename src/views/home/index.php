@@ -84,11 +84,11 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
             <div class="widget-icon mozos-bg">
                 <div class="widget-symbol">👥</div>
             </div>
-            <h3 class="widget-title">Mozos</h3>
+            <h3 class="widget-title">Personal</h3>
         </div>
         <div class="widget-actions">
             <a href="<?= $base_url ?>/index.php?route=mozos" class="widget-btn primary">
-                <span class="btn-text">Ver Mozos</span>
+                <span class="btn-text">Ver Personal</span>
             </a>
             <a href="<?= $base_url ?>/index.php?route=mozos/create" class="widget-btn secondary">
                 <span class="btn-icon">➕</span>
@@ -124,7 +124,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
         </div>
         <div class="widget-actions">
             <a href="<?= $base_url ?>/index.php?route=llamados" class="widget-btn primary">
-                <span class="btn-icon">👁️</span>
+                <span class="btn-icon">📋</span>
                 <span class="btn-text">Ver Llamados</span>
             </a>
         </div>
@@ -351,15 +351,15 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 
 /* Colores usando la paleta del sistema */
 .mesas-bg {
-    background: var(--secondary) !important;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
 }
 
 .pedidos-bg {
-    background: linear-gradient(135deg, var(--secondary) 0%, #8b5e46 100%) !important;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
 }
 
 .carta-bg {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%) !important;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
 }
 
 .nuevo-pedido-bg {
@@ -383,6 +383,6 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 }
 
 .llamados-bg {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%) !important;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
 }
 </style>

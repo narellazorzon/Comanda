@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Mozos y administradores pueden ver esta página
+// Personal y administradores pueden ver esta página
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ' . url('login'));
     exit;
@@ -87,7 +87,7 @@ $mesasInactivas = Mesa::allInactive();
 
 <!-- Header de gestión -->
 <div class="management-header">
-  <h1><?= $rol === 'administrador' ? '🍽️ Gestión de Mesas' : '👁️ Consulta de Mesas' ?></h1>
+  <h1><?= $rol === 'administrador' ? '🍽️ Gestión de Mesas' : 'Consulta de Mesas' ?></h1>
   <?php if ($rol === 'administrador'): ?>
     <div class="header-actions">
       <a href="<?= url('mesas/create') ?>" class="header-btn">
@@ -104,58 +104,34 @@ $mesasInactivas = Mesa::allInactive();
 <div id="notification-container"></div>
 
 
-<?php if ($rol !== 'administrador'): ?>
-  <div style="background: #d1ecf1; padding: 8px; border-radius: 4px; margin-bottom: 1rem; color: #0c5460; font-size: 0.9rem; text-align: center;">
-    👁️ Vista de solo lectura - Consulta las mesas disponibles
-  </div>
-<?php endif; ?>
-
 <!-- Filtros de búsqueda y estado -->
 <div class="filters-container">
-  <!-- Botón para mostrar/ocultar filtros en móvil -->
+  <!-- Botón para mostrar/ocultar filtros -->
   <button id="toggleFilters" class="toggle-filters-btn" onclick="toggleFilters()">
-    Filtrar
+    🔍 Filtrar
   </button>
   
-  <div id="filtersContent" class="search-filter" style="background: rgb(250, 238, 193); border: 1px solid #e0e0e0; border-radius: 6px; padding: 0.6rem; margin-bottom: 1rem; position: relative; z-index: 1; display: none;">
+  <div id="filtersContent" class="filters-content">
   <!-- Filtro por número -->
-  <div style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: nowrap; margin-bottom: 0.5rem;">
-    <label for="mesaSearch" style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">🔍 Buscar:</label>
-    <input type="text" 
-           id="mesaSearch" 
-           name="mesaSearch"
-           placeholder="Número..." 
-           style="padding: 0.3rem 0.5rem; border: 1px solid var(--accent); border-radius: 3px; font-size: 0.8rem; min-width: 120px; height: 28px;">
-    <button id="clearSearch" 
-            type="button"
-            style="padding: 0.3rem 0.6rem; background: var(--secondary); color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.75rem; height: 28px;">
-      Limpiar
-    </button>
+    <div class="filter-group">
+      <label for="mesaSearch">🔍 Buscar por número:</label>
+      <div class="search-input-group">
+        <input type="text" id="mesaSearch" placeholder="Número de mesa..." />
+        <button id="clearSearch" type="button">Limpiar</button>
+      </div>
   </div>
   
   <!-- Filtro por estado -->
-  <div style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap;">
-    <label style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">📊 Estado:</label>
-    <div class="status-filters" style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
-      <button class="status-filter-btn active" data-status="all" style="padding: 4px 8px; border: none; background: var(--secondary); color: white; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
-        Todas
-      </button>
-      <button class="status-filter-btn" data-status="libre" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
-        Libre
-      </button>
-      <button class="status-filter-btn" data-status="ocupada" style="padding: 4px 8px; border: none; background: #f8d7da; color: #721c24; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
-        Ocupada
-      </button>
-      <button class="status-filter-btn" data-status="reservada" style="padding: 4px 8px; border: none; background: #fff3cd; color: #856404; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
-        Reservada
-      </button>
-      <button class="status-filter-btn" data-status="inactiva" style="padding: 4px 8px; border: none; background: #dc3545; color: white; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
-        Inactiva
-      </button>
+    <div class="filter-group">
+      <label>📊 Filtrar por estado:</label>
+      <div class="status-filters">
+        <button class="status-filter-btn active" data-status="all">Todas</button>
+        <button class="status-filter-btn" data-status="libre">Libre</button>
+        <button class="status-filter-btn" data-status="ocupada">Ocupada</button>
+        <button class="status-filter-btn" data-status="reservada">Reservada</button>
     </div>
   </div>
   
-  <div id="searchResults" style="margin-top: 0.3rem; font-size: 0.8rem; color: var(--secondary);"></div>
   </div>
 </div>
 
@@ -472,121 +448,52 @@ $mesasInactivas = Mesa::allInactive();
 
 
 <script>
-// Variables globales para el modal de cambio de estado
-let mesaIdParaCambiar = null;
-let nuevoEstadoParaCambiar = null;
-
-// Efectos hover para los botones
-document.getElementById('btnCancelar').addEventListener('mouseenter', function() {
-    this.style.background = '#6c757d';
-    this.style.color = 'white';
-    this.style.borderColor = '#5a6268';
-    this.style.boxShadow = '0 4px 8px rgba(108, 117, 125, 0.3)';
-    this.style.opacity = '0.95';
-});
-
-document.getElementById('btnCancelar').addEventListener('mouseleave', function() {
-    this.style.background = 'white';
-    this.style.color = '#6c757d';
-    this.style.borderColor = '#6c757d';
-    this.style.boxShadow = '0 2px 4px rgba(108, 117, 125, 0.2)';
-    this.style.opacity = '1';
-});
-
-document.getElementById('btnConfirmar').addEventListener('mouseenter', function() {
-    this.style.background = '#c82333';
-    this.style.borderColor = '#bd2130';
-    this.style.boxShadow = '0 4px 8px rgba(220, 53, 69, 0.4)';
-    this.style.opacity = '0.95';
-});
-
-document.getElementById('btnConfirmar').addEventListener('mouseleave', function() {
-    this.style.background = '#dc3545';
-    this.style.borderColor = '#dc3545';
-    this.style.boxShadow = '0 2px 4px rgba(220, 53, 69, 0.3)';
-    this.style.opacity = '1';
-});
-
-// Funcionalidad de búsqueda y filtrado de mesas
-function initMesasFilters() {
-    console.log('=== INICIANDO FILTROS DE MESAS ===');
-    
-    // Buscar elementos con timeout para asegurar que el DOM esté listo
-    const searchInput = document.getElementById('mesaSearch');
-    const clearButton = document.getElementById('clearSearch');
-    const searchResults = document.getElementById('searchResults');
-    const tableRows = document.querySelectorAll('.table tbody tr');
-    const mobileCards = document.querySelectorAll('.mobile-card');
-    const statusButtons = document.querySelectorAll('.status-filter-btn');
-    
-    console.log('=== ELEMENTOS ENCONTRADOS ===');
-    console.log('searchInput:', searchInput);
-    console.log('clearButton:', clearButton);
-    console.log('searchResults:', searchResults);
-    console.log('tableRows count:', tableRows.length);
-    console.log('mobileCards count:', mobileCards.length);
-    console.log('statusButtons count:', statusButtons.length);
-    
-    // Verificar si los elementos existen
-    if (!searchInput || !clearButton || !searchResults) {
-        console.error('❌ ERROR: Elementos de filtro no encontrados');
-        console.log('Elementos disponibles:', document.querySelectorAll('[id]'));
-        return false;
-    }
-    
+// Variables globales
     let currentSearchTerm = '';
     let currentStatusFilter = 'all';
     
+// Función para obtener el estado de una mesa desde la tabla
     function getMesaStatus(row) {
-        // Buscar el span de estado en la tercera columna
         const statusCell = row.querySelector('td:nth-child(3)');
         if (statusCell) {
             const statusSpan = statusCell.querySelector('span');
         if (statusSpan) {
-                const statusText = statusSpan.textContent.toLowerCase().trim();
-                return statusText;
+            return statusSpan.textContent.toLowerCase().trim();
             }
         }
         return '';
     }
     
+// Función para obtener el estado de una mesa desde la tarjeta móvil
     function getMesaStatusFromCard(card) {
-        // Si es una tarjeta inactiva, devolver 'inactiva'
-        if (card.classList.contains('mesa-inactiva')) {
-            return 'inactiva';
-        }
-        
-        // Buscar el estado en la tarjeta móvil activa
+    if (card.classList.contains('mesa-inactiva')) {
+        return 'inactiva';
+    }
+    
         const statusItems = card.querySelectorAll('.mobile-card-item');
         for (let item of statusItems) {
             const label = item.querySelector('.mobile-card-label');
             if (label && label.textContent.includes('Estado')) {
                 const statusSpan = item.querySelector('.mobile-card-value span');
         if (statusSpan) {
-                    const statusText = statusSpan.textContent.toLowerCase().trim();
-                    return statusText;
+                return statusSpan.textContent.toLowerCase().trim();
                 }
             }
         }
         return '';
     }
     
+// Función principal de filtrado
     function filterMesas() {
-        console.log('=== FILTRANDO MESAS ===');
-        console.log('Término de búsqueda:', currentSearchTerm);
-        console.log('Filtro de estado:', currentStatusFilter);
-        
         const searchTerm = currentSearchTerm.toLowerCase().trim();
         const statusFilter = currentStatusFilter;
         let visibleCount = 0;
         
         // Filtrar filas de la tabla
-        tableRows.forEach((row, index) => {
+    const tableRows = document.querySelectorAll('.table tbody tr');
+    tableRows.forEach((row) => {
             const firstCell = row.querySelector('td:first-child');
-            if (!firstCell) {
-                console.error(`Fila ${index}: No se encontró la primera celda`);
-                return;
-            }
+        if (!firstCell) return;
             
             const mesaNumber = firstCell.textContent.toLowerCase();
             const mesaStatus = getMesaStatus(row);
@@ -603,12 +510,10 @@ function initMesasFilters() {
         });
         
         // Filtrar tarjetas móviles
-        mobileCards.forEach((card, index) => {
+    const mobileCards = document.querySelectorAll('.mobile-card');
+    mobileCards.forEach((card) => {
             const numberElement = card.querySelector('.mobile-card-number');
-            if (!numberElement) {
-                console.error(`Tarjeta ${index}: No se encontró el elemento de número`);
-                return;
-            }
+        if (!numberElement) return;
             
             const mesaNumber = numberElement.textContent.toLowerCase();
             const mesaStatus = getMesaStatusFromCard(card);
@@ -616,18 +521,19 @@ function initMesasFilters() {
             const matchesSearch = searchTerm === '' || mesaNumber.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || mesaStatus === statusFilter;
             
-            // Verificar si la tarjeta debe mostrarse según la pestaña activa
-            const isActiveTab = document.querySelector('.tab-button.active').onclick.toString().includes('activas');
-            const isInactiveTab = document.querySelector('.tab-button.active').onclick.toString().includes('inactivas');
-            
-            let shouldShow = false;
-            if (isActiveTab && card.classList.contains('mesa-activa')) {
-                shouldShow = true;
-            } else if (isInactiveTab && card.classList.contains('mesa-inactiva')) {
-                shouldShow = true;
-            }
-            
-            if (matchesSearch && matchesStatus && shouldShow) {
+        // Verificar si la tarjeta debe mostrarse según la pestaña activa
+        const activeTab = document.querySelector('.tab-button.active');
+        const isActiveTab = activeTab && activeTab.textContent.includes('Activas');
+        const isInactiveTab = activeTab && activeTab.textContent.includes('Inactivas');
+        
+        let shouldShow = false;
+        if (isActiveTab && card.classList.contains('mesa-activa')) {
+            shouldShow = true;
+        } else if (isInactiveTab && card.classList.contains('mesa-inactiva')) {
+            shouldShow = true;
+        }
+        
+        if (matchesSearch && matchesStatus && shouldShow) {
                 card.style.display = '';
                 visibleCount++;
             } else {
@@ -635,31 +541,27 @@ function initMesasFilters() {
             }
         });
         
-        // Mostrar resultados
-        let resultText = `Mostrando ${visibleCount} mesa(s)`;
-        if (searchTerm !== '' && statusFilter !== 'all') {
-            resultText += ` que coinciden con "${searchTerm}" y estado "${statusFilter}"`;
-        } else if (searchTerm !== '') {
-            resultText += ` que coinciden con "${searchTerm}"`;
-        } else if (statusFilter !== 'all') {
-            resultText += ` con estado "${statusFilter}"`;
-        }
-        
-        searchResults.textContent = resultText;
-        console.log('=== RESULTADO FINAL ===');
-        console.log('Mesas visibles:', visibleCount);
+}
+
+// Función para inicializar los filtros
+function initFilters() {
+    const searchInput = document.getElementById('mesaSearch');
+    const clearButton = document.getElementById('clearSearch');
+    const statusButtons = document.querySelectorAll('.status-filter-btn');
+    
+    if (!searchInput || !clearButton) {
+        console.error('Elementos de filtro no encontrados');
+        return;
     }
     
     // Event listener para el input de búsqueda
     searchInput.addEventListener('input', function() {
-        console.log('Input cambiado:', this.value);
         currentSearchTerm = this.value;
         filterMesas();
     });
     
     // Event listener para el botón limpiar
     clearButton.addEventListener('click', function() {
-        console.log('Botón limpiar clickeado');
         searchInput.value = '';
         currentSearchTerm = '';
         filterMesas();
@@ -667,116 +569,43 @@ function initMesasFilters() {
     });
     
     // Event listeners para los botones de estado
-    statusButtons.forEach((button, index) => {
-        console.log(`Configurando botón ${index}:`, button.dataset.status);
-        
+    statusButtons.forEach((button) => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            console.log('Botón de estado clickeado:', this.dataset.status);
             
             // Remover clase active de todos los botones
-            statusButtons.forEach(btn => {
-                btn.classList.remove('active');
-                // Restaurar estilos originales según el estado
-                const status = btn.getAttribute('data-status');
-                if (status === 'all') {
-                    btn.style.background = 'var(--secondary)';
-                    btn.style.color = 'white';
-                } else if (status === 'libre') {
-                    btn.style.background = '#d4edda';
-                    btn.style.color = '#155724';
-                } else if (status === 'ocupada') {
-                    btn.style.background = '#f8d7da';
-                    btn.style.color = '#721c24';
-                } else if (status === 'reservada') {
-                    btn.style.background = '#fff3cd';
-                    btn.style.color = '#856404';
-                }
-            });
+            statusButtons.forEach(btn => btn.classList.remove('active'));
             
             // Agregar clase active al botón clickeado
             this.classList.add('active');
             
             // Actualizar filtro de estado
             currentStatusFilter = this.dataset.status;
-            console.log('Filtro de estado actualizado a:', currentStatusFilter);
             filterMesas();
         });
-        
-        // También agregar un event listener de mouse para debugging
-        button.addEventListener('mousedown', function() {
-            console.log('Botón presionado:', this.dataset.status);
-        });
-    });
-    
-    // Permitir búsqueda con Enter
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            currentSearchTerm = this.value;
-            filterMesas();
-        }
     });
     
     // Ejecutar filtro inicial
-    console.log('Ejecutando filtro inicial...');
     filterMesas();
-    
-    return true;
 }
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM cargado, inicializando filtros...');
+// Función para mostrar/ocultar filtros
+function toggleFilters() {
+    const filtersContent = document.getElementById('filtersContent');
+    const toggleBtn = document.getElementById('toggleFilters');
     
-    // Test simple para verificar que JavaScript funciona
-    console.log('✅ JavaScript funcionando correctamente');
-    
-    // Intentar inicializar inmediatamente
-    if (!initMesasFilters()) {
-        // Si falla, intentar después de un pequeño delay
-        console.log('Filtros no inicializados, reintentando en 100ms...');
-        setTimeout(function() {
-            if (!initMesasFilters()) {
-                console.log('Filtros no inicializados, reintentando en 500ms...');
-                setTimeout(function() {
-                    initMesasFilters();
-                }, 500);
-            }
-        }, 100);
-    }
-});
-
-// Función de prueba global
-function testFilters() {
-    console.log('=== TEST DE FILTROS ===');
-    const searchInput = document.getElementById('mesaSearch');
-    const clearButton = document.getElementById('clearSearch');
-    const statusButtons = document.querySelectorAll('.status-filter-btn');
-    
-    console.log('searchInput:', searchInput);
-    console.log('clearButton:', clearButton);
-    console.log('statusButtons:', statusButtons.length);
-    
-    if (searchInput) {
-        console.log('✅ Campo de búsqueda encontrado');
+    if (filtersContent.style.display === 'none' || filtersContent.style.display === '') {
+        filtersContent.style.display = 'block';
+        toggleBtn.innerHTML = '🔍 Ocultar Filtros';
     } else {
-        console.log('❌ Campo de búsqueda NO encontrado');
-    }
-    
-    if (clearButton) {
-        console.log('✅ Botón limpiar encontrado');
-    } else {
-        console.log('❌ Botón limpiar NO encontrado');
-    }
-    
-    if (statusButtons.length > 0) {
-        console.log('✅ Botones de estado encontrados:', statusButtons.length);
-    } else {
-        console.log('❌ Botones de estado NO encontrados');
+        filtersContent.style.display = 'none';
+        toggleBtn.innerHTML = '🔍 Filtrar';
     }
 }
+
+// Variables globales para el modal de cambio de estado
+let mesaIdParaCambiar = null;
+let nuevoEstadoParaCambiar = null;
 
 // Función para cambiar el estado de una mesa
 function cambiarEstado(idMesa, nuevoEstado) {
@@ -804,37 +633,31 @@ function cambiarEstadoConfirmado(idMesa, nuevoEstado) {
             body: formData
         })
         .then(response => {
-            console.log('Status:', response.status);
             if (!response.ok) {
                 throw new Error('HTTP error! status: ' + response.status);
             }
             return response.text();
         })
         .then(text => {
-            console.log('Respuesta del servidor (texto):', text);
             try {
                 const data = JSON.parse(text);
-                console.log('Respuesta del servidor (JSON):', data);
                 if (data.success) {
                     // Mostrar notificación de éxito
                     showNotification('Estado de la mesa actualizado correctamente', 'success', 4000);
                     // Recargar la página para mostrar los cambios
                     setTimeout(() => {
-                        location.reload();
+                    location.reload();
                     }, 1000);
                 } else {
                     // Mostrar notificación de error con el mensaje específico
                     showNotification(data.message || 'Error al cambiar el estado de la mesa', 'error', 6000);
                 }
             } catch (e) {
-                console.error('Error parsing JSON:', e);
-                console.log('Respuesta no es JSON válida:', text);
                 // Si no es JSON válido, recargar la página
                 location.reload();
             }
         })
         .catch(error => {
-            console.error('Error:', error);
             showNotification('Error al cambiar el estado de la mesa: ' + error.message, 'error', 6000);
         });
         
@@ -845,19 +668,6 @@ function cambiarEstadoConfirmado(idMesa, nuevoEstado) {
 }
 
 
-// Función para mostrar/ocultar filtros en móvil
-function toggleFilters() {
-    const filtersContent = document.getElementById('filtersContent');
-    const toggleBtn = document.getElementById('toggleFilters');
-    
-    if (filtersContent.style.display === 'none' || filtersContent.style.display === '') {
-        filtersContent.style.display = 'block';
-        toggleBtn.innerHTML = 'Ocultar Filtros';
-    } else {
-        filtersContent.style.display = 'none';
-        toggleBtn.innerHTML = 'Filtrar';
-    }
-}
 
 // Sistema de notificaciones temporales
 function showNotification(message, type = 'success', duration = 4000) {
@@ -985,7 +795,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-console.log('Script de mesas cargado correctamente');
 
 // Función para cambiar entre pestañas
 function showTab(tabName) {
@@ -1034,7 +843,6 @@ function showTab(tabName) {
 
 // Función para reactivar mesa (usando el modal existente)
 function confirmarReactivacionMesa(id, numero) {
-  console.log('confirmarReactivacionMesa llamado con:', id, numero);
   
   ModalConfirmacion.show({
     title: '✅ Reactivar Mesa',
@@ -1059,10 +867,15 @@ function confirmarReactivacionMesa(id, numero) {
       form.submit();
     },
     onCancel: () => {
-      console.log('Reactivación de mesa cancelada');
+      // Reactivación cancelada
     }
   });
 }
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initFilters();
+});
 </script>
 
 <!-- Incluir CSS y JS del modal de confirmación -->
@@ -1070,7 +883,118 @@ function confirmarReactivacionMesa(id, numero) {
 <script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
-/* Estilos para filtros desplegables en móvil */
+/* Estilos para pestañas - CRÍTICO: Debe ir primero para evitar FOUC */
+.tabs-container {
+  margin-bottom: 1.2rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6c757d;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: #495057;
+  background: #f8f9fa;
+}
+
+.tab-button.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: #f8f9fa;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #007bff;
+}
+
+/* Responsive para pestañas */
+@media (max-width: 992px) {
+  .tab-button {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs-container {
+    margin-bottom: 1rem;
+  }
+  
+  .tabs {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .tab-button {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 0;
+    text-align: left;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: #007bff;
+    background: #e3f2fd;
+  }
+  
+  .tab-button:hover {
+    background: #f5f5f5;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs-container {
+    margin-bottom: 0.8rem;
+  }
+  
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .tabs-container {
+    margin-bottom: 0.6rem;
+  }
+  
+  .tab-button {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Estilos para filtros */
+.filters-container {
+    background: rgb(238, 224, 191);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
 .toggle-filters-btn {
     display: block;
     width: 100%;
@@ -1082,7 +1006,7 @@ function confirmarReactivacionMesa(id, numero) {
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -1093,55 +1017,138 @@ function confirmarReactivacionMesa(id, numero) {
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-.filters-container {
-    background: rgb(238, 224, 191);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin-bottom: 1rem;
-    overflow: hidden;
-}
-
-#filtersContent {
+.filters-content {
     display: none;
     padding: 1rem;
 }
 
-/* En móvil, ocultar filtros por defecto y mostrar botón */
+.filter-group {
+    margin-bottom: 1rem;
+}
+
+.filter-group:last-child {
+    margin-bottom: 0;
+}
+
+.filter-group label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.search-input-group input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.search-input-group button {
+    padding: 0.5rem 1rem;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
+}
+
+.search-input-group button:hover {
+    background: #5a6268;
+}
+
+.status-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.status-filter-btn {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.status-filter-btn.active {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.status-filter-btn[data-status="all"] {
+    background: #6c757d;
+    color: white;
+}
+
+.status-filter-btn[data-status="libre"] {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-filter-btn[data-status="ocupada"] {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-filter-btn[data-status="reservada"] {
+    background: #fff3cd;
+    color: #856404;
+}
+
+
+
+/* Responsive para móvil */
 @media (max-width: 768px) {
     .toggle-filters-btn {
-        display: block;
-        padding: 0.3rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
     }
     
-    #filtersContent {
-        display: none;
+    .filters-content {
+        padding: 0.8rem;
     }
     
-    /* Cuando se muestran los filtros en móvil,  que ocupen menos espacio */
-    .search-filter {
-        padding: 0.3rem !important;
+    .filter-group {
+        margin-bottom: 0.8rem;
     }
     
-    .search-filter .filter-group {
+    .filter-group label {
+        font-size: 0.8rem;
         margin-bottom: 0.3rem;
     }
     
-    .search-filter input,
-    .search-filter select {
-        font-size: 0.7rem !important;
-        padding: 0.2rem !important;
-        height: 24px !important;
+    .search-input-group input {
+        padding: 0.4rem;
+        font-size: 0.8rem;
     }
     
-    .search-filter .status-filters {
-        gap: 0.15rem !important;
+    .search-input-group button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
     }
     
-    .search-filter .status-filter-btn {
-        font-size: 0.6rem !important;
-        padding: 2px 4px !important;
+    .status-filters {
+        gap: 0.3rem;
     }
+    
+    .status-filter-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+    }
+    
     
     /* Reducir tamaño general de elementos en móvil */
     .table {
@@ -1230,7 +1237,7 @@ function confirmarReactivacionMesa(id, numero) {
         display: block;
     }
     
-    #filtersContent {
+    .filters-content {
         display: none;
     }
 }
@@ -1533,50 +1540,6 @@ function confirmarReactivacionMesa(id, numero) {
   }
 }
 
-/* Estilos para pestañas */
-.tabs-container {
-  margin-bottom: 1.2rem;
-  border-bottom: 2px solid #e9ecef;
-}
-
-.tabs {
-  display: flex;
-  gap: 0;
-}
-
-.tab-button {
-  background: none;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #6c757d;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.tab-button:hover {
-  color: #495057;
-  background: #f8f9fa;
-}
-
-.tab-button.active {
-  color: #007bff;
-  border-bottom-color: #007bff;
-  background: #f8f9fa;
-}
-
-.tab-button.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: #007bff;
-}
 
 /* Estilos para estado inactivo */
 .status-inactiva {
@@ -1615,129 +1578,6 @@ function confirmarReactivacionMesa(id, numero) {
   text-decoration: none;
 }
 
-/* Responsive para pestañas */
-@media (max-width: 992px) {
-  .tab-button {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .tabs-container {
-    margin-bottom: 1rem;
-  }
-  
-  .tabs {
-    flex-direction: column;
-    gap: 0;
-  }
-  
-  .tab-button {
-    padding: 10px 16px;
-    font-size: 0.8rem;
-    border-bottom: 1px solid #e9ecef;
-    border-radius: 0;
-    text-align: left;
-  }
-  
-  .tab-button.active {
-    border-bottom-color: #007bff;
-    background: #e3f2fd;
-  }
-  
-  .tab-button:hover {
-    background: #f5f5f5;
-  }
-}
-
-@media (max-width: 480px) {
-  .tabs-container {
-    margin-bottom: 0.8rem;
-  }
-  
-  .tab-button {
-    padding: 8px 12px;
-    font-size: 0.75rem;
-  }
-  
-  .status-inactiva {
-    padding: 2px 8px;
-    font-size: 0.7rem;
-    border-radius: 12px;
-  }
-  
-  .btn-action.reactivate {
-    min-width: 24px;
-    height: 24px;
-    font-size: 0.7rem;
-    padding: 4px 6px;
-  }
-}
-
-@media (max-width: 360px) {
-  .tabs-container {
-    margin-bottom: 0.6rem;
-  }
-  
-  .tab-button {
-    padding: 6px 8px;
-    font-size: 0.7rem;
-  }
-  
-  .management-header h1 {
-    font-size: 0.75rem;
-  }
-  
-  .header-btn {
-    font-size: 0.6rem;
-    padding: 0.2rem 0.4rem;
-  }
-  
-  .table {
-    font-size: 0.75rem;
-  }
-  
-  .table th,
-  .table td {
-    padding: 0.3rem 0.1rem;
-  }
-  
-  .btn-action {
-    min-width: 20px;
-    height: 20px;
-    font-size: 0.6rem;
-  }
-  
-  .mobile-card {
-    padding: 0.4rem !important;
-  }
-  
-  .mobile-card-number {
-    font-size: 0.75rem !important;
-  }
-  
-  .mobile-card-label {
-    font-size: 0.65rem !important;
-  }
-  
-  .mobile-card-value {
-    font-size: 0.7rem !important;
-  }
-  
-  .status-inactiva {
-    padding: 1px 6px;
-    font-size: 0.65rem;
-    border-radius: 10px;
-  }
-  
-  .btn-action.reactivate {
-    min-width: 20px;
-    height: 20px;
-    font-size: 0.6rem;
-    padding: 3px 5px;
-  }
-}
 
 /* Estilos para botones de estado deshabilitados */
 .state-btn.disabled {

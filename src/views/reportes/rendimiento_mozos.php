@@ -276,7 +276,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h2 mb-0">📊 Rendimiento de Mozos</h1>
+                <h1 class="h2 mb-0">📊 Rendimiento del Personal</h1>
                 <button class="export-btn" onclick="exportarCSV()">
                     📥 Exportar CSV
                 </button>

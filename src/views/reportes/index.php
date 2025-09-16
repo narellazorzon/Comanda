@@ -39,92 +39,94 @@ main {
 }
 
 .welcome-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .welcome-section h1 {
     color: var(--secondary);
-    font-size: 2.5em;
-    margin: 0 0 10px 0;
+    font-size: 2em;
+    margin: 0 0 8px 0;
     font-weight: bold;
 }
 
 .welcome-section p {
     color: var(--text);
-    font-size: 1.1em;
+    font-size: 1em;
     margin: 0;
+    opacity: 0.8;
 }
 
 .stats-overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-card {
     background: var(--surface);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .stat-card .icon {
-    font-size: 2.5em;
-    margin-bottom: 15px;
+    font-size: 1.8em;
+    margin-bottom: 8px;
     display: block;
 }
 
 .stat-card h3 {
-    margin: 0 0 10px 0;
+    margin: 0 0 6px 0;
     color: var(--text);
-    font-size: 0.9em;
+    font-size: 0.8em;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     font-weight: 600;
 }
 
 .stat-card .value {
-    font-size: 2.2em;
+    font-size: 1.6em;
     font-weight: bold;
     color: var(--secondary);
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .stat-card .subtitle {
     color: var(--text);
-    font-size: 0.9em;
+    font-size: 0.75em;
+    opacity: 0.8;
 }
 
 .reports-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .report-card {
     background: var(--surface);
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .report-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .report-card-header {
-    padding: 1.5rem;
+    padding: 1rem;
     color: var(--text-light);
     text-align: center;
 }
@@ -142,38 +144,38 @@ main {
 }
 
 .report-card-header .icon {
-    font-size: 2.5em;
-    margin-bottom: 15px;
+    font-size: 1.8em;
+    margin-bottom: 8px;
     display: block;
 }
 
 .report-card-header h3 {
-    margin: 0 0 10px 0;
-    font-size: 1.4em;
+    margin: 0 0 6px 0;
+    font-size: 1.1em;
     font-weight: 600;
 }
 
 .report-card-header p {
     margin: 0;
     opacity: 0.9;
-    font-size: 0.95em;
+    font-size: 0.8em;
 }
 
 .report-card-body {
-    padding: 1.5rem;
+    padding: 1rem;
 }
 
 .report-features {
     list-style: none;
     padding: 0;
-    margin: 0 0 20px 0;
+    margin: 0 0 15px 0;
 }
 
 .report-features li {
-    padding: 8px 0;
+    padding: 5px 0;
     border-bottom: 1px solid var(--accent);
     color: var(--text);
-    font-size: 0.9em;
+    font-size: 0.8em;
 }
 
 .report-features li:last-child {
@@ -191,7 +193,7 @@ main {
     display: inline-block;
     background: var(--secondary);
     color: var(--text-light);
-    padding: 0.75rem 1.5rem;
+    padding: 0.6rem 1.2rem;
     border-radius: 4px;
     text-decoration: none;
     font-weight: 600;
@@ -200,7 +202,7 @@ main {
     width: 100%;
     border: none;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 .access-btn:hover {
@@ -211,56 +213,76 @@ main {
 
 .info-section {
     background: var(--surface);
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .info-section h2 {
     color: var(--secondary);
-    margin-bottom: 1rem;
-    font-size: 1.8em;
+    margin-bottom: 0.8rem;
+    font-size: 1.4em;
 }
 
 .info-section p {
     color: var(--text);
-    line-height: 1.6;
-    margin-bottom: 1rem;
+    line-height: 1.5;
+    margin-bottom: 0.8rem;
+    font-size: 0.9em;
 }
 
 .info-section ul {
     color: var(--text);
-    line-height: 1.6;
+    line-height: 1.5;
+    font-size: 0.9em;
 }
 
 .info-section ul li {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
 }
 
 @media (max-width: 600px) {
     .welcome-section h1 {
-        font-size: 2em;
+        font-size: 1.6em;
     }
     
     .stats-overview {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
     }
     
     .reports-grid {
         grid-template-columns: 1fr;
+        gap: 0.8rem;
     }
     
     .stat-card {
-        padding: 1rem;
+        padding: 0.8rem;
+    }
+    
+    .stat-card .icon {
+        font-size: 1.5em;
+    }
+    
+    .stat-card .value {
+        font-size: 1.4em;
     }
     
     .report-card-header {
-        padding: 1rem;
+        padding: 0.8rem;
+    }
+    
+    .report-card-header .icon {
+        font-size: 1.5em;
     }
     
     .report-card-body {
-        padding: 1rem;
+        padding: 0.8rem;
+    }
+    
+    .info-section {
+        padding: 0.8rem;
     }
 }
 </style>
@@ -292,7 +314,7 @@ main {
         </div>
         <div class="stat-card">
             <span class="icon">👥</span>
-            <h3>Mozos Activos</h3>
+            <h3>Personal Activo</h3>
             <div class="value"><?= number_format($stats['mozos_activos'] ?? 0) ?></div>
             <div class="subtitle">Este mes</div>
         </div>
@@ -338,18 +360,18 @@ main {
         <div class="report-card">
             <div class="report-card-header mozos">
                 <span class="icon">👥</span>
-                <h3>Rendimiento de Mozos</h3>
+                <h3>Rendimiento del Personal</h3>
                 <p>Evaluación de productividad del personal</p>
             </div>
             <div class="report-card-body">
                 <ul class="report-features">
-                    <li>Ranking de mozos por ventas</li>
+                    <li>Ranking del personal por ventas</li>
                     <li>Análisis de productividad</li>
-                    <li>Promedio de pedidos por mozo</li>
+                    <li>Promedio de pedidos por empleado</li>
                     <li>Sistema de calificación</li>
                     <li>Métricas de rendimiento</li>
                 </ul>
-                <a href="<?= url('reportes/rendimiento-mozos') ?>" class="access-btn">Ver Reporte</a>
+                <a href="<?= url('reportes/rendimiento-personal') ?>" class="access-btn">Ver Reporte</a>
             </div>
         </div>
     </div>
@@ -361,7 +383,7 @@ main {
         <ul>
             <li><strong>Platos Más Vendidos:</strong> Identifica qué productos son más populares para optimizar tu menú y inventario.</li>
             <li><strong>Ventas por Categoría:</strong> Analiza qué categorías de productos generan más ingresos para tomar decisiones estratégicas.</li>
-            <li><strong>Rendimiento de Mozos:</strong> Evalúa la productividad de tu equipo para reconocer el buen trabajo e identificar áreas de mejora.</li>
+            <li><strong>Rendimiento del Personal:</strong> Evalúa la productividad de tu equipo para reconocer el buen trabajo e identificar áreas de mejora.</li>
         </ul>
         
         <p><strong>Consejo:</strong> Revisa estos reportes regularmente (semanal o mensualmente) para identificar tendencias y tomar decisiones informadas sobre tu negocio.</p>

@@ -126,7 +126,13 @@ class Mesa {
             throw new \InvalidArgumentException('Ya existe otra mesa con el número ' . $numero);
         }
         
-        $estado = $data['estado'] ?? 'libre';
+        // Si no se proporciona estado, mantener el estado actual
+        if (!isset($data['estado'])) {
+            $currentMesa = self::find($id);
+            $estado = $currentMesa ? $currentMesa['estado'] : 'libre';
+        } else {
+            $estado = $data['estado'];
+        }
         
         $stmt = $db->prepare("
             UPDATE mesas

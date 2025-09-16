@@ -3,7 +3,7 @@
   --background: #f7f1e1; /* beige muy claro */
   --surface: hsl(42, 60%, 84%); /* blanco para cartas y tablas */
   --primary: #f3e2b8; /* marrón oscuro más visible */
-  --secondary: #a1866f; /* marrón suave */
+  --secondary: #7f654d; /* marrón suave */
   --accent: #eee0be; /* tonalidad intermedia */
   --text: #3f3f3f; /* gris oscuro para texto */
   --text-light: #ffffff; /* texto claro sobre fondo oscuro */
@@ -18,10 +18,12 @@
 
 html,
 body {
-  min-height: 100%;
+  min-height: 100vh;
   font-family: "Segoe UI", Tahoma, sans-serif;
   background-color: var(--background);
   color: var(--text);
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==== layout ==== */
@@ -29,6 +31,8 @@ main {
   max-width: 960px;
   margin: 1.5rem auto;
   padding: 0 1rem;
+  flex: 1;
+  width: 100%;
 }
 
 h1,
@@ -443,7 +447,7 @@ textarea:focus-visible {
 
 /* ==== pie de página ==== */
 footer {
-  background-color: rgb(125, 93, 69);
+  background: linear-gradient(135deg, rgb(125, 93, 69), rgb(104, 81, 64));
   color: var(--text-light);
   text-align: center;
   padding: 1.5rem 0;
@@ -451,6 +455,7 @@ footer {
   margin-top: auto;
   width: 100%;
   box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+  flex-shrink: 0;
 }
 
 .footer-content {
@@ -490,7 +495,7 @@ footer {
     left: -100%;
     width: 100%;
     height: calc(100vh - 60px);
-    background-color: rgb(125, 93, 69);
+    background: linear-gradient(135deg, var(--primary) 0%, #e6d1a8 50%, var(--accent) 100%);
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;

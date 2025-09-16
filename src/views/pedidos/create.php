@@ -11,7 +11,7 @@ use App\Models\CartaItem;
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Mozos y administradores pueden crear pedidos
+// Personal y administradores pueden crear pedidos
 if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
     header('Location: ' . url('login'));
     exit;
@@ -43,8 +43,6 @@ if ($is_edit) {
     
     // Cargar detalles del pedido
     $detalles = Pedido::getDetalles($pedido_id);
-    // Debug: verificar qué datos se obtienen
-    error_log('Detalles del pedido ' . $pedido_id . ': ' . print_r($detalles, true));
 }
 
 // Cargar datos necesarios
@@ -929,6 +927,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div id="items-container">
         <!-- Los items se agregarán dinámicamente aquí -->
+        <?php if ($is_edit && !empty($detalles)): ?>
+          <?php foreach ($detalles as $index => $detalle): ?>
+            <div class="item-card" data-index="<?= $index ?>">
+              <div class="item-header">
+                <div class="item-name"><?= htmlspecialchars($detalle['item_nombre']) ?></div>
+                <div class="item-price">$<?= number_format($detalle['precio_unitario'], 2) ?></div>
+              </div>
+              <div class="item-detail-section">
+                <label for="detalle_<?= $index ?>" class="detail-label">Detalle/Observaciones:</label>
+                <input type="text" 
+                       id="detalle_<?= $index ?>" 
+                       class="item-detail-input" 
+                       value="<?= htmlspecialchars($detalle['detalle']) ?>"
+                       placeholder="Ej: sin sal, sin condimentos...">
+              </div>
+              <div class="item-controls">
+                <div class="qty">
+                  <button type="button" onclick="changeQuantity(<?= $index ?>, -1)">-</button>
+                  <span id="qty_<?= $index ?>"><?= $detalle['cantidad'] ?></span>
+                  <button type="button" onclick="changeQuantity(<?= $index ?>, 1)">+</button>
+                </div>
+                <div class="item-subtotal">
+                  $<?= number_format($detalle['subtotal'], 2) ?>
+                </div>
+                <button type="button" class="btn-remove" onclick="removeItem(<?= $index ?>)">
+                  ❌
+                </button>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </div>
     </div>
 
@@ -1316,6 +1345,29 @@ function updateTotal() {
 document.addEventListener('DOMContentLoaded', function() {
     updateTotal();
     
+  // Inicializar array de items si estamos en modo edición
+  <?php if ($is_edit && !empty($detalles)): ?>
+    // Limpiar array existente
+    items = [];
+    
+    // Cargar items existentes en el array JavaScript
+    <?php foreach ($detalles as $index => $detalle): ?>
+      items.push({
+        index: <?= $index ?>,
+        id: <?= $detalle['id_item'] ?>,
+        nombre: '<?= addslashes($detalle['item_nombre']) ?>',
+        precio: <?= $detalle['precio_unitario'] ?>,
+        cantidad: <?= $detalle['cantidad'] ?>,
+        detalle: '<?= addslashes($detalle['detalle']) ?>',
+        descuento: 0,
+        precioOriginal: <?= $detalle['precio_unitario'] ?>
+      });
+    <?php endforeach; ?>
+    
+    console.log('Items cargados desde PHP:', items);
+    updateTotal();
+  <?php endif; ?>
+
   // Inicializar visibilidad del campo de mesa según el modo seleccionado
   const modoConsumo = document.getElementById('modo_consumo').value;
   if (modoConsumo) {
@@ -1325,44 +1377,5 @@ document.addEventListener('DOMContentLoaded', function() {
     selectModoConsumo('stay');
   }
   
-  // Si es edición, cargar items existentes
-  <?php if ($is_edit && !empty($detalles)): ?>
-    loadExistingItems();
-  <?php endif; ?>
 });
-
-// Función para cargar items existentes en modo edición
-function loadExistingItems() {
-  console.log('=== FUNCIÓN loadExistingItems LLAMADA ===');
-  <?php if ($is_edit && !empty($detalles)): ?>
-    const existingItems = <?= json_encode($detalles) ?>;
-    console.log('=== DEBUGGING CARGA DE ITEMS ===');
-    console.log('is_edit:', <?= $is_edit ? 'true' : 'false' ?>);
-    console.log('detalles vacío:', <?= empty($detalles) ? 'true' : 'false' ?>);
-    console.log('Cantidad de detalles:', <?= count($detalles) ?>);
-    console.log('Cargando items existentes:', existingItems);
-    
-    existingItems.forEach((detalle, index) => {
-      const item = {
-        index: items.length,
-        id: detalle.id_item,
-        nombre: detalle.item_nombre, // Corregido: usar item_nombre en lugar de nombre
-        precio: parseFloat(detalle.precio_unitario),
-        cantidad: parseInt(detalle.cantidad),
-        detalle: detalle.detalle || '',
-        descuento: 0,
-        precioOriginal: parseFloat(detalle.precio_unitario)
-      };
-      
-      console.log('Agregando item:', item);
-      items.push(item);
-      createItemCard(item);
-    });
-    
-    updateTotal();
-    console.log('Items cargados:', items);
-  <?php else: ?>
-    console.log('No hay items para cargar');
-  <?php endif; ?>
-}
 </script>
