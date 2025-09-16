@@ -2,49 +2,24 @@
 // src/models/Pedido.php
 namespace App\Models;
 
-use App\Config\Database;
+use App\Database\QueryBuilder;
 use PDO;
 
-class Pedido {
+class Pedido extends BaseModel {
     /**
      * Devuelve todos los pedidos con información de mesa y mozo, ordenados por fecha desc.
      */
     public static function all(): array {
-        $db = (new Database)->getConnection();
-        return $db->query("
-            SELECT p.*, 
-                   m.numero as numero_mesa,
-                   m.ubicacion as ubicacion_mesa,
-                   u.nombre as mozo_nombre,
-                   u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
-                   p.fecha_hora as fecha_creacion
-            FROM pedidos p
-            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
-            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
-            ORDER BY p.fecha_hora DESC
-        ")->fetchAll(PDO::FETCH_ASSOC);
+        $sql = QueryBuilder::pedidosWithMesaAndMozo();
+        return self::fetchAll($sql);
     }
 
     /**
      * Devuelve todos los pedidos del día actual con información de mesa y mozo.
      */
     public static function todayOnly(): array {
-        $db = (new Database)->getConnection();
-        return $db->query("
-            SELECT p.*, 
-                   m.numero as numero_mesa,
-                   m.ubicacion as ubicacion_mesa,
-                   u.nombre as mozo_nombre,
-                   u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
-                   p.fecha_hora as fecha_creacion
-            FROM pedidos p
-            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
-            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
-            WHERE DATE(p.fecha_hora) = CURDATE()
-            ORDER BY p.fecha_hora DESC
-        ")->fetchAll(PDO::FETCH_ASSOC);
+        $sql = QueryBuilder::pedidosWithMesaAndMozo('DATE(p.fecha_hora) = CURDATE()');
+        return self::fetchAll($sql);
     }
 
     /**
@@ -157,57 +132,29 @@ class Pedido {
      * Actualiza el estado de un pedido.
      */
     public static function updateEstado(int $id, string $nuevoEstado): bool {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            UPDATE pedidos 
-            SET estado = ? 
-            WHERE id_pedido = ?
-        ");
-        return $stmt->execute([$nuevoEstado, $id]);
+        return parent::updateTable('pedidos', ['estado' => $nuevoEstado], 'id_pedido = :id', ['id' => $id]) > 0;
     }
 
     /**
      * Elimina un pedido por su ID.
      */
     public static function delete(int $id): bool {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("DELETE FROM pedidos WHERE id_pedido = ?");
-        return $stmt->execute([$id]);
+        return parent::deleteFrom('pedidos', 'id_pedido = :id', ['id' => $id]) > 0;
     }
 
     /**
      * Actualiza el total de un pedido.
      */
     public static function updateTotal(int $id, float $total): bool {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            UPDATE pedidos 
-            SET total = ? 
-            WHERE id_pedido = ?
-        ");
-        return $stmt->execute([$total, $id]);
+        return parent::updateTable('pedidos', ['total' => $total], 'id_pedido = :id', ['id' => $id]) > 0;
     }
 
     /**
      * Obtiene un pedido por su ID con información completa.
      */
     public static function find(int $id): ?array {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            SELECT p.*, 
-                   m.numero as numero_mesa,
-                   m.ubicacion as ubicacion_mesa,
-                   u.nombre as mozo_nombre,
-                   u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
-                   p.fecha_hora as fecha_creacion
-            FROM pedidos p
-            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
-            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
-            WHERE p.id_pedido = ?
-        ");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $sql = QueryBuilder::pedidosWithMesaAndMozo('p.id_pedido = :id');
+        return self::fetchOne($sql, ['id' => $id]);
     }
 
     /**

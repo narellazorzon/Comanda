@@ -2,63 +2,33 @@
 // src/models/Mesa.php
 namespace App\Models;
 
-use App\Config\Database;
+use App\Database\QueryBuilder;
 use PDO;
+use PDOException;
 
-class Mesa {
+class Mesa extends BaseModel {
     /**
      * Devuelve todas las mesas activas ordenadas por número con información del mozo asignado.
      */
     public static function all(): array {
-        $db   = (new Database)->getConnection();
-        $stmt = $db->query("
-            SELECT m.*, 
-                   u.nombre as mozo_nombre,
-                   u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo,
-                   (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos
-            FROM mesas m
-            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.status = 1
-            ORDER BY m.numero ASC
-        ");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = QueryBuilder::mesasWithMozo('m.status = 1');
+        return self::fetchAll($sql);
     }
 
     /**
      * Busca una mesa activa por su ID con información del mozo asignado, o devuelve null si no existe.
      */
     public static function find(int $id): ?array {
-        $db   = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            SELECT m.*, 
-                   u.nombre as mozo_nombre,
-                   u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
-            FROM mesas m
-            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.id_mesa = ? AND m.status = 1
-        ");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $sql = QueryBuilder::mesasWithMozo('m.id_mesa = :id AND m.status = 1');
+        return self::fetchOne($sql, ['id' => $id]);
     }
     
     /**
      * Busca una mesa por su número con información del mozo asignado.
      */
     public static function findByNumero(int $numero): ?array {
-        $db   = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            SELECT m.*, 
-                   u.nombre as mozo_nombre,
-                   u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
-            FROM mesas m
-            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.numero = ?
-        ");
-        $stmt->execute([$numero]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $sql = QueryBuilder::mesasWithMozo('m.numero = :numero');
+        return self::fetchOne($sql, ['numero' => $numero]);
     }
 
     /**
@@ -202,19 +172,8 @@ class Mesa {
      * Devuelve todas las mesas inactivas ordenadas por número con información del mozo asignado.
      */
     public static function allInactive(): array {
-        $db   = (new Database)->getConnection();
-        $stmt = $db->query("
-            SELECT m.*, 
-                   u.nombre as mozo_nombre,
-                   u.apellido as mozo_apellido,
-                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo,
-                   (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos
-            FROM mesas m
-            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.estado = 'reservada'
-            ORDER BY m.numero ASC
-        ");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = QueryBuilder::mesasWithMozo('m.status = 0');
+        return self::fetchAll($sql);
     }
 
     /**
