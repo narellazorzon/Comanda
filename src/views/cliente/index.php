@@ -46,7 +46,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 
 // Iconos para cada categoría
 $iconosCategorias = [
-    'Entradas' ,
+    'Entradas' => '🥘',
     'Platos Principales' => '🍽️',
     'Carnes' => '🥩',
     'Aves' => '🍗',

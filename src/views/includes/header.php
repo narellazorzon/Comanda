@@ -21,8 +21,11 @@ $css_path = $base_url . '/assets/css/style.css';
     <link rel="stylesheet" href="<?= $css_path ?>?v=<?= time() ?>">
     <!-- Modal de confirmación -->
     <link rel="stylesheet" href="<?= $base_url ?>/assets/css/modal-confirmacion.css?v=<?= time() ?>">
+    <!-- Correcciones Responsive -->
+    <link rel="stylesheet" href="<?= $base_url ?>/../css/responsive-fixes.css?v=<?= time() ?>">
     <script src="<?= $base_url ?>/assets/js/modal-confirmacion.js?v=<?= time() ?>"></script>
-    <script></script>
+    <!-- Mejoras de experiencia móvil -->
+    <script src="<?= $base_url ?>/../js/mobile-enhancements.js?v=<?= time() ?>" defer></script>
 </head>
 <body>
 <?php include __DIR__ . '/nav.php'; ?>
