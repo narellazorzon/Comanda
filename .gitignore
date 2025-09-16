@@ -1,7 +1,14 @@
 test_rendimiento.php
 test_sistema.php
 REPORTE_ANALISIS_COMPLETO.md
+<<<<<<< Updated upstream
 test_refactoring.php
 test_intensivo_completo.php
 test_rapido_final.php
 test_qr_mesas_mobile.php
+=======
+test_intensivo_completo.php
+test_qr_mesas_mobile.php
+test_rapido_final.php
+test_refactoring.php
+>>>>>>> Stashed changes
