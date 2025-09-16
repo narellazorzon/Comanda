@@ -244,7 +244,8 @@ switch ($route) {
 
     case 'reportes/rendimiento-personal':
         requireAdmin();
-        include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
+        require_once __DIR__ . '/../src/controllers/ReporteController.php';
+        \App\Controllers\ReporteController::rendimientoMozos();
         break;
 
     // Rutas de Llamados (personal y administradores)

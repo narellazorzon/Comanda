@@ -26,7 +26,7 @@ class DetallePedido {
     /**
      * Crea un nuevo detalle de pedido con parámetros individuales.
      */
-    public static function createSimple(int $idPedido, int $idItem, string $detalle = ''): bool {
+    public static function create(int $idPedido, int $idItem, string $detalle = ''): bool {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
             INSERT INTO detalle_pedido (id_pedido, id_item, detalle)

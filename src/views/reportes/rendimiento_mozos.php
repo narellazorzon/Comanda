@@ -286,7 +286,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
             <div class="card mb-4">
                 <div class="card-body">
                     <form method="GET" action="" class="row g-3">
-                        <input type="hidden" name="route" value="reportes/rendimiento-mozos">
+                        <input type="hidden" name="route" value="reportes/rendimiento-personal">
                         
                         <div class="col-md-3">
                             <label for="desde" class="form-label">Desde</label>
@@ -319,7 +319,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                             <button type="submit" class="apply-btn me-2">
                                 🔍 Filtrar
                             </button>
-                            <a href="?route=reportes/rendimiento-mozos" class="clear-btn">
+                            <a href="?route=reportes/rendimiento-personal" class="clear-btn">
                                 🔄 Limpiar
                             </a>
                         </div>
