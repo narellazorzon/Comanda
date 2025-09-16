@@ -93,7 +93,7 @@ class Mesa {
         
         $estado = $data['estado'] ?? 'libre';
         
-        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, estado, id_mozo, status) VALUES (?, ?, ?, ?, 1)");
+        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, estado, id_mozo) VALUES (?, ?, ?, ?)");
         return $stmt->execute([
             $numero,
             $data['ubicacion'] ?? null,
@@ -211,7 +211,7 @@ class Mesa {
                    (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos
             FROM mesas m
             LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.status = 0
+            WHERE m.estado = 'reservada'
             ORDER BY m.numero ASC
         ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -224,21 +224,21 @@ class Mesa {
         $db = (new Database)->getConnection();
         
         try {
-            // Verificar si la mesa existe y está inactiva
-            $checkStmt = $db->prepare("SELECT id_mesa, status FROM mesas WHERE id_mesa = ?");
+            // Verificar si la mesa existe
+            $checkStmt = $db->prepare("SELECT id_mesa, estado FROM mesas WHERE id_mesa = ?");
             $checkStmt->execute([$id]);
             $mesa = $checkStmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$mesa) {
                 return ['success' => false, 'message' => 'La mesa no existe'];
             }
-            
-            if ($mesa['status'] == 1) {
+
+            if ($mesa['estado'] != 'reservada') {
                 return ['success' => false, 'message' => 'La mesa ya está activa'];
             }
-            
+
             // Reactivar la mesa
-            $stmt = $db->prepare("UPDATE mesas SET status = 1 WHERE id_mesa = ?");
+            $stmt = $db->prepare("UPDATE mesas SET estado = 'libre' WHERE id_mesa = ?");
             $result = $stmt->execute([$id]);
             
             if ($result && $stmt->rowCount() > 0) {
@@ -269,21 +269,21 @@ class Mesa {
         $db = (new Database)->getConnection();
         
         try {
-            // Verificar si la mesa existe y está activa
-            $checkStmt = $db->prepare("SELECT id_mesa, status FROM mesas WHERE id_mesa = ?");
+            // Verificar si la mesa existe
+            $checkStmt = $db->prepare("SELECT id_mesa, estado FROM mesas WHERE id_mesa = ?");
             $checkStmt->execute([$id]);
             $mesa = $checkStmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$mesa) {
                 return ['success' => false, 'message' => 'La mesa no existe'];
             }
-            
-            if ($mesa['status'] == 0) {
+
+            if ($mesa['estado'] == 'reservada') {
                 return ['success' => false, 'message' => 'La mesa ya está inactiva'];
             }
-            
-            // Marcar como inactiva (soft delete)
-            $stmt = $db->prepare("UPDATE mesas SET status = 0 WHERE id_mesa = ?");
+
+            // Marcar como inactiva (usando estado reservada como soft delete)
+            $stmt = $db->prepare("UPDATE mesas SET estado = 'reservada' WHERE id_mesa = ?");
             $result = $stmt->execute([$id]);
             
             if ($result && $stmt->rowCount() > 0) {
