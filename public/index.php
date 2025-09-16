@@ -5,11 +5,6 @@ session_start();
 // Cargar autoload
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Incluir header para todas las páginas (excepto login y rutas de API)
-$route = $_GET['route'] ?? 'cliente';
-$apiRoutes = ['cliente-pedido', 'llamar-mozo'];
-if ($route !== 'login' && !in_array($route, $apiRoutes)) {
-    include __DIR__ . '/../src/views/includes/header.php';
 // Cargar autoload si existe, o hacer autoload manual básico
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
@@ -284,8 +279,6 @@ switch ($route) {
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login y rutas de API)
-if ($route !== 'login' && !in_array($route, $apiRoutes)) {
 // Incluir footer solo si la ruta lo requiere
 if (!in_array($route, $noHeaderRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
