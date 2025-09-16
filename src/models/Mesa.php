@@ -19,7 +19,6 @@ class Mesa {
                    (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos
             FROM mesas m
             LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.status = 1
             ORDER BY m.numero ASC
         ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -37,7 +36,7 @@ class Mesa {
                    CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo
             FROM mesas m
             LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.id_mesa = ? AND m.status = 1
+            WHERE m.id_mesa = ?
         ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -93,7 +92,7 @@ class Mesa {
         
         $estado = $data['estado'] ?? 'libre';
         
-        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, estado, id_mozo, status) VALUES (?, ?, ?, ?, 1)");
+        $stmt = $db->prepare("INSERT INTO mesas (numero, ubicacion, estado, id_mozo) VALUES (?, ?, ?, ?)");
         return $stmt->execute([
             $numero,
             $data['ubicacion'] ?? null,
@@ -200,6 +199,7 @@ class Mesa {
 
     /**
      * Devuelve todas las mesas inactivas ordenadas por número con información del mozo asignado.
+     * Nota: Como no existe columna status, devuelve mesas sin mozo asignado como "inactivas"
      */
     public static function allInactive(): array {
         $db   = (new Database)->getConnection();
@@ -211,21 +211,21 @@ class Mesa {
                    (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos
             FROM mesas m
             LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-            WHERE m.status = 0
+            WHERE m.id_mozo IS NULL
             ORDER BY m.numero ASC
         ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Reactiva una mesa (cambia status de 0 a 1).
+     * Reactiva una mesa (asigna un mozo para activarla).
      */
-    public static function reactivate(int $id): array {
+    public static function reactivate(int $id, int $id_mozo): array {
         $db = (new Database)->getConnection();
         
         try {
-            // Verificar si la mesa existe y está inactiva
-            $checkStmt = $db->prepare("SELECT id_mesa, status FROM mesas WHERE id_mesa = ?");
+            // Verificar si la mesa existe
+            $checkStmt = $db->prepare("SELECT id_mesa, id_mozo FROM mesas WHERE id_mesa = ?");
             $checkStmt->execute([$id]);
             $mesa = $checkStmt->fetch(PDO::FETCH_ASSOC);
             
@@ -233,13 +233,13 @@ class Mesa {
                 return ['success' => false, 'message' => 'La mesa no existe'];
             }
             
-            if ($mesa['status'] == 1) {
-                return ['success' => false, 'message' => 'La mesa ya está activa'];
+            if ($mesa['id_mozo'] != null) {
+                return ['success' => false, 'message' => 'La mesa ya tiene un mozo asignado'];
             }
             
-            // Reactivar la mesa
-            $stmt = $db->prepare("UPDATE mesas SET status = 1 WHERE id_mesa = ?");
-            $result = $stmt->execute([$id]);
+            // Asignar mozo a la mesa
+            $stmt = $db->prepare("UPDATE mesas SET id_mozo = ? WHERE id_mesa = ?");
+            $result = $stmt->execute([$id_mozo, $id]);
             
             if ($result && $stmt->rowCount() > 0) {
                 return ['success' => true, 'message' => 'Mesa reactivada correctamente'];
@@ -262,15 +262,15 @@ class Mesa {
     }
 
     /**
-     * Marca una mesa como inactiva (soft delete) por su ID.
+     * Marca una mesa como inactiva (quita el mozo asignado) por su ID.
      * @return array ['success' => bool, 'message' => string]
      */
     public static function delete(int $id): array {
         $db = (new Database)->getConnection();
         
         try {
-            // Verificar si la mesa existe y está activa
-            $checkStmt = $db->prepare("SELECT id_mesa, status FROM mesas WHERE id_mesa = ?");
+            // Verificar si la mesa existe
+            $checkStmt = $db->prepare("SELECT id_mesa, id_mozo FROM mesas WHERE id_mesa = ?");
             $checkStmt->execute([$id]);
             $mesa = $checkStmt->fetch(PDO::FETCH_ASSOC);
             
@@ -278,12 +278,12 @@ class Mesa {
                 return ['success' => false, 'message' => 'La mesa no existe'];
             }
             
-            if ($mesa['status'] == 0) {
-                return ['success' => false, 'message' => 'La mesa ya está inactiva'];
+            if ($mesa['id_mozo'] == null) {
+                return ['success' => false, 'message' => 'La mesa ya está inactiva (sin mozo asignado)'];
             }
             
-            // Marcar como inactiva (soft delete)
-            $stmt = $db->prepare("UPDATE mesas SET status = 0 WHERE id_mesa = ?");
+            // Quitar mozo asignado (marcar como inactiva)
+            $stmt = $db->prepare("UPDATE mesas SET id_mozo = NULL WHERE id_mesa = ?");
             $result = $stmt->execute([$id]);
             
             if ($result && $stmt->rowCount() > 0) {
