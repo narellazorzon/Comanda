@@ -4,10 +4,10 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\CartaItem;
+use App\Config\ClientSession;
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Inicializar sesión limpia de cliente
+ClientSession::initClientSession();
 
 $items = CartaItem::all();
 

@@ -6,9 +6,16 @@ require_once __DIR__ . '/../../config/helpers.php';
 use App\Models\Pedido;
 use App\Models\Mesa;
 use App\Models\DetallePedido;
+use App\Config\ClientSession;
 
+// Usar sesión de cliente
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+
+// Asegurar contexto de cliente
+if (!ClientSession::isClientContext()) {
+    ClientSession::initClientSession();
 }
 
 // Obtener ID del pedido desde GET o sesión
@@ -739,7 +746,7 @@ $opcionesPropina = [
     // Cancelar pago
     function cancelPayment() {
         if (confirm('¿Estás seguro de que deseas cancelar el proceso de pago?')) {
-            window.location.href = '<?= url('cliente') ?>';
+            window.location.href = 'index.php?route=cliente<?= isset($_SESSION['mesa_qr']) ? '&mesa=' . $_SESSION['mesa_qr'] : '' ?>';
         }
     }
 
@@ -764,7 +771,7 @@ $opcionesPropina = [
             data.append('metodo_pago', selectedPaymentMethod);
             
             // Enviar solicitud
-            const response = await fetch('<?= url('cliente/procesar-pago') ?>', {
+            const response = await fetch('index.php?route=cliente/procesar-pago', {
                 method: 'POST',
                 body: data
             });
@@ -775,7 +782,7 @@ $opcionesPropina = [
                 
                 // Redirigir después de 2 segundos
                 setTimeout(() => {
-                    window.location.href = '<?= url('cliente-confirmacion') ?>?pedido=' + pedidoId;
+                    window.location.href = 'index.php?route=cliente-confirmacion&pedido=' + pedidoId;
                 }, 2000);
             } else {
                 throw new Error('Error al procesar el pago');

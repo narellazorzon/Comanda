@@ -16,13 +16,21 @@ session_start();
 
 // Cargar autoload
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../src/config/ClientSession.php';
 
 // Obtener la ruta solicitada primero
 $route = $_GET['route'] ?? 'cliente';
 $apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'test-pedidos', 'cliente/procesar-pago'];
+$clienteRoutes = ['cliente', 'cliente-pago', 'cliente-confirmacion'];
+
+// Si estamos en una ruta de cliente, asegurar contexto de cliente
+if (in_array($route, $clienteRoutes)) {
+    if (!\App\Config\ClientSession::isClientContext()) {
+        \App\Config\ClientSession::initClientSession();
+    }
+}
 
 // Incluir header para todas las páginas (excepto login, rutas de API y páginas del cliente)
-$clienteRoutes = ['cliente', 'cliente-pago', 'cliente-confirmacion'];
 if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
@@ -92,6 +100,11 @@ switch ($route) {
         break;
 
     case 'cliente':
+        // Inicializar contexto de cliente si es necesario
+        require_once __DIR__ . '/../src/config/ClientSession.php';
+        if (!\App\Config\ClientSession::isClientContext()) {
+            \App\Config\ClientSession::initClientSession();
+        }
         include __DIR__ . '/../src/views/cliente/index.php';
         break;
 
@@ -281,17 +294,32 @@ switch ($route) {
 
     // Rutas de pago del cliente
     case 'cliente-pago':
+        require_once __DIR__ . '/../src/config/ClientSession.php';
         require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        // Asegurar contexto de cliente
+        if (!\App\Config\ClientSession::isClientContext()) {
+            \App\Config\ClientSession::initClientSession();
+        }
         \App\Controllers\ClienteController::pago();
         break;
 
     case 'cliente/procesar-pago':
+        require_once __DIR__ . '/../src/config/ClientSession.php';
         require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        // Asegurar contexto de cliente
+        if (!\App\Config\ClientSession::isClientContext()) {
+            \App\Config\ClientSession::initClientSession();
+        }
         \App\Controllers\ClienteController::procesarPago();
         break;
 
     case 'cliente-confirmacion':
+        require_once __DIR__ . '/../src/config/ClientSession.php';
         require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        // Asegurar contexto de cliente
+        if (!\App\Config\ClientSession::isClientContext()) {
+            \App\Config\ClientSession::initClientSession();
+        }
         \App\Controllers\ClienteController::confirmacion();
         break;
 
@@ -306,12 +334,24 @@ switch ($route) {
         break;
 
     default:
+        // Verificar si estamos en contexto de cliente
+        if (isset($_SESSION['contexto']) && $_SESSION['contexto'] === 'cliente') {
+            // Mantener al cliente en su contexto
+            $mesa = $_SESSION['mesa_qr'] ?? null;
+            $url = 'index.php?route=cliente';
+            if ($mesa) {
+                $url .= '&mesa=' . $mesa;
+            }
+            header('Location: ' . $url);
+            exit;
+        }
+
         // Si no está logueado, mostrar la vista pública del cliente
         if (empty($_SESSION['user'])) {
             header('Location: index.php?route=cliente');
             exit;
         }
-        // Si está logueado, mostrar el home
+        // Si está logueado como administrador/mozo, mostrar el home
         header('Location: index.php?route=home');
         exit;
 }

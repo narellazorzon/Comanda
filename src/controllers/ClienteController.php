@@ -7,6 +7,7 @@ use App\Models\Propina;
 use App\Models\Mesa;
 use App\Models\DetallePedido;
 use App\Models\CartaItem;
+use App\Config\ClientSession;
 use Exception;
 
 require_once __DIR__ . '/../config/helpers.php';
@@ -17,6 +18,13 @@ class ClienteController {
      * Muestra la vista principal del cliente (menú)
      */
     public static function index() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        // Asegurar contexto de cliente
+        if (!ClientSession::isClientContext()) {
+            ClientSession::initClientSession();
+        }
         include __DIR__ . '/../views/cliente/index.php';
     }
     
@@ -24,6 +32,13 @@ class ClienteController {
      * Muestra la vista de proceso de pago con opción de propinas
      */
     public static function pago() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        // Asegurar contexto de cliente
+        if (!ClientSession::isClientContext()) {
+            ClientSession::initClientSession();
+        }
         include __DIR__ . '/../views/cliente/pago.php';
     }
     
@@ -84,6 +99,12 @@ class ClienteController {
                 'total' => $pedido['total'] + $propinaMonto,
                 'timestamp' => time()
             ];
+
+            // Asegurar contexto de cliente y limpiar cualquier sesión de admin
+            if (isset($_SESSION['user'])) {
+                unset($_SESSION['user']);
+            }
+            $_SESSION['contexto'] = 'cliente';
             
             // Respuesta exitosa
             http_response_code(200);
@@ -109,14 +130,23 @@ class ClienteController {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        
+
         $pedidoId = $_GET['pedido'] ?? $_SESSION['ultimo_pago']['pedido_id'] ?? null;
-        
+
         if (!$pedidoId) {
             header('Location: ' . url('cliente'));
             exit;
         }
-        
+
+        // Asegurar contexto de cliente y limpiar cualquier sesión de admin
+        if (!ClientSession::isClientContext()) {
+            ClientSession::initClientSession();
+        }
+        // Eliminar cualquier sesión de admin que pueda existir
+        if (isset($_SESSION['user'])) {
+            unset($_SESSION['user']);
+        }
+
         include __DIR__ . '/../views/cliente/confirmacion.php';
     }
     
@@ -222,15 +252,20 @@ class ClienteController {
      * Muestra el menú QR con mesa predefinida
      */
     public static function menuQR() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Asegurar contexto de cliente
+        if (!ClientSession::isClientContext()) {
+            ClientSession::initClientSession();
+        }
+
         $mesa = $_GET['mesa'] ?? null;
-        
         if ($mesa) {
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
             $_SESSION['mesa_qr'] = $mesa;
         }
-        
+
         include __DIR__ . '/../views/cliente/index.php';
     }
 }

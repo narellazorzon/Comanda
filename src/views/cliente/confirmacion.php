@@ -5,9 +5,21 @@ require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\Pedido;
 use App\Models\Propina;
+use App\Config\ClientSession;
 
+// Usar sesión de cliente
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+
+// Asegurar contexto de cliente
+if (!ClientSession::isClientContext()) {
+    ClientSession::initClientSession();
+}
+
+// Asegurarse de que no hay sesión de administrador activa
+if (isset($_SESSION['user'])) {
+    unset($_SESSION['user']);
 }
 
 $pedidoId = $_GET['pedido'] ?? null;
@@ -319,7 +331,7 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
 
             <!-- Botones de acción -->
             <div class="action-buttons">
-                <a href="<?= url('cliente') . (isset($_SESSION['mesa_qr']) ? '?mesa=' . $_SESSION['mesa_qr'] : '') ?>" class="btn btn-primary">
+                <a href="index.php?route=cliente<?= (isset($_SESSION['mesa_qr']) ? '&mesa=' . $_SESSION['mesa_qr'] : '') ?>" class="btn btn-primary">
                     📱 Hacer Otro Pedido
                 </a>
                 <button onclick="window.print()" class="btn btn-secondary">
@@ -386,9 +398,9 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
                 clearInterval(interval);
                 // Redirigir al menú manteniendo la mesa si existe
                 <?php if (isset($_SESSION['mesa_qr'])): ?>
-                    window.location.href = '<?= url('cliente') ?>?mesa=<?= $_SESSION['mesa_qr'] ?>';
+                    window.location.href = 'index.php?route=cliente&mesa=<?= $_SESSION['mesa_qr'] ?>';
                 <?php else: ?>
-                    window.location.href = '<?= url('cliente') ?>';
+                    window.location.href = 'index.php?route=cliente';
                 <?php endif; ?>
             }
         }, 1000);
