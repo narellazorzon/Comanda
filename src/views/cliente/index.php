@@ -2599,21 +2599,15 @@ $iconosCategorias = [
                 
                 if (response.ok && result.success) {
                     // Mostrar mensaje de éxito
-                    showToast(`✅ ¡Pedido confirmado! ID: ${result.pedido_id}. En breve nos comunicaremos contigo.`);
-                    
-                    // Limpiar carrito y cerrar modal
+                    showToast(`✅ ¡Pedido confirmado! Redirigiendo al proceso de pago...`);
+
+                    // Limpiar carrito
                     localStorage.removeItem(CART_KEY);
-                    modal.style.display = 'none';
-                    this.reset();
-                    
-                    if (isQRMode) {
-                        setupQRMode();
-                    } else {
-                        document.getElementById('mesa-manual-field').style.display = 'none';
-                    }
-                    
-                    updateCartCounter();
-                    validateFormQR();
+
+                    // Redirigir a la página de pago después de 1.5 segundos
+                    setTimeout(() => {
+                        window.location.href = `<?= $base_url ?>/index.php?route=cliente-pago&pedido=${result.pedido_id}`;
+                    }, 1500);
                 } else {
                     // Mostrar error
                     showToast(`❌ Error: ${result.error || 'No se pudo crear el pedido'}`, 'error');

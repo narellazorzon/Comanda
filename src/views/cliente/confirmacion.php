@@ -319,18 +319,30 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
 
             <!-- Botones de acción -->
             <div class="action-buttons">
-                <a href="<?= url('cliente') ?>" class="btn btn-secondary">
-                    Nuevo Pedido
+                <a href="<?= url('cliente') . (isset($_SESSION['mesa_qr']) ? '?mesa=' . $_SESSION['mesa_qr'] : '') ?>" class="btn btn-primary">
+                    📱 Hacer Otro Pedido
                 </a>
-                <button onclick="window.print()" class="btn btn-primary">
-                    Imprimir Recibo
+                <button onclick="window.print()" class="btn btn-secondary">
+                    🖨️ Imprimir Recibo
                 </button>
             </div>
 
-            <!-- Nota adicional -->
+            <!-- Información adicional -->
             <div class="receipt-note">
-                <p>📧 Se ha enviado una copia del recibo a tu correo electrónico</p>
-                <p style="margin-top: 0.5rem;">¡Gracias por tu preferencia! Te esperamos pronto.</p>
+                <?php if ($pedido['numero_mesa']): ?>
+                    <p style="font-size: 1.1em; color: var(--color-texto); font-weight: 600;">
+                        📍 Mesa <?= htmlspecialchars($pedido['numero_mesa']) ?>
+                    </p>
+                <?php endif; ?>
+                <p>⏱️ Tu pedido está siendo preparado</p>
+                <p style="margin-top: 0.5rem;">¡Gracias por tu preferencia!</p>
+
+                <!-- Tiempo estimado -->
+                <div style="margin-top: 1rem; padding: 1rem; background: #f0f8ff; border-radius: 8px;">
+                    <p style="color: #0066cc; font-weight: 600; margin: 0;">
+                        ⏰ Tiempo estimado: 15-20 minutos
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -356,7 +368,38 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
     }
 
     // Ejecutar confeti al cargar la página
-    window.addEventListener('load', createConfetti);
+    window.addEventListener('load', () => {
+        createConfetti();
+
+        // Opcional: Redirigir al menú después de 30 segundos
+        let countdown = 30;
+        const countdownElement = document.createElement('div');
+        countdownElement.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 1000;';
+        countdownElement.innerHTML = `Volviendo al menú en <span id="countdown">${countdown}</span> segundos...`;
+        document.body.appendChild(countdownElement);
+
+        const interval = setInterval(() => {
+            countdown--;
+            document.getElementById('countdown').textContent = countdown;
+
+            if (countdown <= 0) {
+                clearInterval(interval);
+                // Redirigir al menú manteniendo la mesa si existe
+                <?php if (isset($_SESSION['mesa_qr'])): ?>
+                    window.location.href = '<?= url('cliente') ?>?mesa=<?= $_SESSION['mesa_qr'] ?>';
+                <?php else: ?>
+                    window.location.href = '<?= url('cliente') ?>';
+                <?php endif; ?>
+            }
+        }, 1000);
+
+        // Permitir cancelar la redirección al hacer clic
+        countdownElement.addEventListener('click', () => {
+            clearInterval(interval);
+            countdownElement.innerHTML = 'Redirección cancelada';
+            setTimeout(() => countdownElement.remove(), 2000);
+        });
+    });
     </script>
 </body>
 </html>

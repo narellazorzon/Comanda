@@ -19,10 +19,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 // Obtener la ruta solicitada primero
 $route = $_GET['route'] ?? 'cliente';
-$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'test-pedidos'];
+$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'test-pedidos', 'cliente/procesar-pago'];
 
-// Incluir header para todas las páginas (excepto login y rutas de API)
-if ($route !== 'login' && !in_array($route, $apiRoutes)) {
+// Incluir header para todas las páginas (excepto login, rutas de API y páginas del cliente)
+$clienteRoutes = ['cliente', 'cliente-pago', 'cliente-confirmacion'];
+if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
@@ -278,6 +279,22 @@ switch ($route) {
         \App\Controllers\ClienteController::crearPedido();
         break;
 
+    // Rutas de pago del cliente
+    case 'cliente-pago':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::pago();
+        break;
+
+    case 'cliente/procesar-pago':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::procesarPago();
+        break;
+
+    case 'cliente-confirmacion':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::confirmacion();
+        break;
+
     // Ruta del generador de QRs offline (solo administrador)
     case 'admin/qr-offline':
         requireAdmin();
@@ -299,8 +316,8 @@ switch ($route) {
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login y rutas de API)
-if ($route !== 'login' && !in_array($route, $apiRoutes)) {
+// Incluir footer para todas las páginas (excepto login, rutas de API y páginas del cliente)
+if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>

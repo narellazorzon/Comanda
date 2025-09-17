@@ -52,9 +52,25 @@ class DetallePedido {
     }
     
     /**
-     * Obtiene todos los detalles de un pedido (alias para compatibilidad).
+     * Obtiene todos los detalles de un pedido con información completa para la vista de pago.
      */
     public static function getByPedido(int $idPedido): array {
-        return self::allByPedido($idPedido);
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT
+                dp.*,
+                c.nombre,
+                c.descripcion,
+                c.categoria,
+                dp.cantidad,
+                dp.precio_unitario,
+                (dp.cantidad * dp.precio_unitario) as subtotal
+            FROM detalle_pedido dp
+            JOIN carta c ON dp.id_item = c.id_item
+            WHERE dp.id_pedido = ?
+            ORDER BY dp.id_detalle
+        ");
+        $stmt->execute([$idPedido]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

@@ -1,1 +1,30 @@
 DirectoryIndex index.php
+
+# Configuración para el directorio public
+RewriteEngine On
+
+# Redirigir todas las solicitudes al index.php excepto archivos existentes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
+
+# Configuración CORS para imágenes y recursos estáticos
+<FilesMatch "\.(jpg|jpeg|png|gif|svg|webp|ico|css|js|woff|woff2|ttf|otf|eot)$">
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header set Cross-Origin-Resource-Policy "cross-origin"
+</FilesMatch>
+
+# Tipos MIME correctos para imágenes
+AddType image/jpeg .jpg .jpeg
+AddType image/png .png
+AddType image/gif .gif
+AddType image/webp .webp
+AddType image/svg+xml .svg
+
+# Evitar problemas de CORS con respuestas opacas
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always unset Cross-Origin-Embedder-Policy
+    Header always unset Cross-Origin-Opener-Policy
+</IfModule>

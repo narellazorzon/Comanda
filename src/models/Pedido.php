@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Database\QueryBuilder;
 use App\Config\Database;
 use PDO;
+use Exception;
 
 class Pedido extends BaseModel {
     /**
@@ -59,7 +60,7 @@ class Pedido extends BaseModel {
                 $data['modo_consumo'] ?? 'stay',
                 0.00, // Temporal, se actualizará después
                 'pendiente',
-                $_SESSION['user']['id_usuario'] ?? null,
+                $data['id_mozo'] ?? (isset($_SESSION['user']['id_usuario']) ? $_SESSION['user']['id_usuario'] : null),
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $data['cliente_nombre'] ?? null,
@@ -170,13 +171,13 @@ class Pedido extends BaseModel {
      */
     public static function update(int $id, array $data): bool {
         $db = (new Database)->getConnection();
-        
+
         try {
             $db->beginTransaction();
-            
+
             // 1. Actualizar datos básicos del pedido
             $stmt = $db->prepare("
-                UPDATE pedidos 
+                UPDATE pedidos
                 SET id_mesa = ?, modo_consumo = ?, forma_pago = ?, observaciones = ?
                 WHERE id_pedido = ?
             ");
@@ -187,11 +188,11 @@ class Pedido extends BaseModel {
                 $data['observaciones'] ?? null,
                 $id
             ]);
-            
+
             // 2. Eliminar detalles existentes
             $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
             $stmt->execute([$id]);
-            
+
             // 3. Insertar nuevos detalles y calcular total
             $total = 0.00;
             if (!empty($data['items'])) {
@@ -199,40 +200,85 @@ class Pedido extends BaseModel {
                     INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario, detalle)
                     VALUES (?, ?, ?, ?, ?)
                 ");
-                
+
                 $stmtPrecio = $db->prepare("SELECT precio FROM carta WHERE id_item = ?");
-                
+
                 foreach ($data['items'] as $item) {
                     $cantidad = (int)($item['cantidad'] ?? 1);
                     $idItem = (int)($item['id_item'] ?? 0);
                     $detalle = $item['detalle'] ?? '';
-                    
+
                     if ($cantidad > 0 && $idItem > 0) {
                         // Obtener precio actual del item
                         $stmtPrecio->execute([$idItem]);
                         $precio = $stmtPrecio->fetchColumn();
-                        
+
                         if ($precio) {
                             $subtotal = $precio * $cantidad;
                             $total += $subtotal;
-                            
+
                             // Guardar detalle
                             $stmtItem->execute([$id, $idItem, $cantidad, $precio, $detalle]);
                         }
                     }
                 }
             }
-            
+
             // 4. Actualizar el total del pedido
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $id]);
-            
+
             $db->commit();
             return true;
-            
+
         } catch (Exception $e) {
             $db->rollback();
             throw $e;
         }
+    }
+
+    /**
+     * Obtiene un pedido con todos sus detalles incluyendo mesa y mozo.
+     */
+    public static function findWithDetails(int $id): ?array {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT p.*,
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   mz.id_usuario as id_mozo,
+                   CONCAT(mz.nombre, ' ', mz.apellido) as nombre_mozo_completo
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios mz ON p.id_mozo = mz.id_usuario
+            WHERE p.id_pedido = ?
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    /**
+     * Calcula el total del pedido con propina.
+     */
+    public static function calcularTotalConPropina(int $idPedido, float $porcentajePropina): array {
+        $pedido = self::findWithDetails($idPedido);
+
+        if (!$pedido) {
+            return [
+                'subtotal' => 0,
+                'propina' => 0,
+                'total' => 0
+            ];
+        }
+
+        $subtotal = (float)$pedido['total'];
+        $propina = $subtotal * ($porcentajePropina / 100);
+        $total = $subtotal + $propina;
+
+        return [
+            'subtotal' => $subtotal,
+            'propina' => round($propina, 2),
+            'total' => round($total, 2)
+        ];
     }
 }
