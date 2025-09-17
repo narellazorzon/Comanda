@@ -12,12 +12,12 @@ if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
 use App\Models\Reporte;
 
 // Parámetros de filtro
-$periodo = $_GET['periodo'] ?? 'mes';
+$periodo = $_GET['periodo'] ?? 'todos';
 
 // Validar período
-$periodos_validos = ['semana', 'mes', 'año'];
+$periodos_validos = ['semana', 'mes', 'año', 'todos'];
 if (!in_array($periodo, $periodos_validos)) {
-    $periodo = 'mes';
+    $periodo = 'todos';
 }
 
 // Obtener datos usando el modelo Reporte
@@ -33,27 +33,48 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 }
 
 .report-header {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--secondary) 0%, #8b5e46 100%);
+    color: var(--text-light);
     padding: 30px;
     border-radius: 10px;
     margin-bottom: 30px;
     text-align: center;
+    box-shadow: 0 4px 15px rgba(161, 134, 111, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.report-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .report-header h1 {
     margin: 0 0 10px 0;
     font-size: 2.5em;
+    color: rgb(238, 224, 191);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
 }
 
 .report-header p {
     margin: 0;
-    opacity: 0.9;
+    opacity: 0.95;
     font-size: 1.1em;
+    position: relative;
+    z-index: 1;
 }
 
+
 .filters-section {
-    background: #f8f9fa;
+    background: var(--surface);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 30px;
@@ -61,6 +82,7 @@ $stats = Reporte::estadisticasPeriodo($periodo);
     gap: 20px;
     align-items: center;
     flex-wrap: wrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .filter-group {
@@ -71,29 +93,35 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 
 .filter-group label {
     font-weight: bold;
-    color: #495057;
+    color: var(--secondary);
 }
 
 .filter-group select {
     padding: 8px 12px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--primary);
     border-radius: 4px;
     font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
 }
 
 .apply-btn {
-    background: #28a745;
-    color: white;
+    background: var(--secondary);
+    color: var(--text-light);
     border: none;
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    transition: background 0.3s;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(161, 134, 111, 0.3);
 }
 
 .apply-btn:hover {
-    background: #218838;
+    background: #8b5e46;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(161, 134, 111, 0.4);
 }
 
 .stats-grid {
@@ -104,25 +132,33 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 }
 
 .stat-card {
-    background: white;
+    background: var(--surface);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid var(--accent);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(161, 134, 111, 0.15);
 }
 
 .stat-card h3 {
     margin: 0 0 10px 0;
-    color: #6c757d;
+    color: var(--secondary);
     font-size: 0.9em;
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-weight: 600;
 }
 
 .stat-card .value {
     font-size: 2em;
     font-weight: bold;
-    color: #495057;
+    color: var(--text);
 }
 
 .categorias-grid {
@@ -133,29 +169,47 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 }
 
 .categoria-card {
-    background: white;
+    background: var(--surface);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     overflow: hidden;
-    transition: transform 0.2s;
+    transition: all 0.3s ease;
+    border: 1px solid var(--accent);
 }
 
 .categoria-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(161, 134, 111, 0.15);
 }
 
 .categoria-header {
-    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--secondary) 0%, #8b5e46 100%);
+    color: var(--text-light);
     padding: 20px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.categoria-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .categoria-header h3 {
     margin: 0;
     font-size: 1.5em;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
+
 
 .categoria-body {
     padding: 20px;
@@ -167,7 +221,7 @@ $stats = Reporte::estadisticasPeriodo($periodo);
     align-items: center;
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--accent);
 }
 
 .categoria-stat:last-child {
@@ -176,23 +230,24 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 }
 
 .stat-label {
-    color: #6c757d;
+    color: var(--secondary);
     font-weight: 500;
 }
 
 .stat-value {
     font-weight: bold;
-    color: #495057;
+    color: var(--text);
 }
 
 .revenue-value {
-    color: #28a745;
+    color: var(--secondary);
+    font-weight: 600;
 }
 
 .percentage-bar {
     width: 100%;
     height: 8px;
-    background: #e9ecef;
+    background: var(--accent);
     border-radius: 4px;
     overflow: hidden;
     margin-top: 5px;
@@ -200,7 +255,7 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 
 .percentage-fill {
     height: 100%;
-    background: linear-gradient(90deg, #28a745, #20c997);
+    background: linear-gradient(90deg, var(--secondary), #8b5e46);
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -208,7 +263,7 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 .no-data {
     text-align: center;
     padding: 40px;
-    color: #6c757d;
+    color: var(--text);
     font-style: italic;
 }
 
@@ -256,6 +311,7 @@ $stats = Reporte::estadisticasPeriodo($periodo);
         <div class="filter-group">
             <label for="periodo">Período:</label>
             <select name="periodo" id="periodo" onchange="updateFilters()">
+                <option value="todos" <?= $periodo === 'todos' ? 'selected' : '' ?>>Todos los Períodos</option>
                 <option value="semana" <?= $periodo === 'semana' ? 'selected' : '' ?>>Última Semana</option>
                 <option value="mes" <?= $periodo === 'mes' ? 'selected' : '' ?>>Último Mes</option>
                 <option value="año" <?= $periodo === 'año' ? 'selected' : '' ?>>Último Año</option>

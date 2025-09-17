@@ -47,7 +47,7 @@ class ReporteController {
         self::authorize();
         
         // Obtener parámetros con valores por defecto
-        $desde = $_GET['desde'] ?? date('Y-m-01'); // Primer día del mes actual
+        $desde = $_GET['desde'] ?? '2024-01-01'; // Desde el inicio de los datos
         $hasta = $_GET['hasta'] ?? date('Y-m-d');  // Hoy
         $agrupar = $_GET['agrupar'] ?? 'ninguno';
         

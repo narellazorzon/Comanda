@@ -12,13 +12,13 @@ if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
 use App\Models\Reporte;
 
 // Parámetros de filtro
-$periodo = $_GET['periodo'] ?? 'mes';
+$periodo = $_GET['periodo'] ?? 'todos';
 $limite = (int)($_GET['limite'] ?? 10);
 
 // Validar período
-$periodos_validos = ['semana', 'mes', 'año'];
+$periodos_validos = ['semana', 'mes', 'año', 'todos'];
 if (!in_array($periodo, $periodos_validos)) {
-    $periodo = 'mes';
+    $periodo = 'todos';
 }
 
 // Obtener datos usando el modelo Reporte
@@ -73,6 +73,7 @@ main {
     margin: 0 0 10px 0;
     font-size: 2.2em;
     font-weight: bold;
+    color: rgb(240, 229, 205);
     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     position: relative;
     z-index: 1;
@@ -288,6 +289,7 @@ main {
         <div class="filter-group">
             <label for="periodo">Período:</label>
             <select name="periodo" id="periodo" onchange="updateFilters()">
+                <option value="todos" <?= $periodo === 'todos' ? 'selected' : '' ?>>Todos los Períodos</option>
                 <option value="semana" <?= $periodo === 'semana' ? 'selected' : '' ?>>Última Semana</option>
                 <option value="mes" <?= $periodo === 'mes' ? 'selected' : '' ?>>Último Mes</option>
                 <option value="año" <?= $periodo === 'año' ? 'selected' : '' ?>>Último Año</option>
