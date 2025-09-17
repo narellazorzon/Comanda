@@ -27,7 +27,7 @@ class Reporte {
             FROM detalle_pedido dp
             JOIN carta c ON dp.id_item = c.id_item
             JOIN pedidos p ON dp.id_pedido = p.id_pedido
-            WHERE p.estado IN ('pagado', 'cerrado')
+            WHERE p.estado IN ('servido', 'cerrado')
             $fecha_filtro
             GROUP BY c.id_item, c.nombre, c.categoria, c.precio
             ORDER BY total_vendido DESC, ingresos_totales DESC
@@ -53,7 +53,7 @@ class Reporte {
                 AVG(p.total) as promedio_pedido,
                 COUNT(DISTINCT p.id_mozo) as mozos_activos
             FROM pedidos p
-            WHERE p.estado IN ('pagado', 'cerrado')
+            WHERE p.estado IN ('servido', 'cerrado')
             $fecha_filtro
         ");
         
@@ -78,7 +78,7 @@ class Reporte {
             FROM detalle_pedido dp
             JOIN carta c ON dp.id_item = c.id_item
             JOIN pedidos p ON dp.id_pedido = p.id_pedido
-            WHERE p.estado IN ('pagado', 'cerrado')
+            WHERE p.estado IN ('servido', 'cerrado')
             $fecha_filtro
             GROUP BY c.categoria
             ORDER BY ingresos_totales DESC
@@ -102,7 +102,7 @@ class Reporte {
                 COUNT(DISTINCT p.id_pedido) as total_pedidos,
                 SUM(p.total) as ingresos_dia
             FROM pedidos p
-            WHERE p.estado IN ('pagado', 'cerrado')
+            WHERE p.estado IN ('servido', 'cerrado')
             $fecha_filtro
             GROUP BY DATE(p.fecha_hora)
             ORDER BY fecha DESC
@@ -129,7 +129,7 @@ class Reporte {
                 AVG(p.total) as promedio_pedido
             FROM pedidos p
             JOIN usuarios u ON p.id_mozo = u.id_usuario
-            WHERE p.estado IN ('pagado', 'cerrado')
+            WHERE p.estado IN ('servido', 'cerrado')
             AND p.id_mozo IS NOT NULL
             $fecha_filtro
             GROUP BY u.id_usuario, u.nombre, u.apellido
@@ -151,6 +151,8 @@ class Reporte {
                 return "AND p.fecha_hora >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
             case 'año':
                 return "AND p.fecha_hora >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+            case 'todos':
+                return ""; // Sin filtro de fecha para mostrar todos los datos
             default:
                 return "AND p.fecha_hora >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
         }
@@ -167,8 +169,10 @@ class Reporte {
                 return 'Último Mes';
             case 'año':
                 return 'Último Año';
+            case 'todos':
+                return 'Todos los Períodos';
             default:
-                return 'Último Mes';
+                return 'Todos los Períodos';
         }
     }
     
@@ -201,7 +205,7 @@ class Reporte {
         $stmt = $db->query("
             SELECT COUNT(*) as total 
             FROM pedidos 
-            WHERE estado IN ('pagado', 'cerrado') 
+            WHERE estado IN ('servido', 'cuenta', 'cerrado') 
             AND total > 0
         ");
         $diagnostico['pedidos_reporteables'] = $stmt->fetchColumn();
