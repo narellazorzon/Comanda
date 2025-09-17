@@ -6,14 +6,10 @@ require_once __DIR__ . '/../../config/helpers.php';
 use App\Controllers\MozoController;
 use App\Models\Usuario;
 
-// Solo iniciar sesión si no está activa
+// La autenticación ya fue verificada en el router (index.php)
+// Solo necesitamos asegurarnos de que la sesión esté disponible
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-}
-// Solo administradores pueden acceder
-if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
-    header('Location: ' . url('login'));
-    exit;
 }
 
 // Si viene un POST, delegamos al controlador y salimos
@@ -54,8 +50,8 @@ if (isset($_GET['id'])) {
   <?php if (isset($mozo)): ?>
     <input type="hidden" name="id" value="<?= $mozo['id_usuario'] ?>">
   <?php endif; ?>
-  
-  <?php 
+
+  <?php
   // Usar datos de la sesión si hay error de validación, o datos del mozo si estamos editando
   $formData = null;
   if (isset($mozo)) {
@@ -66,7 +62,7 @@ if (isset($_GET['id'])) {
       unset($_SESSION['form_data']);
   }
   ?>
-  
+
   <label>Nombre:</label>
   <input type="text" name="nombre" required value="<?= htmlspecialchars($formData['nombre'] ?? '') ?>" autocomplete="off">
 
@@ -109,36 +105,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const contraseniaInput = document.getElementById('contrasenia');
     const contraseniaEditInput = document.getElementById('contrasenia_edit');
     const form = document.querySelector('form');
-    
+
     function validatePassword(input, isRequired = true) {
         if (!input) return true;
-        
+
         const value = input.value.trim();
         const minLength = 8;
-        
+
         // Si no es requerido y está vacío, es válido
         if (!isRequired && value === '') {
             input.setCustomValidity('');
             return true;
         }
-        
+
         // Si es requerido o tiene contenido, validar longitud
         if (value.length < minLength) {
             input.setCustomValidity(`La contraseña debe tener al menos ${minLength} caracteres`);
             return false;
         }
-        
+
         input.setCustomValidity('');
         return true;
     }
-    
+
     function updatePasswordHelpText(input, isRequired = true) {
         if (!input) return;
-        
+
         const value = input.value.trim();
         const minLength = 8;
         const helpText = input.nextElementSibling;
-        
+
         if (!isRequired && value === '') {
             helpText.textContent = 'Solo completa este campo si deseas cambiar la contraseña. Debe tener al menos 8 caracteres.';
             helpText.style.color = '#666';
@@ -149,51 +145,51 @@ document.addEventListener('DOMContentLoaded', function() {
             helpText.textContent = 'Contraseña válida ✓';
             helpText.style.color = '#28a745';
         } else {
-            helpText.textContent = isRequired ? 
-                'La contraseña debe tener al menos 8 caracteres' : 
+            helpText.textContent = isRequired ?
+                'La contraseña debe tener al menos 8 caracteres' :
                 'Solo completa este campo si deseas cambiar la contraseña. Debe tener al menos 8 caracteres.';
             helpText.style.color = '#666';
         }
     }
-    
+
     // Validación en tiempo real para contraseña nueva
     if (contraseniaInput) {
         contraseniaInput.addEventListener('input', function() {
             validatePassword(this, true);
             updatePasswordHelpText(this, true);
         });
-        
+
         contraseniaInput.addEventListener('blur', function() {
             validatePassword(this, true);
             updatePasswordHelpText(this, true);
         });
     }
-    
+
     // Validación en tiempo real para contraseña de edición
     if (contraseniaEditInput) {
         contraseniaEditInput.addEventListener('input', function() {
             validatePassword(this, false);
             updatePasswordHelpText(this, false);
         });
-        
+
         contraseniaEditInput.addEventListener('blur', function() {
             validatePassword(this, false);
             updatePasswordHelpText(this, false);
         });
     }
-    
+
     // Validación antes de enviar el formulario
     form.addEventListener('submit', function(e) {
         let isValid = true;
-        
+
         if (contraseniaInput) {
             isValid = validatePassword(contraseniaInput, true) && isValid;
         }
-        
+
         if (contraseniaEditInput) {
             isValid = validatePassword(contraseniaEditInput, false) && isValid;
         }
-        
+
         if (!isValid) {
             e.preventDefault();
             alert('Por favor, corrige los errores en el formulario antes de enviar.');

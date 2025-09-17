@@ -451,9 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Incluir CSS y JS del modal de confirmación -->
-<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
-<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
+<!-- Modal de confirmación ya incluido en header.php -->
 
 <style>
 /* Estilos para el administrador actual */

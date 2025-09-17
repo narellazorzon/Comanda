@@ -6,15 +6,10 @@ require_once __DIR__ . '/../../config/helpers.php';
 use App\Models\Usuario;
 use App\Models\Mesa;
 
-// Iniciar sesión si no está iniciada
+// La autenticación ya fue verificada en el router (index.php)
+// Solo necesitamos asegurarnos de que la sesión esté disponible
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-}
-
-// Solo administradores pueden acceder
-if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
-    header('Location: ' . url('login'));
-    exit;
 }
 
 // Verificar parámetros requeridos

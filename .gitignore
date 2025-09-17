@@ -10,6 +10,7 @@ composer.lock
 src/config/database.local.php
 .env
 .env.local
+config.php.local
 
 # Logs y archivos temporales
 /logs/
@@ -19,6 +20,7 @@ access_log
 /tmp/
 /temp/
 /cache/
+/sessions/
 
 # Archivos del sistema operativo
 .DS_Store
@@ -26,6 +28,8 @@ Thumbs.db
 desktop.ini
 .Spotlight-V100
 .Trashes
+ehthumbs.db
+Desktop.ini
 
 # IDEs y editores
 .vscode/
@@ -38,6 +42,7 @@ desktop.ini
 .project
 .settings/
 nbproject/
+.vs/
 
 # Archivos de respaldo
 *.bak
@@ -45,49 +50,64 @@ nbproject/
 *.old
 *.orig
 *.~*
+*.tmp
 
 # Archivos de base de datos locales
+*.sql
 *.sql.gz
 *.sql.zip
 database/backup/
 database/migrations/local/
+database/local_*
 
-# Archivos subidos por usuarios (si aplica)
+# Archivos subidos por usuarios
 public/uploads/
 public/assets/uploads/
+uploads/
 
 # Archivos de testing
 test_*.php
+*_test.php
 tests/coverage/
 phpunit.xml
 .phpunit.result.cache
+.php_cs.cache
+.phpunit.cache
 
 # Archivos de documentación local
 docs/local/
 *.todo
 TODO.md
 REPORTE_*.md
+NOTES.md
 
-# Node modules (si se usa algún bundler)
+# Node modules y bundlers
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 package-lock.json
 yarn.lock
 
 # Archivos de construcción
 /build/
 /dist/
+/out/
 
 # Archivos de configuración de servidor local
 .htaccess.local
+.htaccess.backup
 apache.conf
 nginx.conf
 
 # Archivos de sesión PHP
 sess_*
+php_session_*
 
 # Archivos específicos del proyecto que no deben versionarse
 database/*.local.sql
 src/config/app.local.php
+src/config/local.*
 
 # Ignorar archivos de desarrollo/debug
 debug_*.php
@@ -98,5 +118,33 @@ update_*.sql
 create_*.php
 check_*.php
 quick_*.php
+temp_*.php
 SISTEMA_*.md
 DEPLOYMENT_CHECKLIST.md
+
+# Ignorar archivos de caché y optimización
+*.cache
+*.map
+*.min.js.map
+*.min.css.map
+
+# Ignorar archivos de configuración de XAMPP/localhost
+my.ini
+my.cnf
+
+# Ignorar archivos generados automáticamente
+assets/js/*compiled.js
+assets/css/*compiled.css
+
+# Ignorar archivos de errores de PHP
+errors.log
+php_errors.log
+
+# Ignorar archivos de exportación
+*.csv
+*.xlsx
+*.pdf
+
+# Ignorar archivos temporales de navegador
+*.tmp
+*.temp

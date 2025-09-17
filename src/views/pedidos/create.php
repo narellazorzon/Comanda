@@ -7,14 +7,10 @@ use App\Models\Pedido;
 use App\Models\Mesa;
 use App\Models\CartaItem;
 
-// Iniciar sesión si no está iniciada
+// La autenticación ya fue verificada en el router (index.php)
+// Solo necesitamos asegurarnos de que la sesión esté disponible
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-}
-// Personal y administradores pueden crear pedidos
-if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
-    header('Location: ' . url('login'));
-    exit;
 }
 
 $rol = $_SESSION['user']['rol'];

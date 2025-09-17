@@ -1,238 +1,214 @@
 /**
- * Modal de confirmación reutilizable
+ * Modal de confirmación reutilizable para acciones críticas
  * Uso: ModalConfirmacion.show(options)
  */
 
-console.log('Modal de confirmación cargado correctamente');
-
 class ModalConfirmacion {
     static show(options) {
-        const {
-            title = '⚠️ Confirmar Eliminación',
-            message = '¿Estás seguro de que quieres eliminar este elemento?',
-            itemName = '',
-            note = '',
-            confirmText = 'Eliminar',
-            cancelText = 'Cancelar',
-            onConfirm = () => {},
-            onCancel = () => {}
-        } = options;
+        // Valores por defecto
+        const defaults = {
+            title: 'Confirmar Acción',
+            message: '¿Estás seguro de realizar esta acción?',
+            type: 'warning',
+            confirmText: 'Confirmar',
+            cancelText: 'Cancelar',
+            confirmCallback: null,
+            cancelCallback: null,
+            size: 'normal',
+            persistent: false
+        };
+
+        // Combinar opciones
+        const config = {...defaults, ...options};
 
         // Crear modal
         const modal = document.createElement('div');
         modal.className = 'modal-confirmacion';
-        modal.style.display = 'flex';
         modal.innerHTML = `
-            <div class="modal-confirmacion-content">
-                <div class="modal-confirmacion-header">
-                    ${title}
+            <div class="modal-backdrop ${config.persistent ? 'persistent' : ''}" onclick="ModalConfirmacion.closeModal(event)"></div>
+            <div class="modal-content ${config.size}">
+                <div class="modal-header">
+                    <h3>${config.title}</h3>
                 </div>
-                
-                <div class="modal-confirmacion-icon">🗑️</div>
-                
-                <h3 class="modal-confirmacion-title">
-                    ${message}
-                </h3>
-                
-                ${itemName ? `
-                <p class="modal-confirmacion-message">
-                    Estás a punto de eliminar:<br>
-                    <strong class="modal-confirmacion-item-name">${itemName}</strong>
-                </p>
-                ` : ''}
-                
-                ${note ? `
-                <div class="modal-confirmacion-note">
-                    <p><strong>Nota:</strong> ${note}</p>
+                <div class="modal-body">
+                    <p>${config.message}</p>
                 </div>
-                ` : ''}
-                
-                <div class="modal-confirmacion-buttons">
-                    <button class="modal-confirmacion-btn modal-confirmacion-btn-cancel">
-                        ${cancelText}
-                    </button>
-                    <button class="modal-confirmacion-btn modal-confirmacion-btn-confirm">
-                        ${confirmText}
-                    </button>
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="ModalConfirmacion.handleCancel()">${config.cancelText}</button>
+                    <button class="btn-confirm ${config.type}" onclick="ModalConfirmacion.handleConfirm()">${config.confirmText}</button>
                 </div>
             </div>
         `;
-        
+
+        // Añadir al DOM
         document.body.appendChild(modal);
-        
-        // Event listeners
-        const cancelBtn = modal.querySelector('.modal-confirmacion-btn-cancel');
-        const confirmBtn = modal.querySelector('.modal-confirmacion-btn-confirm');
-        
-        const closeModal = () => {
-            document.body.removeChild(modal);
-        };
-        
-        cancelBtn.addEventListener('click', () => {
-            closeModal();
-            onCancel();
-        });
-        
-        confirmBtn.addEventListener('click', () => {
-            closeModal();
-            onConfirm();
-        });
-        
-        // Cerrar al hacer click fuera del modal
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-                onCancel();
-            }
-        });
-        
-        // Cerrar con tecla Escape
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-                onCancel();
-                document.removeEventListener('keydown', handleEscape);
-            }
-        };
-        document.addEventListener('keydown', handleEscape);
+
+        // Añadir estilos si no existen
+        if (!document.querySelector('#modal-confirmacion-styles')) {
+            const styles = document.createElement('style');
+            styles.id = 'modal-confirmacion-styles';
+            styles.textContent = `
+                .modal-confirmacion {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .modal-backdrop {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                }
+                .modal-content {
+                    position: relative;
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                    max-width: 90%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+                .modal-content.small { width: 400px; }
+                .modal-content.normal { width: 500px; }
+                .modal-content.large { width: 600px; }
+                .modal-header {
+                    padding: 20px 20px 10px;
+                    border-bottom: 1px solid #eee;
+                }
+                .modal-header h3 {
+                    margin: 0;
+                    color: #333;
+                    font-size: 1.2rem;
+                }
+                .modal-body {
+                    padding: 20px;
+                    color: #666;
+                    line-height: 1.5;
+                }
+                .modal-footer {
+                    padding: 10px 20px 20px;
+                    display: flex;
+                    gap: 10px;
+                    justify-content: flex-end;
+                }
+                .btn-cancel, .btn-confirm {
+                    padding: 8px 16px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                }
+                .btn-cancel {
+                    background: #6c757d;
+                    color: white;
+                }
+                .btn-cancel:hover {
+                    background: #5a6268;
+                }
+                .btn-confirm {
+                    background: #007bff;
+                    color: white;
+                }
+                .btn-confirm:hover {
+                    background: #0056b3;
+                }
+                .btn-confirm.warning { background: #ffc107; color: #212529; }
+                .btn-confirm.warning:hover { background: #e0a800; }
+                .btn-confirm.danger { background: #dc3545; color: white; }
+                .btn-confirm.danger:hover { background: #c82333; }
+                .btn-confirm.success { background: #28a745; color: white; }
+                .btn-confirm.success:hover { background: #218838; }
+            `;
+            document.head.appendChild(styles);
+        }
+
+        // Guardar callbacks
+        ModalConfirmacion.currentModal = modal;
+        ModalConfirmacion.confirmCallback = config.confirmCallback;
+        ModalConfirmacion.cancelCallback = config.cancelCallback;
+
+        return modal;
+    }
+
+    static closeModal(event) {
+        if (event && event.target.classList.contains('persistent')) {
+            return;
+        }
+        if (ModalConfirmacion.currentModal) {
+            ModalConfirmacion.currentModal.remove();
+            ModalConfirmacion.currentModal = null;
+        }
+    }
+
+    static handleConfirm() {
+        if (ModalConfirmacion.confirmCallback) {
+            ModalConfirmacion.confirmCallback();
+        }
+        ModalConfirmacion.closeModal();
+    }
+
+    static handleCancel() {
+        if (ModalConfirmacion.cancelCallback) {
+            ModalConfirmacion.cancelCallback();
+        }
+        ModalConfirmacion.closeModal();
     }
 }
 
-// Funciones de conveniencia para casos específicos
-function confirmarBorradoCarta(id, nombre) {
-    console.log('confirmarBorradoCarta llamado con:', id, nombre);
-    
+// Funciones específicas para confirmación de acciones críticas
+function confirmarBorradoPedido(idPedido, callback) {
     ModalConfirmacion.show({
-        title: '🗑️ Eliminar Item de Carta',
-        message: '¿Estás seguro de que quieres eliminar este ítem?',
-        itemName: nombre,
-        note: 'Esta acción eliminará permanentemente el ítem y todos sus registros relacionados en pedidos. Esta acción no se puede deshacer.',
-        confirmText: 'Eliminar',
+        title: '🗑️ Eliminar Pedido',
+        message: `¿Estás seguro de que deseas eliminar el pedido #${idPedido}?<br><br>
+                 <strong>Esta acción no se puede deshacer.</strong>`,
+        type: 'danger',
+        confirmText: 'Eliminar Pedido',
         cancelText: 'Cancelar',
-        onConfirm: () => {
-            const actionUrl = window.location.origin + window.location.pathname + '?route=carta/delete&delete=' + id;
-            console.log('URL generada para eliminación:', actionUrl);
-            console.log('Redirigiendo a:', actionUrl);
-            window.location.href = actionUrl;
-        },
-        onCancel: () => {
-            console.log('Eliminación cancelada');
-        }
+        size: 'small',
+        persistent: false,
+        confirmCallback: callback
     });
 }
 
-function confirmarBorradoMozo(id, nombre) {
-    console.log('confirmarBorradoMozo llamado con:', id, nombre);
-    
+function confirmarBorradoMesa(idMesa, callback) {
     ModalConfirmacion.show({
-        title: '⚠️ Eliminar Mozo',
-        message: '¿Estás seguro de que quieres eliminar este mozo?',
-        itemName: nombre,
-        note: 'Esta acción no se puede deshacer y se eliminarán todos los datos asociados al mozo.',
-        confirmText: '🗑️ Eliminar',
-        cancelText: '❌ Cancelar',
-        onConfirm: () => {
-            const actionUrl = window.location.origin + window.location.pathname + '?delete=' + id;
-            console.log('URL generada para eliminación de mozo:', actionUrl);
-            window.location.href = actionUrl;
-        },
-        onCancel: () => {
-            console.log('Eliminación de mozo cancelada');
-        }
+        title: '🗑️ Eliminar Mesa',
+        message: `¿Estás seguro de que deseas eliminar la mesa #${idMesa}?<br><br>
+                 <strong>Esta acción no se puede deshacer.</strong>`,
+        type: 'danger',
+        confirmText: 'Eliminar Mesa',
+        cancelText: 'Cancelar',
+        size: 'small',
+        persistent: false,
+        confirmCallback: callback
     });
 }
 
-function confirmarBorradoPedido(id, nombre) {
-    console.log('confirmarBorradoPedido llamado con:', id, nombre);
-    
+function confirmarCambioEstadoMesa(idMesa, nuevoEstado, callback) {
+    const esActivo = nuevoEstado === 'activa';
     ModalConfirmacion.show({
-        title: '⚠️ Eliminar Pedido',
-        message: '¿Estás seguro de que quieres eliminar este pedido?',
-        itemName: nombre,
-        note: 'Esta acción no se puede deshacer y se eliminarán todos los datos asociados al pedido.',
-        confirmText: '🗑️ Eliminar',
-        cancelText: '❌ Cancelar',
-        onConfirm: () => {
-            const actionUrl = window.location.origin + window.location.pathname + '?route=pedidos/delete&delete=' + id;
-            console.log('URL generada para eliminación de pedido:', actionUrl);
-            window.location.href = actionUrl;
-        },
-        onCancel: () => {
-            console.log('Eliminación de pedido cancelada');
-        }
+        title: esActivo ? '✅ Activar Mesa' : '❌ Desactivar Mesa',
+        message: `¿Estás seguro de que deseas ${esActivo ? 'activar' : 'desactivar'} la mesa #${idMesa}?`,
+        type: esActivo ? 'success' : 'warning',
+        confirmText: esActivo ? 'Activar' : 'Desactivar',
+        cancelText: 'Cancelar',
+        size: 'small',
+        persistent: false,
+        confirmCallback: callback
     });
 }
 
-function confirmarBorradoMesa(id, numero) {
-    console.log('confirmarBorradoMesa llamado con:', id, numero);
-    
-    ModalConfirmacion.show({
-        title: '⚠️ Desactivar Mesa',
-        message: '¿Estás seguro de que quieres desactivar esta mesa?',
-        itemName: `Mesa #${numero}`,
-        note: 'La mesa se marcará como inactiva y no aparecerá en las listas, pero se mantendrá en el historial. Esta acción se puede revertir.',
-        confirmText: '⚠️ Desactivar',
-        cancelText: '❌ Cancelar',
-        onConfirm: () => {
-            // Crear un formulario temporal para enviar la solicitud de eliminación
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = window.location.origin + window.location.pathname + '?route=mesas/delete';
-            
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'id';
-            input.value = id;
-            
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-        },
-        onCancel: () => {
-            console.log('Desactivación de mesa cancelada');
-        }
-    });
-}
-
-function confirmarCambioEstadoMesa(idMesa, nuevoEstado, onConfirm) {
-    console.log('confirmarCambioEstadoMesa llamado con:', idMesa, nuevoEstado);
-    
-    const estadoLabels = {
-        'libre': 'Libre',
-        'ocupada': 'Ocupada', 
-        'reservada': 'Reservada'
-    };
-    
-    const estadoIconos = {
-        'libre': '🟢',
-        'ocupada': '🔴',
-        'reservada': '🟡'
-    };
-    
-    ModalConfirmacion.show({
-        title: '🔄 Cambiar Estado de Mesa',
-        message: '¿Estás seguro de que quieres cambiar el estado de esta mesa?',
-        itemName: `Mesa #${idMesa} → ${estadoIconos[nuevoEstado]} ${estadoLabels[nuevoEstado]}`,
-        note: 'El cambio de estado se aplicará inmediatamente y afectará la disponibilidad de la mesa.',
-        confirmText: '✅ Cambiar Estado',
-        cancelText: '❌ Cancelar',
-        onConfirm: () => {
-            if (onConfirm) {
-                onConfirm(idMesa, nuevoEstado);
-            }
-        },
-        onCancel: () => {
-            console.log('Cambio de estado de mesa cancelado');
-        }
-    });
-}
-
-// Hacer las funciones disponibles globalmente
+// Asignar funciones al ámbito global para uso desde HTML
 window.ModalConfirmacion = ModalConfirmacion;
-window.confirmarBorradoCarta = confirmarBorradoCarta;
-window.confirmarBorradoMozo = confirmarBorradoMozo;
 window.confirmarBorradoPedido = confirmarBorradoPedido;
 window.confirmarBorradoMesa = confirmarBorradoMesa;
 window.confirmarCambioEstadoMesa = confirmarCambioEstadoMesa;
-
-console.log('Funciones del modal asignadas a window');

@@ -4,3 +4,4 @@
 [17-Sep-2025 19:29:34 Europe/Berlin] PHP Warning:  Undefined array key "fecha_creacion" in C:\xampp\htdocs\Comanda\src\controllers\PedidoController.php on line 317
 [17-Sep-2025 19:33:23 Europe/Berlin] PHP Warning:  Undefined array key "fecha_creacion" in C:\xampp\htdocs\Comanda\src\controllers\PedidoController.php on line 317
 [17-Sep-2025 19:48:41 Europe/Berlin] PHP Warning:  Undefined array key "fecha_creacion" in C:\xampp\htdocs\Comanda\src\controllers\PedidoController.php on line 317
+[18-Sep-2025 00:57:18 Europe/Berlin] PHP Warning:  Undefined array key "fecha_creacion" in C:\xampp\htdocs\Comanda\src\controllers\PedidoController.php on line 317
