@@ -1,19 +1,31 @@
 <?php
 // public/index.php - Punto de entrada principal con routing MVC
+
+// Configurar logging de errores
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/php-error.log');
+
+// Crear directorio de logs si no existe
+$logDir = __DIR__ . '/../logs';
+if (!is_dir($logDir)) {
+    mkdir($logDir, 0755, true);
+}
+
 session_start();
 
 // Cargar autoload
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Incluir header para todas las páginas (excepto login y rutas de API)
+// Obtener la ruta solicitada primero
 $route = $_GET['route'] ?? 'cliente';
-$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado'];
+$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'test-pedidos'];
+
+// Incluir header para todas las páginas (excepto login y rutas de API)
 if ($route !== 'login' && !in_array($route, $apiRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
-// Obtener la ruta solicitada
-$route = $_GET['route'] ?? 'cliente';
 
 // Función para redirigir al login si no está autenticado
 function requireAuth() {

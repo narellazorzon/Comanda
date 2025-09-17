@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Database\QueryBuilder;
+use App\Config\Database;
 use PDO;
 
 class Pedido extends BaseModel {

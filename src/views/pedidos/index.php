@@ -89,6 +89,68 @@ if ($rol === 'mozo') {
     $pedidos = Pedido::all();
 }
 
+// Función para generar botones de acción
+function generarBotonesAccion($pedido, $rol) {
+    $botones = '';
+    
+    if ($rol === 'administrador') {
+        // Botón Ver información (siempre disponible)
+        $botones .= '<button class="btn-action btn-info" title="Ver información del pedido" onclick="mostrarInfoPedido(' . $pedido['id_pedido'] . ')">
+            <span class="btn-icon">👁️</span>
+            <span class="btn-text">Ver</span>
+        </button>';
+        
+        if ($pedido['estado'] !== 'cerrado') {
+            // Botón Editar (solo si no está cerrado)
+            $botones .= '<a href="' . url('pedidos/edit', ['id' => $pedido['id_pedido']]) . '" class="btn-action btn-edit" title="Editar pedido">
+                <span class="btn-icon">✏️</span>
+                <span class="btn-text">Editar</span>
+            </a>';
+            
+            // Botón Eliminar (solo si no está cerrado)
+            $botones .= '<button class="btn-action btn-delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(' . $pedido['id_pedido'] . ', \'Pedido #' . $pedido['id_pedido'] . '\')">
+                <span class="btn-icon">🗑️</span>
+                <span class="btn-text">Eliminar</span>
+            </button>';
+        } else {
+            // Botones deshabilitados para pedidos cerrados
+            $botones .= '<button class="btn-action btn-disabled" title="No se puede editar un pedido cerrado" disabled>
+                <span class="btn-icon">✏️</span>
+                <span class="btn-text">Editar</span>
+            </button>';
+            
+            $botones .= '<button class="btn-action btn-disabled" title="No se puede eliminar un pedido cerrado" disabled>
+                <span class="btn-icon">🗑️</span>
+                <span class="btn-text">Eliminar</span>
+            </button>';
+        }
+    }
+    
+    return $botones;
+}
+
+// Función para generar botones de cambio de estado
+function generarBotonesEstado($pedido, $isMobile = false) {
+    $estado_actual = $pedido['estado'];
+    $estados_disponibles = obtenerTransicionesPermitidas($estado_actual);
+    
+    if (empty($estados_disponibles)) {
+        $style = $isMobile ? 'color: #6c757d; font-size: 0.7rem; font-style: italic; text-align: center; display: block; padding: 0.3rem;' : 'color: #6c757d; font-size: 0.8rem; font-style: italic;';
+        return '<span style="' . $style . '">Pedido cerrado</span>';
+    }
+    
+    $botones = '';
+    foreach ($estados_disponibles as $estado) {
+        $icono = obtenerIconoEstado($estado);
+        $nombre = obtenerNombreEstado($estado);
+        $botones .= '<button class="state-btn ' . $estado . '" onclick="confirmarCambioEstado(' . $pedido['id_pedido'] . ', \'' . $estado . '\')" title="Cambiar a ' . $nombre . '">
+            ' . $icono . '
+        </button>';
+    }
+    
+    return $botones;
+}
+
 // Incluir header DESPUÉS de procesar POST
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -457,45 +519,14 @@ require_once __DIR__ . '/../includes/header.php';
           <td><?= !empty($pedido['fecha_creacion']) ? date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) : 'N/A' ?></td>
           <td class="action-cell">
             <div class="state-shortcuts">
-              <?php 
-              $estado_actual = $pedido['estado'];
-              $estados_disponibles = obtenerTransicionesPermitidas($estado_actual);
-              
-              if (empty($estados_disponibles)): ?>
-                <span style="color: #6c757d; font-size: 0.8rem; font-style: italic;">Pedido cerrado</span>
-              <?php else: ?>
-                <?php foreach ($estados_disponibles as $estado): ?>
-                  <?php
-                  $icono = obtenerIconoEstado($estado);
-                  $nombre = obtenerNombreEstado($estado);
-                  ?>
-                  <button class="state-btn <?= $estado ?>" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, '<?= $estado ?>')" title="Cambiar a <?= $nombre ?>">
-                    <?= $icono ?>
-                  </button>
-                <?php endforeach; ?>
-              <?php endif; ?>
+              <?= generarBotonesEstado($pedido) ?>
             </div>
           </td>
           <?php if ($rol === 'administrador'): ?>
             <td class="action-cell">
-              <a href="#" class="btn-action info" title="Ver información del pedido" onclick="mostrarInfoPedido(<?= $pedido['id_pedido'] ?>)">
-                ℹ️
-              </a>
-              <?php if ($pedido['estado'] !== 'cerrado'): ?>
-              <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
-                ✏️
-              </a>
-              <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
-                ❌
-              </a>
-              <?php else: ?>
-                <span class="btn-action disabled" title="No se puede editar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
-                  ✏️
-                </span>
-                <span class="btn-action disabled" title="No se puede eliminar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
-                  ❌
-                </span>
-              <?php endif; ?>
+              <div class="action-buttons-container">
+                <?= generarBotonesAccion($pedido, $rol) ?>
+              </div>
             </td>
           <?php endif; ?>
         </tr>
@@ -519,45 +550,15 @@ require_once __DIR__ . '/../includes/header.php';
             Pedido #<?= htmlspecialchars($pedido['id_pedido']) ?>
           </div>
           <div class="mobile-card-actions">
-            <a href="#" class="btn-action info" title="Ver información del pedido" onclick="mostrarInfoPedido(<?= $pedido['id_pedido'] ?>)">
-              ℹ️
-            </a>
-            <?php if ($rol === 'administrador'): ?>
-              <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
-                ✏️
-              </a>
-              <?php if ($pedido['estado'] !== 'cerrado'): ?>
-              <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
-                ❌
-              </a>
-              <?php else: ?>
-                <span class="btn-action disabled" title="No se puede eliminar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
-                  🔒
-                </span>
-              <?php endif; ?>
-            <?php endif; ?>
+            <div class="action-buttons-container">
+              <?= generarBotonesAccion($pedido, $rol) ?>
+            </div>
           </div>
         </div>
         
         <div class="mobile-state-shortcuts">
           <div class="state-shortcuts">
-            <?php 
-            $estado_actual = $pedido['estado'];
-            $estados_disponibles = obtenerTransicionesPermitidas($estado_actual);
-            
-            if (empty($estados_disponibles)): ?>
-              <span style="color: #6c757d; font-size: 0.7rem; font-style: italic; text-align: center; display: block; padding: 0.3rem;">Pedido cerrado</span>
-            <?php else: ?>
-              <?php foreach ($estados_disponibles as $estado): ?>
-                <?php
-                $icono = obtenerIconoEstado($estado);
-                $nombre = obtenerNombreEstado($estado);
-                ?>
-                <button class="state-btn <?= $estado ?>" onclick="confirmarCambioEstado(<?= $pedido['id_pedido'] ?>, '<?= $estado ?>')" title="Cambiar a <?= $nombre ?>">
-                  <?= $icono ?>
-                </button>
-              <?php endforeach; ?>
-            <?php endif; ?>
+            <?= generarBotonesEstado($pedido, true) ?>
           </div>
         </div>
         
@@ -1281,6 +1282,13 @@ function mostrarInfoPedido(pedidoId) {
         return;
     }
     
+    // Agregar estado de carga al botón
+    const infoButtons = document.querySelectorAll(`[onclick="mostrarInfoPedido(${pedidoId})"]`);
+    infoButtons.forEach(btn => {
+        btn.classList.add('loading');
+        btn.disabled = true;
+    });
+    
     // Mostrar modal con loading
     contenido.innerHTML = '<div style="text-align: center; padding: 2rem;"><div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div><p>Cargando información del pedido...</p></div>';
     modal.style.display = 'flex';
@@ -1322,6 +1330,14 @@ function mostrarInfoPedido(pedidoId) {
         .catch(err => {
             console.error('Error en fetch:', err);
             contenido.innerHTML = `<div style="text-align: center; padding: 2rem; color: #dc3545;"><div style="font-size: 2rem; margin-bottom: 1rem;">❌</div><p>Error de conexión: ${err.message}</p></div>`;
+        })
+        .finally(() => {
+            // Remover estado de carga de los botones
+            const infoButtons = document.querySelectorAll(`[onclick="mostrarInfoPedido(${pedidoId})"]`);
+            infoButtons.forEach(btn => {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            });
         });
 }
 
@@ -1431,6 +1447,115 @@ function mostrarContenidoPedido(pedido) {
     contenido.innerHTML = html;
 }
 
+// Función mejorada para confirmar eliminación
+function confirmarBorradoPedido(pedidoId, nombrePedido) {
+    // Crear modal de confirmación personalizado
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 2000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: modalSlideIn 0.3s ease-out;
+        ">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h3 style="margin: 0 0 1rem 0; color: #dc3545; font-size: 1.3rem;">Confirmar Eliminación</h3>
+            <p style="margin: 0 0 1.5rem 0; color: #666; line-height: 1.5;">
+                ¿Estás seguro de que quieres eliminar <strong>${nombrePedido}</strong>?<br>
+                <small style="color: #999;">Esta acción no se puede deshacer.</small>
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button id="confirmarEliminar" style="
+                    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                    color: white;
+                    border: none;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(220, 53, 69, 0.3)'" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    🗑️ Eliminar
+                </button>
+                <button id="cancelarEliminar" style="
+                    background: #6c757d;
+                    color: white;
+                    border: none;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(108, 117, 125, 0.3)'" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Agregar animación CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(modal);
+    
+    // Event listeners
+    document.getElementById('confirmarEliminar').addEventListener('click', function() {
+        // Agregar estado de carga
+        this.innerHTML = '⏳ Eliminando...';
+        this.disabled = true;
+        
+        // Redirigir a la eliminación
+        window.location.href = `index.php?route=pedidos/delete&delete=${pedidoId}`;
+    });
+    
+    document.getElementById('cancelarEliminar').addEventListener('click', function() {
+        document.body.removeChild(modal);
+        document.head.removeChild(style);
+    });
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+            document.head.removeChild(style);
+        }
+    });
+}
+
 // Event listeners para el modal de información
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('modalInfoPedido');
@@ -1523,40 +1648,213 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 0.7rem !important;
     }
     
+    /* Contenedor de botones de acción */
+    .action-buttons-container {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    /* Célula de acciones en la tabla */
+    .action-cell {
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.5rem !important;
+    }
+    
+    /* Estilos base para botones de acción */
     .btn-action {
-        padding: 0.2rem 0.4rem !important;
-        font-size: 0.7rem !important;
-    }
-    
-    /* Estilo específico para el botón de información */
-    .btn-action.info {
-        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-        color: white !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.4rem 0.8rem;
         border: none;
-        border-radius: 4px;
-        padding: 0.3rem 0.6rem !important;
-        font-size: 0.75rem !important;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
         cursor: pointer;
-        transition: all 0.2s ease;
-        text-decoration: none !important;
-        display: inline-block;
-        margin-right: 0.3rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        min-width: 60px;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
     }
     
-    .btn-action.info:hover {
+    .btn-action:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn-action:hover:before {
+        left: 100%;
+    }
+    
+    .btn-icon {
+        font-size: 0.9rem;
+        line-height: 1;
+    }
+    
+    .btn-text {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    
+    /* Botón de información */
+    .btn-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        border: 1px solid #138496;
+    }
+    
+    .btn-info:hover {
         background: linear-gradient(135deg, #138496 0%, #0f6674 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+        color: white;
     }
     
-    .action-buttons {
-        margin-bottom: 0.5rem !important;
+    .btn-info:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(23, 162, 184, 0.2);
     }
     
-    .action-buttons .button {
-        padding: 0.3rem 0.6rem !important;
-        font-size: 0.7rem !important;
+    /* Botón de editar */
+    .btn-edit {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: 1px solid #20c997;
+    }
+    
+    .btn-edit:hover {
+        background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        color: white;
+    }
+    
+    .btn-edit:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(40, 167, 69, 0.2);
+    }
+    
+    /* Botón de eliminar */
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: 1px solid #c82333;
+    }
+    
+    .btn-delete:hover {
+        background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        color: white;
+    }
+    
+    .btn-delete:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2);
+    }
+    
+    /* Botón deshabilitado */
+    .btn-disabled {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        color: #adb5bd;
+        border: 1px solid #5a6268;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+    
+    .btn-disabled:hover {
+        transform: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    }
+    
+    /* Estilos específicos para móvil */
+    .mobile-card-actions .action-buttons-container {
+        gap: 0.3rem;
+        justify-content: flex-end;
+    }
+    
+    .mobile-card-actions .btn-action {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+        min-width: 50px;
+    }
+    
+    .mobile-card-actions .btn-text {
+        font-size: 0.65rem;
+    }
+    
+    .mobile-card-actions .btn-icon {
+        font-size: 0.8rem;
+    }
+    
+    /* Mejoras de accesibilidad */
+    .btn-action:focus {
+        outline: 2px solid rgba(23, 162, 184, 0.5);
+        outline-offset: 2px;
+    }
+    
+    .btn-info:focus {
+        outline-color: rgba(23, 162, 184, 0.5);
+    }
+    
+    .btn-edit:focus {
+        outline-color: rgba(40, 167, 69, 0.5);
+    }
+    
+    .btn-delete:focus {
+        outline-color: rgba(220, 53, 69, 0.5);
+    }
+    
+    /* Animación de carga para botones */
+    .btn-action.loading {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+    
+    .btn-action.loading .btn-icon {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Mejoras para pantallas muy pequeñas */
+    @media (max-width: 480px) {
+        .action-buttons-container {
+            gap: 0.2rem;
+        }
+        
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.65rem;
+            min-width: 45px;
+        }
+        
+        .btn-text {
+            display: none; /* Solo mostrar iconos en pantallas muy pequeñas */
+        }
+        
+        .btn-action {
+            min-width: 35px;
+            justify-content: center;
+        }
     }
     
     h1 {
