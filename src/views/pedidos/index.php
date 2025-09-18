@@ -463,7 +463,12 @@ require_once __DIR__ . '/../includes/header.php';
       </tr>
     <?php else: ?>
       <?php foreach ($pedidos as $pedido): ?>
-        <tr>
+        <?php
+          $fechaRaw = $pedido['fecha_creacion'] ?? null;
+          $fechaIso = $fechaRaw ? date('Y-m-d', strtotime($fechaRaw)) : '';
+          $fechaFormateada = $fechaRaw ? date('d/m/Y H:i', strtotime($fechaRaw)) : 'N/A';
+        ?>
+        <tr data-fecha="<?= htmlspecialchars($fechaIso) ?>">
           <td><?= htmlspecialchars($pedido['id_pedido']) ?></td>
           <td><?= htmlspecialchars($pedido['numero_mesa'] ?? 'N/A') ?></td>
           <td><?= htmlspecialchars($pedido['nombre_mozo_completo'] ?? 'N/A') ?></td>
@@ -528,7 +533,9 @@ require_once __DIR__ . '/../includes/header.php';
             }
             ?>
           </td>
-          <td><?= !empty($pedido['fecha_creacion']) ? date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) : 'N/A' ?></td>
+          <td data-role="fecha" data-fecha="<?= htmlspecialchars($fechaIso) ?>">
+            <?= htmlspecialchars($fechaFormateada) ?>
+          </td>
           <td class="action-cell">
             <div class="state-shortcuts">
               <?= generarBotonesEstado($pedido) ?>
@@ -556,7 +563,12 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
   <?php else: ?>
     <?php foreach ($pedidos as $pedido): ?>
-      <div class="mobile-card">
+      <?php
+        $fechaRaw = $pedido['fecha_creacion'] ?? null;
+        $fechaIso = $fechaRaw ? date('Y-m-d', strtotime($fechaRaw)) : '';
+        $fechaFormateada = $fechaRaw ? date('d/m/Y H:i', strtotime($fechaRaw)) : 'N/A';
+      ?>
+      <div class="mobile-card" data-fecha="<?= htmlspecialchars($fechaIso) ?>">
         <div class="mobile-card-header">
           <div class="mobile-card-number">
             Pedido #<?= htmlspecialchars($pedido['id_pedido']) ?>
@@ -656,9 +668,11 @@ require_once __DIR__ . '/../includes/header.php';
               ?>
             </div>
           </div>
-          <div class="mobile-card-item">
+          <div class="mobile-card-item" data-role="fecha">
             <div class="mobile-card-label">Fecha</div>
-            <div class="mobile-card-value"><?= !empty($pedido['fecha_creacion']) ? date('d/m/Y H:i', strtotime($pedido['fecha_creacion'])) : 'N/A' ?></div>
+            <div class="mobile-card-value" data-fecha="<?= htmlspecialchars($fechaIso) ?>">
+              <?= htmlspecialchars($fechaFormateada) ?>
+            </div>
           </div>
         </div>
       </div>
@@ -751,8 +765,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function getPedidoFecha(element) {
-        const fechaCell = element.querySelector('td:nth-child(6)') || element.querySelector('.mobile-card-item:last-child .mobile-card-value');
+        if (element.dataset && element.dataset.fecha) {
+            return element.dataset.fecha;
+        }
+
+        const fechaCell = element.querySelector('[data-fecha]');
         if (fechaCell) {
+            if (fechaCell.dataset && fechaCell.dataset.fecha) {
+                return fechaCell.dataset.fecha;
+            }
+
             const fechaText = fechaCell.textContent.trim();
             // Convertir formato dd/mm/yyyy a yyyy-mm-dd para comparación
             const parts = fechaText.split(' ');
