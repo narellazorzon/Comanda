@@ -780,9 +780,9 @@ $opcionesPropina = [
                 // Mostrar toast de éxito
                 showToast('✅ Pago procesado exitosamente. ¡Gracias por tu propina!');
                 
-                // Redirigir después de 2 segundos
+                // Redirigir después de 2 segundos manteniendo el QR
                 setTimeout(() => {
-                    window.location.href = 'index.php?route=cliente-confirmacion&pedido=' + pedidoId;
+                    window.location.href = 'index.php?route=cliente<?= isset($_SESSION['mesa_qr']) ? '&mesa=' . $_SESSION['mesa_qr'] : '' ?>';
                 }, 2000);
             } else {
                 throw new Error('Error al procesar el pago');

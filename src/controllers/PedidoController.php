@@ -91,7 +91,7 @@ class PedidoController {
             
             $id    = (int)($_POST['id_pedido'] ?? 0);
             $nuevo = $_POST['estado'] ?? '';
-            $map   = ['pendiente','en_preparacion','servido','cerrado'];
+            $map   = ['pendiente','en_preparacion','servido','cuenta','cerrado'];
             
             error_log('ID: ' . $id . ', Estado: ' . $nuevo);
             

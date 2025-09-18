@@ -24,20 +24,21 @@ function validarTransicionEstado($estado_actual, $nuevo_estado) {
     if ($estado_actual === 'cerrado') {
         return false;
     }
-    
+
     // Definir transiciones permitidas (hacia adelante y hacia atrás)
     $transiciones_permitidas = [
-        'pendiente' => ['en_preparacion', 'cerrado'], // pendiente → en_preparacion o cerrado
-        'en_preparacion' => ['pendiente', 'servido', 'cerrado'], // en_preparacion → pendiente, servido o cerrado
-        'servido' => ['pendiente', 'en_preparacion', 'cerrado'], // servido → pendiente, en_preparacion o cerrado
+        'pendiente' => ['en_preparacion', 'cuenta', 'cerrado'], // pendiente → en_preparacion, cuenta o cerrado
+        'en_preparacion' => ['pendiente', 'servido', 'cuenta', 'cerrado'], // en_preparacion → pendiente, servido, cuenta o cerrado
+        'servido' => ['pendiente', 'en_preparacion', 'cuenta', 'cerrado'], // servido → pendiente, en_preparacion, cuenta o cerrado
+        'cuenta' => ['pendiente', 'en_preparacion', 'servido', 'cerrado'], // cuenta → pendiente, en_preparacion, servido o cerrado
         'cerrado' => [] // cerrado no puede cambiar
     ];
-    
+
     // Si el estado actual no existe en las transiciones, no permitir
     if (!isset($transiciones_permitidas[$estado_actual])) {
         return false;
     }
-    
+
     // Verificar si la transición está permitida
     return in_array($nuevo_estado, $transiciones_permitidas[$estado_actual]);
 }
@@ -48,21 +49,23 @@ function obtenerNombreEstado($estado) {
         'pendiente' => 'Pendiente',
         'en_preparacion' => 'En Preparación',
         'servido' => 'Servido',
+        'cuenta' => 'Por Pagar',
         'cerrado' => 'Cerrado'
     ];
-    
+
     return $nombres[$estado] ?? $estado;
 }
 
 // Función para obtener transiciones permitidas desde un estado
 function obtenerTransicionesPermitidas($estado_actual) {
     $transiciones = [
-        'pendiente' => ['en_preparacion', 'cerrado'],
-        'en_preparacion' => ['pendiente', 'servido', 'cerrado'],
-        'servido' => ['pendiente', 'en_preparacion', 'cerrado'],
+        'pendiente' => ['en_preparacion', 'cuenta', 'cerrado'],
+        'en_preparacion' => ['pendiente', 'servido', 'cuenta', 'cerrado'],
+        'servido' => ['pendiente', 'en_preparacion', 'cuenta', 'cerrado'],
+        'cuenta' => ['pendiente', 'en_preparacion', 'servido', 'cerrado'],
         'cerrado' => []
     ];
-    
+
     return $transiciones[$estado_actual] ?? [];
 }
 
@@ -72,9 +75,10 @@ function obtenerIconoEstado($estado) {
         'pendiente' => '⏳',
         'en_preparacion' => '👨‍🍳',
         'servido' => '✅',
+        'cuenta' => '💳',
         'cerrado' => '🔒'
     ];
-    
+
     return $iconos[$estado] ?? '❓';
 }
 
@@ -423,6 +427,9 @@ require_once __DIR__ . '/../includes/header.php';
       <button class="status-filter-btn" data-status="servido" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         ✅ Servido
       </button>
+      <button class="status-filter-btn" data-status="cuenta" style="padding: 4px 8px; border: none; background: #e7f3ff; color: #0066cc; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
+        💳 Por Pagar
+      </button>
       <button class="status-filter-btn" data-status="cerrado" style="padding: 4px 8px; border: none; background: #e2e3e5; color: #383d41; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         🔒 Cerrado
       </button>
@@ -479,6 +486,11 @@ require_once __DIR__ . '/../includes/header.php';
                     $bg_color = '#d4edda';
                     $text_color = '#155724';
                     $icon = '✅';
+                    break;
+                case 'cuenta':
+                    $bg_color = '#e7f3ff';
+                    $text_color = '#0066cc';
+                    $icon = '💳';
                     break;
                 case 'cerrado':
                     $bg_color = '#e2e3e5';
@@ -595,6 +607,11 @@ require_once __DIR__ . '/../includes/header.php';
                   $bg_color = '#d4edda';
                   $text_color = '#155724';
                   $icono = '✅';
+                  break;
+                case 'cuenta':
+                  $bg_color = '#e7f3ff';
+                  $text_color = '#0066cc';
+                  $icono = '💳';
                   break;
                 case 'cerrado':
                   $bg_color = '#e2e3e5';
@@ -723,6 +740,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 'en preparación': 'en_preparacion',
                 'en preparacion': 'en_preparacion', // Agregar sin tilde también
                 'servido': 'servido',
+                'por pagar': 'cuenta',
+                'cuenta': 'cuenta',
                 'cerrado': 'cerrado'
             };
             
@@ -930,20 +949,23 @@ function actualizarEstadoPedido(pedidoId, nuevoEstado) {
         'pendiente': 'Pendiente',
         'en_preparacion': 'En Preparación',
         'servido': 'Servido',
+        'cuenta': 'Por Pagar',
         'cerrado': 'Cerrado'
     };
-    
+
     const iconosEstados = {
         'pendiente': '⏳',
         'en_preparacion': '👨‍🍳',
         'servido': '✅',
+        'cuenta': '💳',
         'cerrado': '🔒'
     };
-    
+
     const coloresEstados = {
         'pendiente': { bg: '#fff3cd', text: '#856404' },
         'en_preparacion': { bg: '#cce5ff', text: '#004085' },
         'servido': { bg: '#d4edda', text: '#155724' },
+        'cuenta': { bg: '#e7f3ff', text: '#0066cc' },
         'cerrado': { bg: '#e2e3e5', text: '#383d41' }
     };
     
@@ -1045,12 +1067,13 @@ function actualizarEstadoPedido(pedidoId, nuevoEstado) {
 // Función auxiliar para obtener transiciones permitidas (duplicada del PHP)
 function obtenerTransicionesPermitidas(estado_actual) {
     const transiciones = {
-        'pendiente': ['en_preparacion', 'cerrado'],
-        'en_preparacion': ['pendiente', 'servido', 'cerrado'],
-        'servido': ['pendiente', 'en_preparacion', 'cerrado'],
+        'pendiente': ['en_preparacion', 'cuenta', 'cerrado'],
+        'en_preparacion': ['pendiente', 'servido', 'cuenta', 'cerrado'],
+        'servido': ['pendiente', 'en_preparacion', 'cuenta', 'cerrado'],
+        'cuenta' => ['pendiente', 'en_preparacion', 'servido', 'cerrado'],
         'cerrado': []
     };
-    
+
     return transiciones[estado_actual] || [];
 }
 
@@ -1066,7 +1089,8 @@ function confirmarCambioEstado(idPedido, nuevoEstado) {
     const nombresEstados = {
         'pendiente': 'Pendiente',
         'en_preparacion': 'En Preparación',
-         'servido': 'Servido',
+        'servido': 'Servido',
+        'cuenta': 'Por Pagar',
         'cerrado': 'Cerrado'
     };
     
@@ -1899,6 +1923,16 @@ document.addEventListener('DOMContentLoaded', function() {
 .state-btn.servido:hover {
   background-color: #155724;
   color: #d4edda;
+}
+
+.state-btn.cuenta {
+  background-color: #e7f3ff;
+  color: #0066cc;
+}
+
+.state-btn.cuenta:hover {
+  background-color: #0066cc;
+  color: #e7f3ff;
 }
 
 /* Estilos para botones de estado */
