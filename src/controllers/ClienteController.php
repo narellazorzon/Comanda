@@ -173,7 +173,7 @@ class ClienteController {
             }
             
             $modoConsumo = $data['modo_consumo'] ?? 'stay';
-            $idMesa = $data['id_mesa'] ?? null;
+            $mesaInput = $data['id_mesa'] ?? ($data['numero_mesa'] ?? null);
             $nombreCliente = $data['cliente_nombre'] ?? '';
             $emailCliente = $data['cliente_email'] ?? '';
             $formaPago = $data['forma_pago'] ?? '';
@@ -192,18 +192,54 @@ class ClienteController {
                 throw new Exception('El email del cliente es obligatorio');
             }
             
-            // Buscar mozo si hay mesa asignada
             $idMozo = null;
-            if ($idMesa) {
-                $mesa = Mesa::find($idMesa);
-                if ($mesa) {
-                    $idMozo = $mesa['id_mozo'];
+            $mesaId = null;
+            $mesaSeleccionada = null;
+
+            if ($modoConsumo === 'stay') {
+                if (!$mesaInput) {
+                    throw new Exception('Debe seleccionar una mesa para consumir en el local');
+                }
+
+                if (!is_numeric($mesaInput)) {
+                    throw new Exception('La mesa seleccionada no es válida');
+                }
+
+                $mesaInput = (int) $mesaInput;
+
+                if ($mesaInput <= 0) {
+                    throw new Exception('La mesa seleccionada no es válida');
+                }
+
+                // Intentar buscar primero por ID y luego por número
+                $mesaSeleccionada = Mesa::find($mesaInput);
+                if (!$mesaSeleccionada) {
+                    $mesaSeleccionada = Mesa::findByNumero($mesaInput);
+                }
+
+                if (!$mesaSeleccionada) {
+                    throw new Exception('La mesa seleccionada no existe o no está disponible');
+                }
+
+                $mesaId = (int) ($mesaSeleccionada['id_mesa'] ?? $mesaInput);
+                $idMozo = $mesaSeleccionada['id_mozo'] ?? null;
+
+                // Mantener la mesa en sesión para la experiencia del cliente (volver al menú correcto)
+                if (!empty($mesaSeleccionada['numero'])) {
+                    $_SESSION['mesa_qr'] = $mesaSeleccionada['numero'];
+                } else {
+                    $_SESSION['mesa_qr'] = $mesaId;
+                }
+            } else {
+                $mesaId = null;
+                if (isset($_SESSION['mesa_qr'])) {
+                    unset($_SESSION['mesa_qr']);
                 }
             }
-            
+
             // Crear el pedido
             $pedidoData = [
-                'id_mesa' => $idMesa,
+                'id_mesa' => $mesaId,
                 'modo_consumo' => $modoConsumo,
                 'id_mozo' => $idMozo,
                 'cliente_nombre' => $nombreCliente,

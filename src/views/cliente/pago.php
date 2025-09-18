@@ -769,27 +769,36 @@ $opcionesPropina = [
             data.append('propina_monto', selectedTipAmount);
             data.append('mozo_id', mozoId);
             data.append('metodo_pago', selectedPaymentMethod);
-            
+
             // Enviar solicitud
             const response = await fetch('index.php?route=cliente/procesar-pago', {
                 method: 'POST',
                 body: data
             });
-            
-            if (response.ok) {
-                // Mostrar toast de éxito
-                showToast('✅ Pago procesado exitosamente. ¡Gracias por tu propina!');
-                
-                // Redirigir después de 2 segundos manteniendo el QR
-                setTimeout(() => {
-                    window.location.href = 'index.php?route=cliente<?= isset($_SESSION['mesa_qr']) ? '&mesa=' . $_SESSION['mesa_qr'] : '' ?>';
-                }, 2000);
-            } else {
-                throw new Error('Error al procesar el pago');
+
+            let result = null;
+            try {
+                result = await response.json();
+            } catch (parseError) {
+                console.error('No se pudo parsear la respuesta del servidor', parseError);
             }
+
+            if (!response.ok || !result || !result.success) {
+                const errorMessage = (result && result.message) ? result.message : 'Error al procesar el pago';
+                throw new Error(errorMessage);
+            }
+
+            // Mostrar toast de éxito
+            showToast('✅ Pago procesado exitosamente. ¡Gracias por tu propina!');
+
+            // Redirigir al resumen del pedido para impresión
+            setTimeout(() => {
+                const pedidoIdConfirmado = result.pedido_id || pedidoId;
+                window.location.href = `index.php?route=cliente-confirmacion&pedido=${encodeURIComponent(pedidoIdConfirmado)}`;
+            }, 1500);
         } catch (error) {
             console.error('Error:', error);
-            alert('Hubo un error al procesar el pago. Por favor intenta nuevamente.');
+            alert(error.message || 'Hubo un error al procesar el pago. Por favor intenta nuevamente.');
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Confirmar Pago';
         }
