@@ -111,6 +111,14 @@ class PedidoController
     {
         header('Content-Type: application/json; charset=utf-8');
 
+        // Para obtener info del mozo de una mesa, permitir acceso sin autenticación
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (isset($input['accion']) && $input['accion'] === 'obtener_mozo_mesa') {
+            self::obtenerMozoMesa($input['numero_mesa'] ?? 0);
+            return;
+        }
+
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
@@ -166,5 +174,47 @@ class PedidoController
             ],
         ]);
         exit;
+    }
+
+    /**
+     * Obtiene información del mozo asignado a una mesa
+     */
+    private static function obtenerMozoMesa(int $numeroMesa): void
+    {
+        try {
+            // Obtener la mesa por número
+            $mesa = \App\Models\Mesa::findByNumero($numeroMesa);
+
+            if (!$mesa) {
+                echo json_encode(['success' => false, 'message' => 'Mesa no encontrada']);
+                exit;
+            }
+
+            // Si no hay mozo asignado
+            if (!$mesa['id_mozo']) {
+                echo json_encode(['success' => true, 'mozo' => null]);
+                exit;
+            }
+
+            // Obtener información del mozo
+            $mozo = \App\Models\Usuario::find($mesa['id_mozo']);
+
+            if ($mozo) {
+                echo json_encode([
+                    'success' => true,
+                    'mozo' => [
+                        'id_usuario' => $mozo['id_usuario'],
+                        'nombre' => $mozo['nombre'],
+                        'apellido' => $mozo['apellido']
+                    ]
+                ]);
+            } else {
+                echo json_encode(['success' => true, 'mozo' => null]);
+            }
+        } catch (\Exception $e) {
+            error_log("Error obtaining waiter info: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
     }
 }

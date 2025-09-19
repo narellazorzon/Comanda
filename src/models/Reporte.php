@@ -117,11 +117,11 @@ class Reporte {
      */
     public static function rendimientoMozos(string $periodo = 'mes'): array {
         $db = (new Database)->getConnection();
-        
+
         $fecha_filtro = self::getFiltroFecha($periodo);
-        
+
         $stmt = $db->prepare("
-            SELECT 
+            SELECT
                 u.nombre,
                 u.apellido,
                 COUNT(DISTINCT p.id_pedido) as total_pedidos,
@@ -135,8 +135,43 @@ class Reporte {
             GROUP BY u.id_usuario, u.nombre, u.apellido
             ORDER BY ingresos_generados DESC
         ");
-        
+
         $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene las propinas por mozo en un período específico
+     */
+    public static function propinasPorMozo(string $mes = null): array {
+        $db = (new Database)->getConnection();
+
+        $sql = "
+            SELECT
+                u.id_usuario,
+                u.nombre,
+                u.apellido,
+                SUM(pr.monto) as monto,
+                COUNT(DISTINCT pr.id_pedido) as pedidos,
+                AVG(pr.monto) as promedio
+            FROM propinas pr
+            JOIN usuarios u ON pr.id_mozo = u.id_usuario
+            JOIN pedidos p ON pr.id_pedido = p.id_pedido
+            WHERE pr.id_mozo IS NOT NULL
+        ";
+
+        $params = [];
+
+        if ($mes) {
+            $sql .= " AND DATE_FORMAT(pr.fecha_hora, '%Y-%m') = ?";
+            $params[] = $mes;
+        }
+
+        $sql .= " GROUP BY u.id_usuario, u.nombre, u.apellido ORDER BY monto DESC";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     

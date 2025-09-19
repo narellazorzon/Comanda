@@ -775,7 +775,7 @@ $opcionesPropina = [
                 
                 // Redirigir después de 2 segundos
                 setTimeout(() => {
-                    window.location.href = '<?= url('cliente/confirmacion') ?>?pedido=' + pedidoId;
+                    window.location.href = '<?= url('pago-confirmacion') ?>?pedido=' + pedidoId;
                 }, 2000);
             } else {
                 throw new Error('Error al procesar el pago');
