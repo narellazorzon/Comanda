@@ -985,11 +985,6 @@ footer {
     color: white !important;
   }
   
-  .status-filter-btn[data-status="reservada"]:hover {
-    background-color: #ffc107 !important;
-    color: #212529 !important;
-  }
-  
   /* Estilos específicos para la tabla de mesas en móvil */
   .table th,
   .table td {
@@ -1247,16 +1242,6 @@ footer {
 .state-btn.ocupada:hover {
   background-color: #721c24;
   color: #f8d7da;
-}
-
-.state-btn.reservada {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.state-btn.reservada:hover {
-  background-color: #856404;
-  color: #fff3cd;
 }
 
 /* Estilos para atajos de estado en móvil */

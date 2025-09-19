@@ -200,13 +200,11 @@ function confirmarCambioEstadoMesa(idMesa, nuevoEstado, onConfirm) {
     const estadoLabels = {
         'libre': 'Libre',
         'ocupada': 'Ocupada', 
-        'reservada': 'Reservada'
     };
     
     const estadoIconos = {
         'libre': '🟢',
         'ocupada': '🔴',
-        'reservada': '🟡'
     };
     
     ModalConfirmacion.show({

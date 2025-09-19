@@ -115,10 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="radio" name="estado" value="ocupada" <?= ($mesa['estado'] ?? $_POST['estado'] ?? 'libre') == 'ocupada' ? 'checked' : '' ?> style="margin: 0;">
             <span>🔴 Ocupada</span>
         </label>
-        <label class="estado-option" style="display: flex; align-items: center; gap: 0.5rem; padding: 8px 12px; border-radius: 12px; background: #fff3cd; color: #856404; cursor: pointer; font-weight: bold; font-size: 0.8em; transition: all 0.3s ease; border: 2px solid transparent;">
-            <input type="radio" name="estado" value="reservada" <?= ($mesa['estado'] ?? $_POST['estado'] ?? 'libre') == 'reservada' ? 'checked' : '' ?> style="margin: 0;">
-            <span>🟡 Reservada</span>
-        </label>
     </div>
 
     <label>Mozo Asignado (opcional):</label>

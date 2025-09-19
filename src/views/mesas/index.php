@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
     $id_mesa = (int) ($_POST['id_mesa'] ?? 0);
     $nuevo_estado = trim($_POST['nuevo_estado'] ?? '');
     
-    if ($id_mesa > 0 && in_array($nuevo_estado, ['libre', 'ocupada', 'reservada'])) {
+    if ($id_mesa > 0 && in_array($nuevo_estado, ['libre', 'ocupada'])) {
         // Validación especial: no permitir cambiar a "libre" si hay pedidos activos
         if ($nuevo_estado === 'libre' && Mesa::tienePedidosActivos($id_mesa)) {
             header('Content-Type: application/json');
@@ -128,7 +128,6 @@ $mesasInactivas = Mesa::allInactive();
         <button class="status-filter-btn active" data-status="all">Todas</button>
         <button class="status-filter-btn" data-status="libre">Libre</button>
         <button class="status-filter-btn" data-status="ocupada">Ocupada</button>
-        <button class="status-filter-btn" data-status="reservada">Reservada</button>
     </div>
   </div>
   
@@ -174,9 +173,6 @@ $mesasInactivas = Mesa::allInactive();
           if ($estado === 'libre') {
               $bg_color = '#d4edda';
               $text_color = '#155724';
-          } elseif ($estado === 'reservada') {
-              $bg_color = '#fff3cd';
-              $text_color = '#856404';
           } else { // ocupada
               $bg_color = '#f8d7da';
               $text_color = '#721c24';
@@ -216,11 +212,6 @@ $mesasInactivas = Mesa::allInactive();
             <?php if ($m['estado'] !== 'ocupada'): ?>
               <button class="state-btn ocupada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'ocupada')" title="Marcar como Ocupada">
                 🔴
-              </button>
-            <?php endif; ?>
-            <?php if ($m['estado'] !== 'reservada'): ?>
-              <button class="state-btn reservada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'reservada')" title="Marcar como Reservada">
-                🟡
               </button>
             <?php endif; ?>
           </div>
@@ -336,9 +327,6 @@ $mesasInactivas = Mesa::allInactive();
             if ($estado === 'libre') {
                 $bg_color = '#d4edda';
                 $text_color = '#155724';
-            } elseif ($estado === 'reservada') {
-                $bg_color = '#fff3cd';
-                $text_color = '#856404';
             } else { // ocupada
                 $bg_color = '#f8d7da';
                 $text_color = '#721c24';
@@ -386,11 +374,6 @@ $mesasInactivas = Mesa::allInactive();
           <?php if ($m['estado'] !== 'ocupada'): ?>
             <button class="state-btn ocupada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'ocupada')" title="Marcar como Ocupada">
               🔴 Ocupada
-            </button>
-          <?php endif; ?>
-          <?php if ($m['estado'] !== 'reservada'): ?>
-            <button class="state-btn reservada" onclick="cambiarEstado(<?= $m['id_mesa'] ?>, 'reservada')" title="Marcar como Reservada">
-              🟡 Reservada
             </button>
           <?php endif; ?>
         </div>
@@ -1103,10 +1086,6 @@ document.addEventListener('DOMContentLoaded', function() {
     color: #721c24;
 }
 
-.status-filter-btn[data-status="reservada"] {
-    background: #fff3cd;
-    color: #856404;
-}
 
 
 

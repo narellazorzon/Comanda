@@ -20,7 +20,6 @@ $totalMesas = count($mesas);
 $statusClasses = [
     'libre' => 'status-badge status-active',
     'ocupada' => 'status-badge status-inactive',
-    'reservada' => 'status-badge status-warning',
 ];
 
 $takeawayPresets = [
