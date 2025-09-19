@@ -66,7 +66,7 @@ CREATE TABLE pedidos (
   id_mesa      INT UNSIGNED NULL,
   modo_consumo ENUM('stay','takeaway') NOT NULL,
   total        DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  estado       ENUM('pendiente','en_preparacion','pagado','cerrado') NOT NULL DEFAULT 'pendiente',
+  estado       ENUM('pendiente','en_preparacion','servido','cerrado') NOT NULL DEFAULT 'pendiente',
   fecha_hora   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   id_mozo      INT UNSIGNED NULL,
   forma_pago   ENUM('efectivo','tarjeta','transferencia') NULL,
@@ -128,23 +128,9 @@ CREATE TABLE propinas (
       ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- -------------------------------------------------
--- 9. Tabla pagos
--- -------------------------------------------------
-CREATE TABLE pagos (
-  id_pago         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  id_pedido       INT UNSIGNED NOT NULL,
-  monto           DECIMAL(10,2) NOT NULL,
-  fecha_hora      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  medio_pago      VARCHAR(50) NOT NULL,
-  estado_transaccion ENUM('pendiente','aprobado','rechazado') NOT NULL DEFAULT 'pendiente',
-  FOREIGN KEY (id_pedido) 
-    REFERENCES pedidos(id_pedido)
-      ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB;
 
 -- -------------------------------------------------
--- 10. Índices para optimización
+-- 9. Índices para optimización
 -- -------------------------------------------------
 CREATE INDEX idx_pedidos_estado ON pedidos(estado);
 CREATE INDEX idx_pedidos_fecha ON pedidos(fecha_hora);
@@ -158,7 +144,6 @@ CREATE INDEX idx_carta_categoria ON carta(categoria);
 CREATE INDEX idx_usuarios_rol ON usuarios(rol);
 CREATE INDEX idx_usuarios_estado ON usuarios(estado);
 CREATE INDEX idx_propinas_fecha ON propinas(fecha_hora);
-CREATE INDEX idx_pagos_estado ON pagos(estado_transaccion);
 CREATE INDEX idx_llamados_estado ON llamados_mesa(estado);
 CREATE INDEX idx_llamados_fecha ON llamados_mesa(hora_solicitud);
 
@@ -167,7 +152,7 @@ CREATE INDEX idx_llamados_fecha ON llamados_mesa(hora_solicitud);
 -- =====================================================
 
 -- -------------------------------------------------
--- 11. Usuarios de prueba (admin + mozos)
+-- 10. Usuarios de prueba (admin + mozos)
 -- -------------------------------------------------
 INSERT INTO usuarios (nombre, apellido, email, contrasenia, rol, estado) VALUES
 -- Administrador (password: admin123)
@@ -184,7 +169,7 @@ INSERT INTO usuarios (nombre, apellido, email, contrasenia, rol, estado) VALUES
 ('Luis', 'Fernández', 'luis.fernandez@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'mozo', 'inactivo');
 
 -- -------------------------------------------------
--- 12. Mesas de prueba CON MOZOS ASIGNADOS
+-- 11. Mesas de prueba CON MOZOS ASIGNADOS
 -- -------------------------------------------------
 INSERT INTO mesas (numero, ubicacion, estado, id_mozo) VALUES
 -- Terraza (Juan Pérez - ID 2)
@@ -215,7 +200,7 @@ INSERT INTO mesas (numero, ubicacion, estado, id_mozo) VALUES
 (15, 'Patio - Auxiliar', 'libre', NULL);
 
 -- -------------------------------------------------
--- 13. Carta de prueba completa
+-- 12. Carta de prueba completa
 -- -------------------------------------------------
 INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad) VALUES
 -- ENTRADAS
@@ -261,16 +246,16 @@ INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad) VALUE
 ('Cheesecake', 'Tarta de queso con frutos rojos', 8.00, 'Postres', 1);
 
 -- -------------------------------------------------
--- 14. Pedidos de prueba
+-- 13. Pedidos de prueba
 -- -------------------------------------------------
 INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago, observaciones, fecha_hora) VALUES
 -- Pedidos activos
 (2, 'stay', 45.50, 'en_preparacion', 2, NULL, 'Cliente pidió el bife bien cocido', '2024-01-09 19:30:00'),
 (5, 'stay', 32.00, 'pendiente', 3, NULL, NULL, '2024-01-09 20:15:00'),
-(10, 'stay', 78.50, 'pagado', 5, 'tarjeta', 'Mesa celebrando cumpleaños', '2024-01-09 18:45:00'),
+(10, 'stay', 78.50, 'servido', 5, 'tarjeta', 'Mesa celebrando cumpleaños', '2024-01-09 18:45:00'),
 
 -- Pedidos takeaway
-(NULL, 'takeaway', 23.50, 'pagado', 4, 'efectivo', 'Pedido para retirar en 15 minutos', '2024-01-09 20:00:00'),
+(NULL, 'takeaway', 23.50, 'servido', 4, 'efectivo', 'Pedido para retirar en 15 minutos', '2024-01-09 20:00:00'),
 (NULL, 'takeaway', 12.00, 'cerrado', 2, 'transferencia', NULL, '2024-01-09 19:00:00'),
 
 -- Pedidos históricos
@@ -279,7 +264,7 @@ INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago, 
 (7, 'stay', 34.50, 'cerrado', 4, NULL, '2024-01-07 19:45:00');
 
 -- -------------------------------------------------
--- 15. Detalles de pedidos de prueba
+-- 14. Detalles de pedidos de prueba
 -- -------------------------------------------------
 INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario) VALUES
 -- Pedido 1 (Mesa 2): Bife + Bebidas
@@ -319,7 +304,7 @@ INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario) VALUE
 (8, 26, 1, 8.50);  -- Tiramisú
 
 -- -------------------------------------------------
--- 16. Llamados de mesa de prueba
+-- 15. Llamados de mesa de prueba
 -- -------------------------------------------------
 INSERT INTO llamados_mesa (id_mesa, estado, hora_solicitud) VALUES
 -- Llamados pendientes
@@ -332,21 +317,13 @@ INSERT INTO llamados_mesa (id_mesa, estado, hora_solicitud) VALUES
 (4, 'completado', '2024-01-09 19:30:00');
 
 -- -------------------------------------------------
--- 17. Propinas de prueba
+-- 16. Propinas de prueba
 -- -------------------------------------------------
 INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES
 (6, 2, 6.70, '2024-01-08 21:45:00'),
 (7, 3, 8.95, '2024-01-08 20:30:00'),
 (8, 4, 3.45, '2024-01-07 20:00:00');
 
--- -------------------------------------------------
--- 18. Pagos de prueba
--- -------------------------------------------------
-INSERT INTO pagos (id_pedido, monto, medio_pago, estado_transaccion, fecha_hora) VALUES
-(5, 12.00, 'Efectivo', 'aprobado', '2024-01-09 19:05:00'),
-(6, 67.00, 'Tarjeta de Crédito', 'aprobado', '2024-01-08 21:35:00'),
-(7, 89.50, 'Tarjeta de Débito', 'aprobado', '2024-01-08 20:20:00'),
-(8, 34.50, 'Efectivo', 'aprobado', '2024-01-07 19:50:00');
 
 -- =====================================================
 -- TRIGGERS BÁSICOS PARA CONSISTENCIA - SISTEMA COMANDA
@@ -480,35 +457,6 @@ CREATE TABLE inventario (
     INDEX idx_inventario_stock_bajo (cantidad_disponible)
 ) ENGINE=InnoDB;
 
--- Tabla de movimientos de inventario (historial)
-CREATE TABLE inventario_movimientos (
-    id_movimiento INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    id_item INT UNSIGNED NOT NULL,
-    tipo_movimiento ENUM('entrada','salida','ajuste','venta') NOT NULL,
-    cantidad INT NOT NULL,
-    cantidad_anterior INT NOT NULL,
-    cantidad_nueva INT NOT NULL,
-    motivo VARCHAR(200) NULL,
-    id_pedido INT UNSIGNED NULL,
-    id_usuario INT UNSIGNED NULL,
-    fecha_movimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    CONSTRAINT fk_movimiento_item 
-        FOREIGN KEY (id_item) REFERENCES carta(id_item) 
-        ON UPDATE CASCADE ON DELETE CASCADE,
-        
-    CONSTRAINT fk_movimiento_pedido 
-        FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido) 
-        ON UPDATE CASCADE ON DELETE SET NULL,
-        
-    CONSTRAINT fk_movimiento_usuario 
-        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) 
-        ON UPDATE CASCADE ON DELETE SET NULL,
-        
-    INDEX idx_movimiento_item (id_item),
-    INDEX idx_movimiento_fecha (fecha_movimiento),
-    INDEX idx_movimiento_tipo (tipo_movimiento)
-) ENGINE=InnoDB;
 
 -- TRIGGER: Descontar stock automáticamente en ventas
 DELIMITER $$
@@ -539,50 +487,11 @@ BEGIN
             END
         WHERE id_item = NEW.id_item;
         
-        -- Registrar movimiento
-        INSERT INTO inventario_movimientos (
-            id_item, tipo_movimiento, cantidad, 
-            cantidad_anterior, cantidad_nueva, 
-            motivo, id_pedido
-        ) VALUES (
-            NEW.id_item, 'venta', NEW.cantidad,
-            stock_actual, stock_nuevo,
-            'Venta automática', 
-            NEW.id_pedido
-        );
     END IF;
 END$$
 DELIMITER ;
 
--- Vista: Items con stock bajo
-CREATE VIEW vista_stock_bajo AS
-SELECT 
-    c.nombre as item_nombre,
-    c.categoria,
-    i.cantidad_disponible,
-    i.cantidad_minima,
-    i.unidad_medida,
-    i.estado,
-    i.fecha_ultima_actualizacion
-FROM inventario i
-JOIN carta c ON i.id_item = c.id_item
-WHERE i.cantidad_disponible <= i.cantidad_minima
-   OR i.estado = 'agotado'
-ORDER BY i.cantidad_disponible ASC;
 
--- Vista: Resumen de inventario por categoría
-CREATE VIEW vista_inventario_categoria AS
-SELECT 
-    c.categoria,
-    COUNT(*) as total_items,
-    SUM(CASE WHEN i.estado = 'disponible' THEN 1 ELSE 0 END) as items_disponibles,
-    SUM(CASE WHEN i.estado = 'agotado' THEN 1 ELSE 0 END) as items_agotados,
-    SUM(CASE WHEN i.cantidad_disponible <= i.cantidad_minima THEN 1 ELSE 0 END) as items_stock_bajo,
-    AVG(i.cantidad_disponible) as promedio_stock
-FROM inventario i
-JOIN carta c ON i.id_item = c.id_item
-GROUP BY c.categoria
-ORDER BY c.categoria;
 
 -- Insertar inventario inicial para todos los items de carta existentes
 INSERT INTO inventario (id_item, cantidad_disponible, cantidad_minima, unidad_medida, costo_unitario, estado)
@@ -640,24 +549,6 @@ BEGIN
         END
     WHERE id_item = p_id_item;
     
-    -- Registrar movimiento
-    INSERT INTO inventario_movimientos (
-        id_item, tipo_movimiento, cantidad,
-        cantidad_anterior, cantidad_nueva,
-        motivo, id_usuario
-    ) VALUES (
-        p_id_item, 
-        CASE 
-            WHEN p_nueva_cantidad > cantidad_anterior THEN 'entrada'
-            WHEN p_nueva_cantidad < cantidad_anterior THEN 'salida'
-            ELSE 'ajuste'
-        END,
-        ABS(p_nueva_cantidad - cantidad_anterior),
-        cantidad_anterior, 
-        p_nueva_cantidad,
-        p_motivo, 
-        p_id_usuario
-    );
 END$$
 DELIMITER ;
 
@@ -680,7 +571,6 @@ ESQUEMA COMPLETO CON MEJORAS:
 
 3. SISTEMA DE INVENTARIOS:
    ✅ Control de stock automático
-   ✅ Historial de movimientos
    ✅ Alertas de stock bajo
    ✅ Vistas y procedimientos
 

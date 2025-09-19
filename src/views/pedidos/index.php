@@ -523,14 +523,17 @@ require_once __DIR__ . '/../includes/header.php';
               ℹ️
             </a>
             <?php if ($rol === 'administrador'): ?>
+              <?php if ($pedido['estado'] !== 'cerrado'): ?>
               <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
                 ✏️
               </a>
-              <?php if ($pedido['estado'] !== 'cerrado'): ?>
               <a href="#" class="btn-action delete" title="Eliminar pedido" onclick="confirmarBorradoPedido(<?= $pedido['id_pedido'] ?>, 'Pedido #<?= $pedido['id_pedido'] ?>')">
                 ❌
               </a>
               <?php else: ?>
+                <span class="btn-action disabled" title="No se puede editar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
+                  ✏️
+                </span>
                 <span class="btn-action disabled" title="No se puede eliminar un pedido cerrado" style="opacity: 0.5; cursor: not-allowed;">
                   🔒
                 </span>

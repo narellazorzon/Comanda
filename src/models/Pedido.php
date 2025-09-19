@@ -155,9 +155,28 @@ class Pedido {
 
     /**
      * Actualiza el estado de un pedido.
+     * Si es un pedido "take away" y se cambia a "servido", automáticamente se cierra.
      */
     public static function updateEstado(int $id, string $nuevoEstado): bool {
         $db = (new Database)->getConnection();
+        
+        // Si el nuevo estado es "servido", verificar si es un pedido "take away"
+        if ($nuevoEstado === 'servido') {
+            // Obtener información del pedido para verificar el modo de consumo
+            $pedidoStmt = $db->prepare("
+                SELECT modo_consumo 
+                FROM pedidos 
+                WHERE id_pedido = ?
+            ");
+            $pedidoStmt->execute([$id]);
+            $pedido = $pedidoStmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Si es "takeaway", cambiar automáticamente a "cerrado"
+            if ($pedido && $pedido['modo_consumo'] === 'takeaway') {
+                $nuevoEstado = 'cerrado';
+            }
+        }
+        
         $stmt = $db->prepare("
             UPDATE pedidos 
             SET estado = ? 

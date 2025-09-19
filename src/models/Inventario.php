@@ -57,20 +57,24 @@ class Inventario
     public static function getStockBajo(): array 
     {
         $db = (new Database)->getConnection();
-        $stmt = $db->query("SELECT * FROM vista_stock_bajo");
+        $stmt = $db->query("
+            SELECT 
+                c.nombre as item_nombre,
+                c.categoria,
+                i.cantidad_disponible,
+                i.cantidad_minima,
+                i.unidad_medida,
+                i.estado,
+                i.fecha_ultima_actualizacion
+            FROM inventario i
+            JOIN carta c ON i.id_item = c.id_item
+            WHERE i.cantidad_disponible <= i.cantidad_minima
+               OR i.estado = 'agotado'
+            ORDER BY i.cantidad_disponible ASC
+        ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    /**
-     * Obtiene resumen por categorías
-     * @return array Estadísticas por categoría
-     */
-    public static function getResumenCategorias(): array 
-    {
-        $db = (new Database)->getConnection();
-        $stmt = $db->query("SELECT * FROM vista_inventario_categoria");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
     
     /**
      * Actualiza stock de un item
@@ -176,44 +180,6 @@ class Inventario
         ]);
     }
     
-    /**
-     * Obtiene movimientos de inventario recientes
-     * @param int $limit Número de movimientos a mostrar
-     * @param int $id_item Filtrar por item específico (opcional)
-     * @return array Lista de movimientos
-     */
-    public static function getMovimientosRecientes(int $limit = 50, int $id_item = null): array 
-    {
-        $db = (new Database)->getConnection();
-        
-        $sql = "
-            SELECT 
-                m.*,
-                c.nombre as item_nombre,
-                c.categoria,
-                u.nombre as usuario_nombre,
-                u.apellido as usuario_apellido
-            FROM inventario_movimientos m
-            JOIN carta c ON m.id_item = c.id_item
-            LEFT JOIN usuarios u ON m.id_usuario = u.id_usuario
-        ";
-        
-        if ($id_item) {
-            $sql .= " WHERE m.id_item = ?";
-        }
-        
-        $sql .= " ORDER BY m.fecha_movimiento DESC LIMIT ?";
-        
-        $stmt = $db->prepare($sql);
-        
-        if ($id_item) {
-            $stmt->execute([$id_item, $limit]);
-        } else {
-            $stmt->execute([$limit]);
-        }
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
     
     /**
      * Verifica disponibilidad de un item para pedidos

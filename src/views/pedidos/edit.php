@@ -60,15 +60,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($modo_consumo === 'stay' && $id_mesa <= 0) {
         $error = 'Debe seleccionar una mesa para pedidos en el local';
-    } elseif (empty($items_pedido)) {
-        $error = 'Debe agregar al menos un ítem al pedido';
     } else {
+        // Filtrar items vacíos (sin id_item seleccionado)
+        $items_validos = array_filter($items_pedido, function($item) {
+            return !empty($item['id_item']) && $item['id_item'] !== '';
+        });
+        
+        if (empty($items_validos)) {
+            $error = 'Debe seleccionar al menos un ítem válido';
+        } else {
         try {
             $data = [
                 'modo_consumo' => $modo_consumo,
                 'forma_pago' => $forma_pago,
                 'observaciones' => $observaciones,
-                'items' => $items_pedido
+                'items' => $items_validos
             ];
             
             // Solo incluir mesa si es modo 'stay'
@@ -86,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (Exception $e) {
             $error = 'Error: ' . $e->getMessage();
+        }
         }
     }
 }
@@ -520,7 +527,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <div class="form-group">
-        <label>Modo de Consumo *</label>
+        <label for="modo_consumo">Modo de Consumo *</label>
         <div class="modo-consumo-container">
           <div class="modo-consumo-btn <?= $pedido['modo_consumo'] === 'stay' ? 'selected' : '' ?>" 
                onclick="selectModoConsumo('stay')">

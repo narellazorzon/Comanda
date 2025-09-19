@@ -103,10 +103,10 @@ Core tables (partial list relevant to code):
 - `pedidos`: References `mesas` and `usuarios`, tracks `estado`, `modo_consumo`, totals, customer data.
 - `detalle_pedido`: Individual line items (`cantidad`, `precio_unitario`, `detalle` note). Triggers deduct inventory in `schema.sql`.
 - `carta`: Menu catalogue with `categoria`, availability flag, optional image URL and discount.
-- `inventario` + `inventario_movimientos`: Stock tracking with stored procedures for adjustments.
+- `inventario`: Stock tracking with stored procedures for adjustments.
 - `llamados_mesa`: Waiter calls with state machine and FK back to `mesas`.
 - `propinas`: Optional tip entries linked to `pedidos` and `usuarios`.
-- Reporting views/triggers: e.g. `vista_stock_bajo`, `vista_inventario_categoria`, triggers for automatic updates.
+- Reporting views/triggers: triggers for automatic updates.
 
 Refer to `database/schema.sql` for the definitive definition, plus `simple_test_data.sql` for seeds.
 
