@@ -351,6 +351,107 @@ $takeawayPresets = [
 </div>
 
 <style>
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.management-header {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.tabs-container,
+.table-responsive,
+.mobile-cards {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.table tbody tr {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+.table tbody tr:nth-child(6) { animation-delay: 0.6s; }
+.table tbody tr:nth-child(7) { animation-delay: 0.7s; }
+.table tbody tr:nth-child(8) { animation-delay: 0.8s; }
+.table tbody tr:nth-child(9) { animation-delay: 0.9s; }
+.table tbody tr:nth-child(10) { animation-delay: 1.0s; }
+
+.mobile-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.mobile-card:nth-child(1) { animation-delay: 0.1s; }
+.mobile-card:nth-child(2) { animation-delay: 0.2s; }
+.mobile-card:nth-child(3) { animation-delay: 0.3s; }
+.mobile-card:nth-child(4) { animation-delay: 0.4s; }
+.mobile-card:nth-child(5) { animation-delay: 0.5s; }
+.mobile-card:nth-child(6) { animation-delay: 0.6s; }
+.mobile-card:nth-child(7) { animation-delay: 0.7s; }
+.mobile-card:nth-child(8) { animation-delay: 0.8s; }
+.mobile-card:nth-child(9) { animation-delay: 0.9s; }
+.mobile-card:nth-child(10) { animation-delay: 1.0s; }
+
+/* Efectos de hover mejorados */
+.table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.mobile-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.filters-container {
+  animation: slideInUp 0.7s ease-out;
+}
+
 /* Header de gestión */
 .management-header {
   background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
@@ -398,8 +499,9 @@ $takeawayPresets = [
 
 .header-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .header-btn.secondary {

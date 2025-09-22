@@ -88,13 +88,13 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
   <div style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap;">
     <label style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">📊 Estado:</label>
     <div class="status-filters" style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
-      <button class="status-filter-btn active" data-status="all" style="padding: 4px 8px; border: none; background: var(--secondary); color: white; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
+      <button class="status-filter-btn active" data-status="all" style="padding: 4px 8px; border: none; background: var(--secondary); color: white; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
         Todas
       </button>
-      <button class="status-filter-btn" data-status="activo" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
+      <button class="status-filter-btn" data-status="activo" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
         ✅ Activo
       </button>
-      <button class="status-filter-btn" data-status="inactivo" style="padding: 4px 8px; border: none; background: #f8d7da; color: #721c24; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
+      <button class="status-filter-btn" data-status="inactivo" style="padding: 4px 8px; border: none; background: #f8d7da; color: #721c24; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
         ❌ Inactivo
       </button>
     </div>
@@ -456,10 +456,111 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.management-header {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.table-responsive,
+.mobile-cards {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.table tbody tr {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+.table tbody tr:nth-child(6) { animation-delay: 0.6s; }
+.table tbody tr:nth-child(7) { animation-delay: 0.7s; }
+.table tbody tr:nth-child(8) { animation-delay: 0.8s; }
+.table tbody tr:nth-child(9) { animation-delay: 0.9s; }
+.table tbody tr:nth-child(10) { animation-delay: 1.0s; }
+
+.mobile-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.mobile-card:nth-child(1) { animation-delay: 0.1s; }
+.mobile-card:nth-child(2) { animation-delay: 0.2s; }
+.mobile-card:nth-child(3) { animation-delay: 0.3s; }
+.mobile-card:nth-child(4) { animation-delay: 0.4s; }
+.mobile-card:nth-child(5) { animation-delay: 0.5s; }
+.mobile-card:nth-child(6) { animation-delay: 0.6s; }
+.mobile-card:nth-child(7) { animation-delay: 0.7s; }
+.mobile-card:nth-child(8) { animation-delay: 0.8s; }
+.mobile-card:nth-child(9) { animation-delay: 0.9s; }
+.mobile-card:nth-child(10) { animation-delay: 1.0s; }
+
+/* Efectos de hover mejorados */
+.table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.mobile-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.filters-container {
+  animation: slideInUp 0.7s ease-out;
+}
+
 /* Estilos para el administrador actual */
 .admin-current {
     border-left: 4px solid #ffd700 !important;
     box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3) !important;
+    animation: pulse 2s infinite;
 }
 
 .admin-badge {
@@ -491,8 +592,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .toggle-filters-btn:hover {
     background: linear-gradient(135deg, rgb(190, 141, 56) 0%, rgb(170, 125, 50) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .filters-container {
@@ -540,9 +642,20 @@ document.addEventListener('DOMContentLoaded', function() {
         gap: 0.15rem;
     }
     
-    .search-filter .status-filter-btn {
+    .search-filter     .status-filter-btn {
         font-size: 0.6rem;
         padding: 2px 4px;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    .status-filter-btn:hover {
+        transform: translateY(-1px) scale(1.05);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    .status-filter-btn.active {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     
     /* Reducir tamaño general de elementos en móvil */
@@ -666,8 +779,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     .card-actions .btn-action:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transform: translateY(-2px) scale(1.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
     
     .card-actions .edit-btn {
@@ -731,8 +845,9 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .btn-action:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .edit-btn {
@@ -757,6 +872,17 @@ document.addEventListener('DOMContentLoaded', function() {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+/* Efectos de hover para botones de filtro en desktop */
+.status-filter-btn:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.status-filter-btn.active {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* En desktop, mantener botón visible */
@@ -826,9 +952,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .header-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   color: white !important;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .header-btn.secondary {
