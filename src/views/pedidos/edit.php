@@ -60,8 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($modo_consumo === 'stay' && $id_mesa <= 0) {
         $error = 'Debe seleccionar una mesa para pedidos en el local';
-    } elseif (empty($items_pedido)) {
-        $error = 'Debe agregar al menos un ítem al pedido';
     } else {
         try {
             $data = [
