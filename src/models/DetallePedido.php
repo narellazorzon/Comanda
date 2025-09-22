@@ -12,6 +12,9 @@ class DetallePedido
     public static function create(int $pedidoId, int $itemId, int $cantidad = 1, ?float $precioUnitario = null, string $detalle = ''): bool
     {
         $db = (new Database)->getConnection();
+        // TODO: Implement method body
+        return true;
+    }
 
     /**
      * Crea un nuevo detalle de pedido con parámetros individuales.
