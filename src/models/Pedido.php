@@ -278,10 +278,12 @@ class Pedido {
                 $id
             ]);
             
-            // 2. Eliminar detalles existentes
-            $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
-            $stmt->execute([$id]);
-            
+            // 2. Eliminar detalles existentes solo si se envían nuevos items
+            if (!empty($data['items'])) {
+                $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
+                $stmt->execute([$id]);
+            }
+
             // 3. Insertar nuevos detalles y calcular total
             $total = 0.00;
             if (!empty($data['items'])) {
@@ -311,8 +313,13 @@ class Pedido {
                         }
                     }
                 }
+            } else {
+                // Si no se envían items, mantener el total actual
+                $stmtTotal = $db->prepare("SELECT total FROM pedidos WHERE id_pedido = ?");
+                $stmtTotal->execute([$id]);
+                $total = $stmtTotal->fetchColumn();
             }
-            
+
             // 4. Actualizar el total del pedido
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $id]);
