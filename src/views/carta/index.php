@@ -36,40 +36,92 @@ $items = CartaItem::allIncludingUnavailable();
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-.carta-header {
+/* Estilos para el header de gestión */
+.management-header {
   background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
-  color: white;
+  color: white !important;
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 12px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-.carta-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 4px 0;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+.management-header * {
+  color: white !important;
 }
 
-.carta-subtitle {
-  font-size: 0.85rem;
-  opacity: 0.9;
+.management-header h1 {
   margin: 0;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white !important;
+  flex: 1;
 }
 
-.admin-controls {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
+
+.header-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  color: white !important;
+}
+
+.header-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+  .management-header {
+    padding: 8px;
+    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .management-header h1 {
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-actions {
+    justify-content: center;
+  }
+  
+  .header-btn {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+
 
 .categorias-nav {
   display: flex;
@@ -657,29 +709,6 @@ $items = CartaItem::allIncludingUnavailable();
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
-.btn-nuevo-item {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 50%, #1e7e34 100%);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-  border: 1px solid #28a745;
-  width: 100%;
-  justify-content: center;
-}
-
-.btn-nuevo-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-  background: linear-gradient(135deg, #1e7e34 0%, #28a745 50%, #20c997 100%);
-}
 
 .no-items {
   text-align: center;
@@ -848,14 +877,6 @@ $items = CartaItem::allIncludingUnavailable();
     min-width: fit-content;
   }
   
-  .admin-controls {
-    padding: 8px;
-  }
-  
-  .btn-nuevo-item {
-    padding: 8px 16px;
-    font-size: 0.65rem;
-  }
   
   /* Mejorar tarjetas móviles */
   .mobile-card {
@@ -934,21 +955,20 @@ $items = CartaItem::allIncludingUnavailable();
 </style>
 
 <div class="carta-container">
-  <div class="carta-header">
-    <h1 class="carta-title">🍽️ Carta Digital</h1>
-    <p class="carta-subtitle">Deliciosos platos </p>
+  <!-- Header de gestión -->
+  <div class="management-header">
+    <h1>🍽️ Gestion de carta</h1>
+    <div class="header-actions">
+      <?php if ($rol === 'administrador'): ?>
+        <a href="<?= url('carta/create') ?>" class="header-btn">
+          ➕ Nuevo Item
+        </a>
+      <?php endif; ?>
+    </div>
   </div>
 
   <!-- Sistema de notificaciones temporales -->
   <div id="notification-container"></div>
-
-  <?php if ($rol === 'administrador'): ?>
-    <div class="admin-controls">
-      <a href="<?= url('carta/create') ?>" class="btn-nuevo-item">
-        ➕ Nuevo Ítem
-      </a>
-    </div>
-  <?php endif; ?>
 
   <?php 
   // Definir orden específico de categorías

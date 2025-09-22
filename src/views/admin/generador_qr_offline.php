@@ -1003,6 +1003,8 @@ $takeawayPresets = [
 /* Estilos para tarjetas móviles */
 .mobile-cards {
   display: none;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .mobile-card {
@@ -1163,6 +1165,8 @@ $takeawayPresets = [
 
   .mobile-cards {
     display: block !important;
+    max-height: 60vh;
+    overflow-y: auto;
   }
 }
 </style>
