@@ -50,6 +50,52 @@ $detalles = Pedido::getDetalles($pedido_id);
 $mesas = Mesa::all();
 $items = CartaItem::all();
 
+// Si estamos en modo POST, validar la mesa directamente aquí
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $modo_consumo === 'stay') {
+    $id_mesa = (int) ($_POST['id_mesa'] ?? 0);
+
+    if ($id_mesa > 0) {
+        // Verificación directa de la mesa
+        $db = new \App\Config\Database();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("SELECT estado FROM mesas WHERE id_mesa = ?");
+        $stmt->execute([$id_mesa]);
+        $mesaEstado = $stmt->fetchColumn();
+
+        $stmtActual = $conn->prepare("SELECT id_mesa FROM pedidos WHERE id_pedido = ?");
+        $stmtActual->execute([$pedido_id]);
+        $mesaActual = $stmtActual->fetchColumn();
+
+        error_log("VALIDACIÓN DIRECTA - Mesa $id_mesa tiene estado: " . $mesaEstado);
+        error_log("VALIDACIÓN DIRECTA - Mesa actual del pedido: " . $mesaActual);
+
+        if ($mesaEstado !== 'libre' && $id_mesa != $mesaActual) {
+            die(json_encode([
+                'success' => false,
+                'message' => "ERROR: La mesa #$id_mesa no está disponible (Estado: $mesaEstado). Solo se permite cambiar a mesas libres."
+            ]));
+        }
+    }
+}
+
+// Depuración: verificar estados de las mesas
+if (empty($mesas)) {
+    $error = 'No hay mesas disponibles en el sistema';
+} else {
+    // Verificar si hay al menos una mesa libre
+    $mesasLibres = array_filter($mesas, function($mesa) {
+        return $mesa['estado'] === 'libre';
+    });
+    if (empty($mesasLibres) && $pedido['id_mesa']) {
+        // Si no hay mesas libres pero el pedido tiene mesa, mostrar advertencia
+        $mesaActual = Mesa::find($pedido['id_mesa']);
+        if ($mesaActual && $mesaActual['estado'] !== 'libre') {
+            $error = 'Advertencia: No hay mesas libres disponibles. Solo puede mantener la mesa actual.';
+        }
+    }
+}
+
 // Procesar formulario de actualización
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_mesa = (int) ($_POST['id_mesa'] ?? 0);
@@ -57,10 +103,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $forma_pago = $_POST['forma_pago'] ?? null;
     $observaciones = $_POST['observaciones'] ?? '';
     $items_pedido = $_POST['items'] ?? [];
-    
+
+    // Log para depuración
+    error_log("EDIT PEDIDO - POST data: " . print_r($_POST, true));
+    error_log("EDIT PEDIDO - Pedido actual: " . print_r($pedido, true));
+
     if ($modo_consumo === 'stay' && $id_mesa <= 0) {
         $error = 'Debe seleccionar una mesa para pedidos en el local';
-    } else {
+    } elseif ($modo_consumo === 'stay' && $id_mesa > 0) {
+        // Verificar si la mesa está disponible
+        $mesa = Mesa::find($id_mesa);
+        error_log("EDIT PEDIDO - ID mesa actual: " . $pedido['id_mesa']);
+        error_log("EDIT PEDIDO - ID mesa nueva: " . $id_mesa);
+        error_log("EDIT PEDIDO - Mesa seleccionada ($id_mesa): " . print_r($mesa, true));
+
+        if (!$mesa) {
+            $error = 'La mesa seleccionada no existe';
+        } elseif ($mesa['estado'] !== 'libre' && $id_mesa != $pedido['id_mesa']) {
+            // Permitir mantener la misma mesa actual aunque no esté libre
+            $error = 'La mesa seleccionada no está disponible. Estado actual: ' . ucfirst($mesa['estado']);
+            error_log("EDIT PEDIDO - Error: Mesa no disponible. Estado: " . $mesa['estado']);
+            error_log("EDIT PEDIDO - Condición: estado=" . $mesa['estado'] . ", es_mesa_nueva=" . ($id_mesa != $pedido['id_mesa'] ? 'SI' : 'NO'));
+        }
+    }
+
+    if (empty($error)) {
         try {
             $data = [
                 'modo_consumo' => $modo_consumo,
@@ -502,16 +569,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       
       <div class="form-group">
         <label for="id_mesa">Mesa *</label>
+        <div style="background: #e7f3ff; padding: 8px; border-radius: 4px; margin-bottom: 8px; font-size: 0.85rem; border-left: 4px solid #0066cc;">
+          ℹ️ Solo se puede cambiar a mesas con estado <strong>"libre"</strong>
+        </div>
         <select name="id_mesa" id="id_mesa" required onchange="showMozoInfo()">
           <option value="">Seleccionar mesa</option>
           <?php foreach ($mesas as $mesa): ?>
-            <option value="<?= $mesa['id_mesa'] ?>" 
+            <?php
+            $disabled = ($mesa['estado'] !== 'libre' && $mesa['id_mesa'] != $pedido['id_mesa']);
+            $style = $disabled ? 'style="color: #999;"' : '';
+            ?>
+            <option value="<?= $mesa['id_mesa'] ?>"
                     data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
-                    <?= $mesa['id_mesa'] == $pedido['id_mesa'] ? 'selected' : '' ?>>
+                    data-estado="<?= $mesa['estado'] ?>"
+                    <?= $mesa['id_mesa'] == $pedido['id_mesa'] ? 'selected' : '' ?>
+                    <?= $disabled ? 'disabled' : '' ?>
+                    <?= $style ?>>
               Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
+              <?php if ($mesa['id_mesa'] == $pedido['id_mesa']): ?>
+                (Actual)
+              <?php endif; ?>
+              <?php if ($mesa['estado'] !== 'libre'): ?>
+                - [<?= ucfirst($mesa['estado']) ?>]
+              <?php endif; ?>
             </option>
           <?php endforeach; ?>
         </select>
+        <div id="mesa-info" style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; display: none;">
+          <strong>Estado:</strong> <span id="mesa-estado"></span>
+        </div>
         <div id="mozo-info" style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; display: none;">
           <strong>Mozo asignado:</strong> <span id="mozo-nombre"></span>
         </div>
@@ -520,14 +606,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="form-group">
         <label>Modo de Consumo *</label>
         <div class="modo-consumo-container">
-          <div class="modo-consumo-btn <?= $pedido['modo_consumo'] === 'stay' ? 'selected' : '' ?>" 
-               onclick="selectModoConsumo('stay')">
+          <div class="modo-consumo-btn <?= $pedido['modo_consumo'] === 'stay' ? 'selected' : '' ?>"
+               onclick="selectModoConsumo('stay', this)">
             <div style="font-size: 1.5rem; margin-bottom: 6px;">🍽️</div>
             <div style="font-size: 0.9rem;"><strong>En el Local</strong></div>
             <div style="font-size: 0.8rem; opacity: 0.8;">Stay</div>
           </div>
-          <div class="modo-consumo-btn <?= $pedido['modo_consumo'] === 'takeaway' ? 'selected' : '' ?>" 
-               onclick="selectModoConsumo('takeaway')">
+          <div class="modo-consumo-btn <?= $pedido['modo_consumo'] === 'takeaway' ? 'selected' : '' ?>"
+               onclick="selectModoConsumo('takeaway', this)">
             <div style="font-size: 1.5rem; margin-bottom: 6px;">🛍️</div>
             <div style="font-size: 0.9rem;"><strong>Para Llevar</strong></div>
             <div style="font-size: 0.8rem; opacity: 0.8;">Takeaway</div>
@@ -615,14 +701,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 let itemIndex = <?= count($detalles) ?>;
 
-function selectModoConsumo(modo) {
+function selectModoConsumo(modo, element) {
   // Remover selección anterior
   document.querySelectorAll('.modo-consumo-btn').forEach(btn => {
     btn.classList.remove('selected');
   });
-  
+
   // Seleccionar nuevo modo
-  event.target.closest('.modo-consumo-btn').classList.add('selected');
+  if (element) {
+    element.closest('.modo-consumo-btn').classList.add('selected');
+  }
   document.getElementById('modo_consumo').value = modo;
   
   // Mostrar/ocultar campo de mesa según el modo
@@ -647,15 +735,25 @@ function selectModoConsumo(modo) {
 
 function showMozoInfo() {
   const select = document.getElementById('id_mesa');
+  const mesaInfo = document.getElementById('mesa-info');
+  const mesaEstado = document.getElementById('mesa-estado');
   const mozoInfo = document.getElementById('mozo-info');
   const mozoNombre = document.getElementById('mozo-nombre');
-  
+
   if (select.value) {
     const selectedOption = select.options[select.selectedIndex];
+    const estado = selectedOption.getAttribute('data-estado');
     const mozo = selectedOption.getAttribute('data-mozo');
+
+    // Mostrar estado de la mesa
+    mesaEstado.textContent = estado;
+    mesaInfo.style.display = 'block';
+
+    // Mostrar información del mozo
     mozoNombre.textContent = mozo;
     mozoInfo.style.display = 'block';
   } else {
+    mesaInfo.style.display = 'none';
     mozoInfo.style.display = 'none';
   }
 }

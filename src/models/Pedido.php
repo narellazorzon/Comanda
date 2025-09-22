@@ -264,27 +264,48 @@ class Pedido {
         try {
             $db->beginTransaction();
             
-            // 1. Actualizar datos básicos del pedido
+            // 1. Validar que la mesa esté disponible si se está cambiando
+            if (isset($data['id_mesa']) && $data['id_mesa']) {
+                // Verificar estado actual de la mesa
+                $stmtMesa = $db->prepare("SELECT estado, id_mozo FROM mesas WHERE id_mesa = ?");
+                $stmtMesa->execute([$data['id_mesa']]);
+                $mesaData = $stmtMesa->fetch(PDO::FETCH_ASSOC);
+
+                // Obtener mesa actual del pedido
+                $stmtActual = $db->prepare("SELECT id_mesa FROM pedidos WHERE id_pedido = ?");
+                $stmtActual->execute([$id]);
+                $mesaActual = $stmtActual->fetchColumn();
+
+                // Si la mesa no es libre y es diferente a la actual, lanzar error
+                if ($mesaData && $mesaData['estado'] !== 'libre' && $data['id_mesa'] != $mesaActual) {
+                    throw new \Exception("No se puede cambiar a la mesa seleccionada. Estado actual: " . $mesaData['estado']);
+                }
+
+                $idMozo = $mesaData ? $mesaData['id_mozo'] : null;
+            }
+
+            // 2. Actualizar datos básicos del pedido incluyendo el mozo
             $stmt = $db->prepare("
-                UPDATE pedidos 
-                SET id_mesa = ?, modo_consumo = ?, forma_pago = ?, observaciones = ?
+                UPDATE pedidos
+                SET id_mesa = ?, id_mozo = ?, modo_consumo = ?, forma_pago = ?, observaciones = ?
                 WHERE id_pedido = ?
             ");
             $stmt->execute([
                 $data['id_mesa'] ?? null,
+                $idMozo,
                 $data['modo_consumo'] ?? 'stay',
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $id
             ]);
             
-            // 2. Eliminar detalles existentes solo si se envían nuevos items
+            // 3. Eliminar detalles existentes solo si se envían nuevos items
             if (!empty($data['items'])) {
                 $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
                 $stmt->execute([$id]);
             }
 
-            // 3. Insertar nuevos detalles y calcular total
+            // 4. Insertar nuevos detalles y calcular total
             $total = 0.00;
             if (!empty($data['items'])) {
                 $stmtItem = $db->prepare("
@@ -320,7 +341,7 @@ class Pedido {
                 $total = $stmtTotal->fetchColumn();
             }
 
-            // 4. Actualizar el total del pedido
+            // 5. Actualizar el total del pedido
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $id]);
             
