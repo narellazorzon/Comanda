@@ -33,87 +33,6 @@ $takeawayPresets = [
     ],
 ];
 ?>
-<!-- Estilos específicos para móvil -->
-<style>
-/* Correcciones móvil para QR Mesas */
-@media (max-width: 768px) {
-    /* Ajustar botones de tipo QR */
-    .tipo-qr-selector {
-        padding: 0.75rem !important;
-    }
-
-    .tipo-qr-selector span {
-        display: block !important;
-        margin-bottom: 0.5rem !important;
-        font-size: 0.85rem !important;
-    }
-
-    .tipo-qr-selector div {
-        display: flex !important;
-        gap: 0.3rem !important;
-    }
-
-    .btn-tipo-qr {
-        flex: 1 !important;
-        min-width: 0 !important;
-        padding: 0.6rem 0.5rem !important;
-        font-size: 0.75rem !important;
-    }
-
-    /* Ajustar grid principal */
-    #qr-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
-        padding: 0 10px !important;
-    }
-
-    /* Configuración QR responsive */
-    .qr-config-grid {
-        grid-template-columns: 1fr 1fr !important;
-        gap: 0.5rem !important;
-    }
-
-    /* Botones de acción */
-    .qr-action-buttons {
-        flex-direction: column !important;
-    }
-
-    .qr-action-buttons button {
-        width: 100% !important;
-        margin-bottom: 0.5rem !important;
-    }
-
-    /* Cards de QR */
-    .qr-card {
-        padding: 0.75rem !important;
-    }
-
-    /* Ajustar h2 principal */
-    h2 {
-        font-size: 1.3rem !important;
-        margin-bottom: 1rem !important;
-        padding: 0 10px !important;
-    }
-
-    /* Estadísticas */
-    .stats-grid {
-        grid-template-columns: 1fr !important;
-        gap: 0.75rem !important;
-    }
-}
-
-@media (max-width: 480px) {
-    /* Móviles pequeños */
-    .qr-config-grid {
-        grid-template-columns: 1fr !important;
-    }
-
-    .btn-tipo-qr {
-        font-size: 0.7rem !important;
-        padding: 0.5rem 0.3rem !important;
-    }
-}
-</style>
 
 <!-- Header de gestión -->
 <div class="management-header">
@@ -131,70 +50,32 @@ $takeawayPresets = [
   </div>
 </div>
 
-<!-- Configuración de QR -->
-<div class="filters-container" style="margin-bottom: 1.5rem;">
-    <div class="search-filter" style="background: rgb(250, 238, 193); border: 1px solid #e0e0e0; border-radius: 6px; padding: 1rem;">
-        <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--secondary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-            ⚙️ Configuración de QR
-        </h3>
-        
-        <div class="qr-config-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-            <div>
-                <label for="qr-size" style="font-weight: 600; color: var(--secondary); font-size: 0.9rem; display: block; margin-bottom: 0.3rem;">
-                    📐 Tamaño (px):
-                </label>
-                <input type="number" id="qr-size" value="200" min="100" max="500" 
-                       style="width: 100%; padding: 0.5rem; border: 1px solid var(--accent); border-radius: 4px; font-size: 0.9rem;">
-            </div>
-            
-            <div>
-                <label for="qr-margin" style="font-weight: 600; color: var(--secondary); font-size: 0.9rem; display: block; margin-bottom: 0.3rem;">
-                    📏 Margen:
-                </label>
-                <input type="number" id="qr-margin" value="1" min="0" max="10" 
-                       style="width: 100%; padding: 0.5rem; border: 1px solid var(--accent); border-radius: 4px; font-size: 0.9rem;">
-            </div>
-            
-            <div>
-                <label for="qr-color" style="font-weight: 600; color: var(--secondary); font-size: 0.9rem; display: block; margin-bottom: 0.3rem;">
-                    🎨 Color:
-                </label>
-                <input type="color" id="qr-color" value="#000000" 
-                       style="width: 100%; height: 38px; padding: 0.25rem; border: 1px solid var(--accent); border-radius: 4px; cursor: pointer;">
-            </div>
-            
-            <div>
-                <label for="qr-bgcolor" style="font-weight: 600; color: var(--secondary); font-size: 0.9rem; display: block; margin-bottom: 0.3rem;">
-                    🎨 Fondo:
-                </label>
-                <input type="color" id="qr-bgcolor" value="#FFFFFF" 
-                       style="width: 100%; height: 38px; padding: 0.25rem; border: 1px solid var(--accent); border-radius: 4px; cursor: pointer;">
-            </div>
+<!-- Sistema de notificaciones temporales -->
+<div id="notification-container"></div>
+
+<!-- Filtros de búsqueda y configuración -->
+<div class="filters-container">
+  <!-- Botón para mostrar/ocultar filtros -->
+  <button id="toggleFilters" class="toggle-filters-btn" onclick="toggleFilters()">
+    🔍 Filtros y Configuración
+  </button>
+
+  <div id="filtersContent" class="filters-content" style="display: none;">
+    <!-- Resumen de QR -->
+    <div class="filter-group">
+      <label>📊 Resumen:</label>
+      <div class="qr-summary" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div class="qr-summary-item">
+          <strong><?php echo number_format($totalMesas); ?></strong>
+          <span>Mesas activas</span>
         </div>
-        
-        <div class="qr-action-buttons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
-            <button onclick="regenerarTodos()" class="button" style="padding: 0.6rem 1rem; font-size: 0.9rem;">
-                🔄 Regenerar Todos
-            </button>
-            <button onclick="descargarTodos()" class="button" style="background: rgb(40, 167, 69); padding: 0.6rem 1rem; font-size: 0.9rem;">
-                📥 Descargar Todos (ZIP)
-            </button>
-            <button onclick="imprimirSeleccionados()" class="button" style="background: rgb(237, 221, 172); color: #212529; padding: 0.6rem 1rem; font-size: 0.9rem;">
-                🖨️ Imprimir Seleccionados
-            </button>
+        <div class="qr-summary-item">
+          <strong id="qr-generados">0</strong>
+          <span>QR generados</span>
         </div>
-        
-        <!-- Selector de tipo de QR -->
-        <div class="tipo-qr-selector" style="padding: 0.75rem; background: #f8f9fa; border-radius: 6px; border: 1px solid #e0e0e0;">
-            <span style="display: block; font-weight: 600; color: var(--secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Tipo de QR:</span>
-            <div style="display: flex; gap: 0.5rem;">
-                <button id="btn-stay" onclick="mostrarTipoQR('stay')" class="button btn-tipo-qr" style="flex: 1; padding: 0.5rem 0.75rem; font-size: 0.8rem; background: var(--secondary); color: white; white-space: nowrap; overflow: hidden;">
-                    🪑 STAY
-                </button>
-                <button id="btn-takeaway" onclick="mostrarTipoQR('takeaway')" class="button btn-tipo-qr" style="flex: 1; padding: 0.5rem 0.75rem; font-size: 0.8rem; background: #6c757d; color: white; white-space: nowrap; overflow: hidden;">
-                    🥡 TAKE AWAY
-                </button>
-            </div>
+        <div class="qr-summary-item">
+          <strong id="qr-seleccionados">0</strong>
+          <span>Seleccionados</span>
         </div>
       </div>
     </div>
@@ -227,25 +108,16 @@ $takeawayPresets = [
   </div>
 </div>
 
-<!-- Estadísticas rápidas -->
-<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-    <div style="background: white; padding: 1rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
-        <div style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem;">📊</div>
-        <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary);"><?= count($mesas) ?></div>
-        <div style="color: #666; font-size: 0.9rem;">Total Mesas</div>
-    </div>
-    
-    <div style="background: white; padding: 1rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
-        <div style="font-size: 2rem; color: #28a745; margin-bottom: 0.5rem;">✅</div>
-        <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary);" id="qr-generados">0</div>
-        <div style="color: #666; font-size: 0.9rem;">QR Generados</div>
-    </div>
-    
-    <div style="background: white; padding: 1rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
-        <div style="font-size: 2rem; color: #007bff; margin-bottom: 0.5rem;">📱</div>
-        <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary);" id="qr-seleccionados">0</div>
-        <div style="color: #666; font-size: 0.9rem;">Seleccionados</div>
-    </div>
+<!-- Pestañas para mesas y takeaway -->
+<div class="tabs-container">
+  <div class="tabs">
+    <button class="tab-button active" onclick="showTab('stay')">
+      🍽️ Mesas (<?php echo count($mesas); ?>)
+    </button>
+    <button class="tab-button" onclick="showTab('takeaway')">
+      🥡 Take away
+    </button>
+  </div>
 </div>
 
 <!-- Vista de tabla para desktop -->
@@ -1234,80 +1106,15 @@ $takeawayPresets = [
   50% { transform: scale(1.1); }
 }
 
-/* Responsive mejorado */
+/* Responsive */
 @media (max-width: 768px) {
-    /* Grid responsive para móvil */
-    #qr-grid, #qr-takeaway-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
-        padding: 0 10px;
-    }
-
-    /* Cards optimizadas para móvil */
-    .qr-card {
-        padding: 0.75rem !important;
-    }
-
-    /* Configuración QR responsive */
-    .search-filter > div {
-        grid-template-columns: 1fr 1fr !important;
-    }
-
-    /* Botones responsive */
-    .search-filter button {
-        min-height: 44px !important;
-        padding: 10px !important;
-        font-size: 14px !important;
-    }
-
-    /* Estadísticas en columna */
-    .filters-container + div {
-        grid-template-columns: 1fr !important;
-    }
-
-    /* Ajustar contenedor principal */
-    main {
-        padding: 10px !important;
-    }
-
-    /* Selector de tipo QR responsive */
-    #btn-stay, #btn-takeaway {
-        min-height: 44px !important;
-        padding: 10px 15px !important;
-    }
-
-    /* Modal responsive */
-    #modalProgreso > div {
-        margin: 1rem !important;
-        padding: 1.5rem !important;
-    }
-
-    /* Ocultar texto largo en móvil */
-    .hide-mobile {
-        display: none !important;
-    }
-
-    /* URL más pequeña en móvil */
-    .qr-card > div[style*="word-break"] {
-        font-size: 0.65rem !important;
-    }
-}
-
-@media (max-width: 480px) {
-    /* Ajustes para móviles pequeños */
-    h2 {
-        font-size: 1.3rem !important;
-    }
-
-    h3 {
-        font-size: 1rem !important;
-    }
-
-    /* Configuración en columna única */
-    .search-filter > div {
-        grid-template-columns: 1fr !important;
-    }
-}
+  .management-header {
+    padding: 8px;
+    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
 
   .management-header h1 {
     font-size: 0.9rem;
