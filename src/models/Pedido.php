@@ -53,10 +53,34 @@ class Pedido {
     public static function allByMozo(int $mozoId): array {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
-            SELECT * 
-            FROM pedidos 
-            WHERE id_mozo = ? 
+            SELECT *
+            FROM pedidos
+            WHERE id_mozo = ?
             ORDER BY fecha_hora DESC
+        ");
+        $stmt->execute([$mozoId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Devuelve los pedidos del día actual para las mesas asignadas a un mozo.
+     */
+    public static function todayByMesoAssigned(int $mozoId): array {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT p.*,
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   p.fecha_hora as fecha_creacion
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            WHERE DATE(p.fecha_hora) = CURDATE()
+            AND m.id_mozo = ?
+            ORDER BY p.fecha_hora DESC
         ");
         $stmt->execute([$mozoId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

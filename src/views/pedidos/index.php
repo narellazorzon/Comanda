@@ -82,8 +82,9 @@ function obtenerIconoEstado($estado) {
 
 // Cargar pedidos según el rol
 if ($rol === 'mozo') {
-    // Los mozos solo ven pedidos del día actual
-    $pedidos = Pedido::todayOnly();
+    // Los mozos solo ven pedidos del día actual de sus mesas asignadas
+    $mozoId = $_SESSION['user']['id_usuario'];
+    $pedidos = Pedido::todayByMesoAssigned($mozoId);
 } else {
     // Los administradores ven todos los pedidos
     $pedidos = Pedido::all();
@@ -274,7 +275,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <?php if ($rol === 'mozo'): ?>
   <div style="background: #d1ecf1; padding: 8px; border-radius: 4px; margin-bottom: 0.8rem; color: #0c5460; font-size: 0.85rem;">
-    📅 Mostrando únicamente los pedidos del día de hoy (<?= date('d/m/Y') ?>)
+    📅 Mostrando únicamente los pedidos del día de hoy de tus mesas asignadas (<?= date('d/m/Y') ?>)
   </div>
 <?php endif; ?>
 
