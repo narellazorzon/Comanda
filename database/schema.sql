@@ -459,25 +459,20 @@ DELIMITER ;
 -- SISTEMA BÁSICO DE INVENTARIOS - SISTEMA COMANDA
 -- =====================================================
 
--- Tabla de inventario para items de carta
+-- Tabla de inventario para items de carta (simplificada)
 CREATE TABLE inventario (
     id_inventario INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_item INT UNSIGNED NOT NULL,
     cantidad_disponible INT NOT NULL DEFAULT 0,
     cantidad_minima INT NOT NULL DEFAULT 5,
-    unidad_medida ENUM('unidad','porcion','kg','litro','gramo') NOT NULL DEFAULT 'unidad',
-    costo_unitario DECIMAL(10,2) NULL,
-    fecha_ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     estado ENUM('disponible','agotado','discontinuado') NOT NULL DEFAULT 'disponible',
-    notas TEXT NULL,
     
     CONSTRAINT fk_inventario_item 
         FOREIGN KEY (id_item) REFERENCES carta(id_item) 
         ON UPDATE CASCADE ON DELETE CASCADE,
         
     INDEX idx_inventario_item (id_item),
-    INDEX idx_inventario_estado (estado),
-    INDEX idx_inventario_stock_bajo (cantidad_disponible)
+    INDEX idx_inventario_estado (estado)
 ) ENGINE=InnoDB;
 
 -- Tabla de movimientos de inventario (historial)

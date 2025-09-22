@@ -129,9 +129,7 @@ class Inventario
         $validation = Validator::validateMultiple($data, [
             'id_item' => ['type' => 'positive_integer'],
             'cantidad_disponible' => ['type' => 'positive_integer', 'options' => ['min' => 0, 'max' => 9999]],
-            'cantidad_minima' => ['type' => 'positive_integer', 'options' => ['min' => 0, 'max' => 999]],
-            'unidad_medida' => ['type' => 'enum', 'options' => ['values' => ['unidad', 'porcion', 'kg', 'litro', 'gramo']]],
-            'costo_unitario' => ['type' => 'price', 'options' => ['decimals' => 2]]
+            'cantidad_minima' => ['type' => 'positive_integer', 'options' => ['min' => 0, 'max' => 999]]
         ]);
         
         if (!$validation['valid']) {
@@ -158,9 +156,8 @@ class Inventario
         
         $stmt = $db->prepare("
             INSERT INTO inventario (
-                id_item, cantidad_disponible, cantidad_minima, 
-                unidad_medida, costo_unitario, estado, notas
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                id_item, cantidad_disponible, cantidad_minima, estado
+            ) VALUES (?, ?, ?, ?)
         ");
         
         $estado = $validated_data['cantidad_disponible'] <= 0 ? 'agotado' : 'disponible';
@@ -169,10 +166,7 @@ class Inventario
             $validated_data['id_item'],
             $validated_data['cantidad_disponible'],
             $validated_data['cantidad_minima'],
-            $validated_data['unidad_medida'],
-            $validated_data['costo_unitario'],
-            $estado,
-            $data['notas'] ?? null
+            $estado
         ]);
     }
     
@@ -257,9 +251,8 @@ class Inventario
         $stmt = $db->query("SELECT COUNT(*) FROM inventario WHERE cantidad_disponible <= cantidad_minima AND estado != 'agotado'");
         $items_stock_bajo = $stmt->fetchColumn();
         
-        // Valor total del inventario
-        $stmt = $db->query("SELECT SUM(cantidad_disponible * COALESCE(costo_unitario, 0)) as valor_total FROM inventario");
-        $valor_total = $stmt->fetchColumn() ?: 0;
+        // Valor total del inventario (simplificado - solo contar items)
+        $valor_total = 0; // Campo costo_unitario eliminado
         
         return [
             'total_items' => $total_items,
