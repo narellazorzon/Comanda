@@ -108,6 +108,10 @@ switch ($route) {
         include __DIR__ . '/../src/views/cliente/index.php';
         break;
 
+    case 'pago':
+        include __DIR__ . '/../src/views/cliente/pago.php';
+        break;
+
     // Rutas de Mesas
     case 'mesas':
         requireMozoOrAdmin();

@@ -1756,6 +1756,711 @@ $iconosCategorias = [
             box-shadow: 0 6px 16px rgba(0,0,0,0.3);
         }
     }
+
+    /* Estilos para el modal de pago */
+    .pago-modal {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(83, 52, 31, 0.9) 0%, rgba(137, 107, 75, 0.8) 100%);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+        backdrop-filter: blur(8px);
+    }
+
+    .pago-panel {
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        width: 95%;
+        max-width: 600px;
+        border-radius: 20px;
+        padding: 0;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 20px 60px rgba(83, 52, 31, 0.3), 0 8px 25px rgba(0,0,0,0.15);
+        border: 2px solid rgba(161, 134, 111, 0.2);
+    }
+
+    .pago-header {
+        background: linear-gradient(135deg, rgb(83, 52, 31) 0%, rgb(137, 107, 75) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pago-header.confirmacion {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+
+    .pago-content {
+        padding: 2rem;
+    }
+
+    .pago-info h4,
+    .pago-mozo-info h4,
+    .pago-propina h4,
+    .pago-metodo h4 {
+        color: var(--color-secundario);
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .pago-detalle {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .pago-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .pago-item:last-child {
+        border-bottom: none;
+    }
+
+    .pago-mozo-info {
+        background: linear-gradient(145deg, #e8f5e8 0%, #c8e6c9 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .mozo-datos {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c5530;
+    }
+
+    .propina-opciones {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .propina-btn {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        color: var(--color-texto);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .propina-btn:hover {
+        background: var(--color-primario);
+        border-color: var(--color-primario);
+        color: white;
+    }
+
+    .propina-btn.selected {
+        background: var(--color-acento);
+        border-color: var(--color-acento);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+
+    #propina-otro-container {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    #propina-otro {
+        flex: 1;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .btn-aceptar-propina {
+        background: var(--color-acento);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .pago-total {
+        background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
+        border: 2px solid rgba(161, 134, 111, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .total-detalle {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .total-fila {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .total-fila.total-final {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--color-secundario);
+        padding-top: 0.75rem;
+        border-top: 2px solid var(--color-primario);
+        margin-top: 0.5rem;
+    }
+
+    .metodo-opciones {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .metodo-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .metodo-label input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .pago-actions {
+        padding: 1.5rem 2rem;
+        background: #f8f9fa;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .btn-cancelar {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancelar:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .btn-confirmar-pago {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-confirmar-pago:hover:not(:disabled) {
+        background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+        transform: translateY(-2px);
+    }
+
+    .btn-confirmar-pago:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .btn-secundario {
+        background: var(--color-primario);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secundario:hover {
+        background: var(--color-secundario);
+        transform: translateY(-2px);
+    }
+
+    /* Confirmación de pago */
+    .confirmacion-mensaje {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .confirmacion-icono {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        animation: checkmark 0.8s ease;
+    }
+
+    @keyframes checkmark {
+        0% {
+            transform: scale(0) rotate(45deg);
+        }
+        50% {
+            transform: scale(1.2) rotate(-5deg);
+        }
+        100% {
+            transform: scale(1) rotate(0);
+        }
+    }
+
+    .confirmacion-mensaje h4 {
+        color: var(--color-exito);
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #confirmacion-propina {
+        font-size: 1.1rem;
+        color: var(--color-secundario);
+        margin-top: 1rem;
+        font-weight: 600;
+    }
+
+    .confirmacion-detalles {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .confirmacion-total {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #e9ecef;
+    }
+
+    /* Responsive para modales de pago */
+    @media (max-width: 768px) {
+        .pago-panel {
+            width: 100%;
+            height: 100%;
+            max-height: 100vh;
+            border-radius: 0;
+        }
+
+        .pago-content {
+            padding: 1rem;
+        }
+
+        .propina-opciones {
+            flex-direction: column;
+        }
+
+        .propina-btn {
+            width: 100%;
+        }
+
+        .metodo-opciones {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .pago-actions {
+            flex-direction: column;
+        }
+
+        .btn-cancelar,
+        .btn-confirmar-pago,
+        .btn-secundario {
+            width: 100%;
+        }
+    }
+
+    /* Modal de Pago */
+    .modal-pago {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-pago-contenido {
+        background: white;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-pago-header {
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+        color: white;
+        padding: 1.5rem;
+        border-radius: 16px 16px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-pago-header h3 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .modal-cerrar {
+        font-size: 2rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .modal-cerrar:hover {
+        transform: scale(1.1);
+    }
+
+    .modal-pago-body {
+        padding: 1.5rem;
+    }
+
+    .pago-seccion {
+        margin-bottom: 1.5rem;
+    }
+
+    .pago-seccion h4 {
+        color: var(--color-primario);
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .pago-detalle {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .pago-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .pago-item:last-child {
+        border-bottom: none;
+    }
+
+    .pago-item-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pago-item-cantidad {
+        font-weight: 600;
+        color: var(--color-primario);
+    }
+
+    .pago-item-precio {
+        font-weight: 600;
+        color: var(--color-secundario);
+    }
+
+    .pago-subtotal {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 2px solid var(--color-primario);
+        font-weight: 600;
+    }
+
+    .propina-opciones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .propina-btn {
+        flex: 1;
+        min-width: 100px;
+        padding: 0.6rem 1rem;
+        border: 1px solid var(--color-primario);
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        color: var(--color-primario);
+        font-size: 0.9rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .propina-btn:hover {
+        background: var(--color-primario);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .propina-btn.selected {
+        background: var(--color-primario);
+        color: white;
+        border-color: var(--color-primario);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .propina-otro {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .propina-otro input {
+        flex: 1;
+        padding: 0.75rem;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .btn-propina-custom {
+        padding: 0.6rem 1.2rem;
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-propina-custom:hover {
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .pago-total {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .total-calculo {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        color: #666;
+    }
+
+    .total-final {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-primario);
+        padding-top: 0.5rem;
+        border-top: 2px solid #ddd;
+        margin-top: 0.5rem;
+    }
+
+    .pago-metodos {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .pago-metodo {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .pago-metodo:hover {
+        border-color: var(--color-primario);
+    }
+
+    .pago-metodo input[type="radio"] {
+        display: none;
+    }
+
+    .pago-metodo input[type="radio"]:checked ~ .pago-metodo-icono {
+        background: var(--color-primario);
+        color: white;
+    }
+
+    .pago-metodo-icono {
+        display: block;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 50%;
+        background: #f0f0f0;
+        transition: all 0.2s;
+    }
+
+    .modal-pago-footer {
+        padding: 1.5rem;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .modal-pago-footer .btn-principal,
+    .modal-pago-footer .btn-secundario {
+        padding: 0.6rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-pago-footer .btn-principal {
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
+        color: white;
+    }
+
+    .modal-pago-footer .btn-principal:hover {
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .modal-pago-footer .btn-secundario {
+        background: #6c757d;
+        color: white;
+    }
+
+    .modal-pago-footer .btn-secundario:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+    }
+
+    .confirmacion-acciones {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .confirmacion-acciones .btn-principal,
+    .confirmacion-acciones .btn-secundario {
+        flex: 1;
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .confirmacion-acciones .btn-principal {
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
+        color: white;
+    }
+
+    .confirmacion-acciones .btn-principal:hover {
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .confirmacion-acciones .btn-secundario {
+        background: #6c757d;
+        color: white;
+    }
+
+    .confirmacion-acciones .btn-secundario:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+    }
+
+    .confirmacion-mesa {
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--color-secundario);
+    }
+
+    @media (max-width: 768px) {
+        .modal-pago-contenido {
+            width: 95%;
+            margin: 1rem;
+        }
+
+        .modal-pago-body {
+            padding: 1rem;
+        }
+
+        .propina-opciones {
+            flex-direction: column;
+        }
+
+        .propina-btn {
+            width: 100%;
+        }
+
+        .pago-metodos {
+            flex-direction: column;
+        }
+
+        .confirmacion-acciones {
+            flex-direction: column;
+        }
+    }
     </style>
 </head>
 <body>
@@ -2596,7 +3301,9 @@ $iconosCategorias = [
                 });
                 
                 const result = await response.json();
-                
+
+                console.log('Respuesta del servidor:', result); // Debug
+
                 if (response.ok && result.success) {
                     // Mostrar mensaje de éxito
                     showToast(`✅ ¡Pedido confirmado! Redirigiendo al proceso de pago...`);
@@ -2625,6 +3332,652 @@ $iconosCategorias = [
             }
         });
     });
+
+    // Variables globales para el modal de pago
+    let pedidoActual = null;
+    let subtotalPedido = 0;
+    let propinaSeleccionada = 0;
+    let propinaPorcentaje = 0;
+    let mozoActual = null;
+
+    // Función para mostrar el modal de pago
+    function mostrarModalPago(pedidoId, carrito) {
+        console.log('mostrarModalPago called with:', { pedidoId, carrito });
+
+        // Asegurarse de que el modal exista en el DOM
+        const modal = document.getElementById('modalProcesoPago');
+        if (!modal) {
+            console.error('Modal de pago no encontrado en el DOM');
+            return;
+        }
+
+        pedidoActual = pedidoId;
+
+        // Verificar que el carrito tenga items
+        if (!carrito || carrito.length === 0) {
+            console.error('El carrito está vacío');
+            return;
+        }
+
+        // Calcular subtotal
+        subtotalPedido = carrito.reduce((total, item) => {
+            const precio = Number(item.precio || item.precio_unitario || 0);
+            console.log('Item:', item, 'Precio:', precio);
+            return total + (item.qty * precio);
+        }, 0);
+
+        console.log('Subtotal calculado:', subtotalPedido);
+
+        // Llenar detalle del pedido
+        const detalleDiv = document.getElementById('pago-detalle');
+        if (!detalleDiv) {
+            console.error('Elemento pago-detalle no encontrado');
+            return;
+        }
+
+        // Generar HTML del detalle
+        const detalleHTML = carrito.map(item => {
+            const precio = Number(item.precio || item.precio_unitario || 0);
+            const total = (item.qty * precio).toFixed(2);
+            console.log('Rendering item:', { nombre: item.nombre, qty: item.qty, precio, total });
+            return `
+                <div class="pago-item">
+                    <div class="pago-item-info">
+                        <span class="pago-item-cantidad">${item.qty}x</span>
+                        <span class="pago-item-nombre">${item.nombre}</span>
+                    </div>
+                    <span class="pago-item-precio">$${total}</span>
+                </div>
+            `;
+        }).join('');
+
+        console.log('Generated detalle HTML:', detalleHTML);
+        detalleDiv.innerHTML = detalleHTML;
+
+        // Mostrar información del mozo si está disponible
+        const mesaNumero = isQRMode ? mesaFromQR : document.getElementById('numero-mesa').value;
+        const mozoInfoDiv = document.getElementById('pago-mozo-info');
+
+        if (mesaNumero) {
+            // Obtener información del mozo asignado a la mesa
+            mozoInfoDiv.innerHTML = '<p>🔄 Buscando información del mozo...</p>';
+
+            fetch('<?= $base_url ?>/index.php?route=pedidos/info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    accion: 'obtener_mozo_mesa',
+                    numero_mesa: mesaNumero
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Waiter info response:', data);
+                if (data.success && data.mozo) {
+                    mozoInfoDiv.innerHTML = `
+                        <p><strong>${data.mozo.nombre} ${data.mozo.apellido}</strong></p>
+                        <p>Mozo asignado a la Mesa ${mesaNumero}</p>
+                    `;
+                } else {
+                    mozoInfoDiv.innerHTML = `
+                        <p>👨‍🍳 Mozo asignado a la Mesa ${mesaNumero}</p>
+                        <p>Te atenderá en breve</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener info del mozo:', error);
+                mozoInfoDiv.innerHTML = `
+                    <p>👨‍🍳 Mozo asignado a la Mesa ${mesaNumero}</p>
+                    <p>Te atenderá en breve</p>
+                `;
+            });
+        } else {
+            mozoInfoDiv.innerHTML = `
+                <p>🚚 Pedido para Take Away</p>
+                <p>Preparando tu orden</p>
+            `;
+        }
+
+        // Resetear selección de propina
+        propinaSeleccionada = 0;
+        document.querySelectorAll('.propina-btn').forEach(btn => btn.classList.remove('selected'));
+        document.querySelectorAll('.propina-btn')[0].classList.add('selected');
+
+        // Actualizar totales
+        actualizarTotalPago();
+
+        // Mostrar modal
+        document.getElementById('modalProcesoPago').style.display = 'flex';
+    }
+
+    // Función para obtener información del mozo
+    async function obtenerMozoMesa(numeroMesa) {
+        try {
+            const response = await fetch(`<?= $base_url ?>/index.php?route=pedidos/info`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    accion: 'obtener-mozo-mesa',
+                    numero_mesa: numeroMesa
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.data.mozo) {
+                mozoActual = result.data.mozo;
+                document.getElementById('pago-mozo-info').style.display = 'block';
+                document.getElementById('pago-mozo-nombre').textContent =
+                    `${mozoActual.nombre} ${mozoActual.apellido}`;
+            }
+        } catch (error) {
+            console.error('Error al obtener mozo:', error);
+        }
+    }
+
+    // Función para actualizar el total del pago
+    function actualizarTotalPago() {
+        const totalFinal = subtotalPedido + propinaSeleccionada;
+        document.getElementById('pago-propina').textContent = `$${propinaSeleccionada.toFixed(2)}`;
+        document.getElementById('pago-total-final').textContent = `$${totalFinal.toFixed(2)}`;
+    }
+
+    // Event listeners para el modal de pago
+    document.addEventListener('DOMContentLoaded', function() {
+        // Botones de propina
+        document.querySelectorAll('.propina-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.propina-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+
+                const propinaValue = this.dataset.propina;
+
+                if (propinaValue === 'otro') {
+                    document.getElementById('propina-otro-container').style.display = 'flex';
+                    document.getElementById('propina-otro').focus();
+                } else {
+                    document.getElementById('propina-otro-container').style.display = 'none';
+
+                    if (propinaValue === '0') {
+                        propinaSeleccionada = 0;
+                        propinaPorcentaje = 0;
+                    } else {
+                        propinaPorcentaje = parseInt(propinaValue);
+                        propinaSeleccionada = subtotalPedido * (propinaPorcentaje / 100);
+                    }
+
+                    actualizarTotalPago();
+                }
+            });
+        });
+
+        // Botón aceptar propina personalizada
+        document.getElementById('btn-aceptar-propina').addEventListener('click', function() {
+            const monto = parseFloat(document.getElementById('propina-otro').value) || 0;
+            if (monto >= 0) {
+                propinaSeleccionada = monto;
+                propinaPorcentaje = 0;
+                actualizarTotalPago();
+            }
+        });
+
+        // Botón confirmar pago
+        document.getElementById('btn-confirmar-pago').addEventListener('click', async function() {
+            const metodoPago = document.querySelector('input[name="metodo-pago"]:checked').value;
+
+            // Deshabilitar botón
+            this.disabled = true;
+            this.textContent = 'Procesando...';
+
+            try {
+                const response = await fetch('<?= $base_url ?>/index.php?route=pago-procesar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pedido_id: pedidoActual,
+                        propina_monto: propinaSeleccionada,
+                        mozo_id: mozoActual ? mozoActual.id_usuario : null,
+                        metodo_pago: metodoPago
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Cerrar modal de pago
+                    document.getElementById('pago-modal').style.display = 'none';
+
+                    // Mostrar modal de confirmación
+                    mostrarConfirmacionPago();
+                } else {
+                    throw new Error(result.error || 'Error al procesar el pago');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('❌ Error al procesar el pago: ' + error.message, 'error');
+
+                // Rehabilitar botón
+                this.disabled = false;
+                this.textContent = 'Confirmar Pago';
+            }
+        });
+
+        // Botones de cerrar
+        document.getElementById('btn-close-pago').addEventListener('click', function() {
+            document.getElementById('pago-modal').style.display = 'none';
+        });
+
+        document.getElementById('btn-cancelar-pago').addEventListener('click', function() {
+            document.getElementById('pago-modal').style.display = 'none';
+        });
+
+  
+        // Handle payment method selection
+        document.querySelectorAll('.pago-metodo input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.pago-metodo').forEach(label => {
+                    label.style.borderColor = '#ddd';
+                });
+                if (this.checked) {
+                    this.closest('.pago-metodo').style.borderColor = 'var(--color-primario)';
+                }
+            });
+        });
+
+        // Initialize payment method selection
+        const checkedRadio = document.querySelector('.pago-metodo input[type="radio"]:checked');
+        if (checkedRadio) {
+            checkedRadio.closest('.pago-metodo').style.borderColor = 'var(--color-primario)';
+        }
+
+        // Debug: Log modal elements to verify they exist
+        console.log('Modal elements check:', {
+            modal: document.getElementById('modalProcesoPago'),
+            detalle: document.getElementById('pago-detalle'),
+            mozoInfo: document.getElementById('pago-mozo-info'),
+            subtotal: document.getElementById('pago-subtotal')
+        });
+    });
+
+    // Función para mostrar confirmación de pago
+    function mostrarConfirmacionPago() {
+        // Llenar detalles del pedido en confirmación
+        const detalleDiv = document.getElementById('pago-detalle');
+        const pedidoItems = Array.from(detalleDiv.querySelectorAll('.pago-item'));
+
+        const confirmacionDiv = document.getElementById('confirmacion-pedido');
+        confirmacionDiv.innerHTML = pedidoItems.map(item => item.outerHTML).join('');
+
+        // Actualizar totales
+        document.getElementById('confirmacion-total').textContent =
+            document.getElementById('pago-total-final').textContent;
+
+        // Mostrar mesa
+        const mesaNumero = isQRMode ? mesaFromQR : document.getElementById('numero-mesa').value;
+        document.getElementById('confirmacion-mesa').textContent = mesaNumero ? `Mesa ${mesaNumero}` : 'Take Away';
+
+        // Mostrar mensaje de propina si corresponde
+        if (propinaSeleccionada > 0) {
+            document.getElementById('confirmacion-propina').style.display = 'block';
+        } else {
+            document.getElementById('confirmacion-propina').style.display = 'none';
+        }
+
+        // Mostrar modal
+        document.getElementById('pago-confirmacion-modal').style.display = 'flex';
+
+        // Setup event listeners for confirmation modal buttons
+        setupConfirmationModalListeners();
+
+        // Auto-redirección después de 20 segundos
+        setTimeout(() => {
+            if (document.getElementById('pago-confirmacion-modal').style.display === 'flex') {
+                document.getElementById('btn-close-confirmacion').click();
+            }
+        }, 20000);
+    }
+
+    // Función para configurar los event listeners del modal de confirmación
+    function setupConfirmationModalListeners() {
+        // Botón "Hacer otro pedido"
+        const btnOtroPedido = document.getElementById('btn-otro-pedido');
+        if (btnOtroPedido) {
+            // Remove existing event listener to avoid duplicates
+            btnOtroPedido.replaceWith(btnOtroPedido.cloneNode(true));
+            // Add new event listener
+            document.getElementById('btn-otro-pedido').addEventListener('click', function() {
+                console.log('Hacer otro pedido clicked');
+                document.getElementById('pago-confirmacion-modal').style.display = 'none';
+
+                // Redirigir al menú con la mesa
+                let redirectUrl = '<?= $base_url ?>/index.php?route=cliente';
+                const urlParams = new URLSearchParams(window.location.search);
+                const mesaActual = urlParams.get('mesa');
+                if (mesaActual) {
+                    redirectUrl += `&mesa=${mesaActual}`;
+                }
+                console.log('Redirecting to:', redirectUrl);
+                window.location.href = redirectUrl;
+            });
+        } else {
+            console.error('btn-otro-pedido not found');
+        }
+
+        // Botón "Imprimir recibo"
+        const btnImprimirRecibo = document.getElementById('btn-imprimir-recibo');
+        if (btnImprimirRecibo) {
+            // Remove existing event listener to avoid duplicates
+            btnImprimirRecibo.replaceWith(btnImprimirRecibo.cloneNode(true));
+            // Add new event listener
+            document.getElementById('btn-imprimir-recibo').addEventListener('click', function() {
+                console.log('Imprimir recibo clicked');
+                window.print();
+            });
+        } else {
+            console.error('btn-imprimir-recibo not found');
+        }
+
+        // Botón "Cerrar" de confirmación
+        const btnCloseConfirmacion = document.getElementById('btn-close-confirmacion');
+        if (btnCloseConfirmacion) {
+            // Remove existing event listener to avoid duplicates
+            btnCloseConfirmacion.replaceWith(btnCloseConfirmacion.cloneNode(true));
+            // Add new event listener
+            document.getElementById('btn-close-confirmacion').addEventListener('click', function() {
+                console.log('Close confirmacion clicked');
+                document.getElementById('pago-confirmacion-modal').style.display = 'none';
+
+                // Redirigir después de 20 segundos
+                setTimeout(() => {
+                    let redirectUrl = '<?= $base_url ?>/index.php?route=cliente';
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const mesaActual = urlParams.get('mesa');
+                    if (mesaActual) {
+                        redirectUrl += `&mesa=${mesaActual}`;
+                    }
+                    console.log('Auto-redirecting to:', redirectUrl);
+                    window.location.href = redirectUrl;
+                }, 20000);
+            });
+        } else {
+            console.error('btn-close-confirmacion not found');
+        }
+    }
+
+    // Función para cerrar modal de pago
+    function cerrarModalPago() {
+        document.getElementById('modalProcesoPago').style.display = 'none';
+        // Resetear valores
+        propinaSeleccionada = 0;
+        subtotalPedido = 0;
+        document.querySelectorAll('.propina-btn').forEach(btn => btn.classList.remove('selected'));
+        document.querySelectorAll('.propina-btn')[0].classList.add('selected');
+        actualizarTotalPago();
+    }
+
+    // Función para seleccionar propina
+    function seleccionarPropina(button, percentage) {
+        document.querySelectorAll('.propina-btn').forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+
+        if (percentage === 'otro') {
+            document.getElementById('propina-otro').style.display = 'block';
+            document.getElementById('propina-monto').focus();
+        } else {
+            document.getElementById('propina-otro').style.display = 'none';
+            propinaSeleccionada = percentage;
+            actualizarTotalPago();
+        }
+    }
+
+    // Función para aplicar propina personalizada
+    function aplicarPropinaCustom() {
+        const monto = parseFloat(document.getElementById('propina-monto').value) || 0;
+        propinaSeleccionada = monto;
+        actualizarTotalPago();
+    }
+
+    // Función para actualizar total de pago
+    function actualizarTotalPago() {
+        const subtotal = subtotalPedido;
+        let propina = 0;
+
+        if (typeof propinaSeleccionada === 'number') {
+            if (propinaSeleccionada <= 1) {
+                // Es un porcentaje
+                propina = subtotal * propinaSeleccionada;
+            } else {
+                // Es un monto fijo
+                propina = propinaSeleccionada;
+            }
+        }
+
+        const total = subtotal + propina;
+
+        // Actualizar UI
+        document.getElementById('pago-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('total-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('total-propina').textContent = `$${propina.toFixed(2)}`;
+        document.getElementById('pago-total-final').textContent = `$${total.toFixed(2)}`;
+    }
+
+    // Función para procesar pago
+    function procesarPago() {
+        const metodoPago = document.querySelector('input[name="metodo-pago"]:checked').value;
+        const mesaNumero = isQRMode ? mesaFromQR : document.getElementById('numero-mesa').value;
+
+        // Calcular monto de propina
+        let propinaMonto = 0;
+        if (typeof propinaSeleccionada === 'number') {
+            if (propinaSeleccionada <= 1) {
+                // Es un porcentaje
+                propinaMonto = subtotalPedido * propinaSeleccionada;
+            } else {
+                // Es un monto fijo
+                propinaMonto = propinaSeleccionada;
+            }
+        }
+
+        console.log('Processing payment:', {
+            pedidoId: pedidoActual,
+            metodoPago,
+            propinaMonto,
+            subtotalPedido,
+            mesaNumero
+        });
+
+        // Crear formData para enviar al servidor
+        const formData = new FormData();
+        formData.append('pedido_id', pedidoActual);
+        formData.append('metodo_pago', metodoPago);
+        formData.append('propina_monto', propinaMonto.toFixed(2));
+
+        if (mesaNumero) {
+            formData.append('mesa', mesaNumero);
+        }
+
+        fetch('<?= $base_url ?>/index.php?route=pago-procesar', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response content-type:', response.headers.get('content-type'));
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return response.text().then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Non-JSON response:', text);
+                    throw new Error('La respuesta del servidor no es válida');
+                }
+            });
+        })
+        .then(result => {
+            console.log('Payment result:', result);
+            if (result.success) {
+                // Cerrar modal de pago
+                document.getElementById('modalProcesoPago').style.display = 'none';
+                // Mostrar confirmación
+                mostrarConfirmacionPago();
+            } else {
+                alert('Error al procesar el pago: ' + (result.message || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al procesar el pago: ' + error.message);
+        });
+    }
     </script>
+
+    <!-- Modal de Proceso de Pago -->
+    <div id="modalProcesoPago" class="modal-pago">
+        <div class="modal-pago-contenido">
+            <div class="modal-pago-header">
+                <h3>💳 Proceso de Pago</h3>
+                <span class="modal-cerrar" onclick="cerrarModalPago()">&times;</span>
+            </div>
+
+            <div class="modal-pago-body">
+                <!-- Resumen del Pedido -->
+                <div class="pago-seccion">
+                    <h4>📋 Resumen del Pedido</h4>
+                    <div id="pago-detalle" class="pago-detalle">
+                        <!-- Items del pedido se llenarán dinámicamente -->
+                    </div>
+                    <div class="pago-subtotal">
+                        <span>Subtotal:</span>
+                        <span id="pago-subtotal">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Información del Mozo -->
+                <div class="pago-seccion">
+                    <h4>👨‍🍳 Atendido por</h4>
+                    <div id="pago-mozo-info">
+                        <p>El mozo asignado a tu mesa te atenderá pronto</p>
+                    </div>
+                </div>
+
+                <!-- Propina -->
+                <div class="pago-seccion">
+                    <h4>💝 ¿Deseas añadir una propina?</h4>
+                    <div class="propina-opciones">
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 0)" data-amount="0">Sin propina</button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 5)" data-amount="5">5%</button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 10)" data-amount="10">10%</button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 15)" data-amount="15">15%</button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 'otro')">Otro monto</button>
+                    </div>
+                    <div id="propina-otro" class="propina-otro" style="display: none;">
+                        <input type="number" id="propina-monto" placeholder="Monto de propina" min="0" step="0.01">
+                        <button type="button" class="btn-propina-custom" onclick="aplicarPropinaCustom()">Aplicar</button>
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="pago-total">
+                    <div class="total-calculo">
+                        <span>Subtotal:</span>
+                        <span id="total-subtotal">$0.00</span>
+                    </div>
+                    <div class="total-calculo">
+                        <span>Propina:</span>
+                        <span id="total-propina">$0.00</span>
+                    </div>
+                    <div class="total-final">
+                        <span>Total a Pagar:</span>
+                        <span id="pago-total-final">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Método de Pago -->
+                <div class="pago-seccion">
+                    <h4>💰 Método de Pago</h4>
+                    <div class="pago-metodos">
+                        <label class="pago-metodo">
+                            <input type="radio" name="metodo-pago" value="efectivo" checked>
+                            <span class="pago-metodo-icono">💵</span>
+                            <span>Efectivo</span>
+                        </label>
+                        <label class="pago-metodo">
+                            <input type="radio" name="metodo-pago" value="tarjeta">
+                            <span class="pago-metodo-icono">💳</span>
+                            <span>Tarjeta</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-pago-footer">
+                <button type="button" class="btn-secundario" onclick="cerrarModalPago()">Cancelar</button>
+                <button type="button" class="btn-principal" onclick="procesarPago()">Confirmar Pago</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Pago -->
+    <div id="pago-confirmacion-modal" class="modal-pago">
+        <div class="modal-pago-contenido">
+            <div class="modal-pago-header">
+                <h3>✅ Pago Confirmado</h3>
+                <span class="modal-cerrar" onclick="document.getElementById('pago-confirmacion-modal').style.display='none'">&times;</span>
+            </div>
+
+            <div class="modal-pago-body">
+                <div class="confirmacion-mensaje">
+                    <div class="confirmacion-icono">✅</div>
+                    <h4>¡Pago realizado con éxito!</h4>
+                    <p>Tu pedido ha sido confirmado y está siendo preparado</p>
+                </div>
+
+                <div id="confirmacion-propina" class="confirmacion-mensaje" style="display: none;">
+                    <p>💝 ¡Gracias por tu generosa propina!</p>
+                </div>
+
+                <div class="confirmacion-detalles">
+                    <h5>Detalle del Pedido</h5>
+                    <div id="confirmacion-pedido">
+                        <!-- Items del pedido -->
+                    </div>
+                    <div class="confirmacion-total">
+                        <span>Total Pagado:</span>
+                        <span id="confirmacion-total">$0.00</span>
+                    </div>
+                    <div class="confirmacion-mesa">
+                        <span id="confirmacion-mesa">Mesa 1</span>
+                    </div>
+                </div>
+
+                <div class="confirmacion-acciones">
+                    <button type="button" id="btn-otro-pedido" class="btn-principal">
+                        🍽️ Hacer otro pedido
+                    </button>
+                    <button type="button" id="btn-imprimir-recibo" class="btn-secundario">
+                        🖨️ Imprimir recibo
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-pago-footer">
+                <button type="button" id="btn-close-confirmacion" class="btn-secundario">Cerrar</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
