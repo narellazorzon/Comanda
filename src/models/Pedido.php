@@ -223,12 +223,6 @@ class Pedido {
                 return false;
             }
             
-<<<<<<< HEAD
-            // 3. Liberar la mesa si el pedido tenía una mesa asignada
-            if ($pedido['id_mesa'] && $pedido['modo_consumo'] === 'stay') {
-                $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'libre' WHERE id_mesa = ?");
-                $stmtMesa->execute([$pedido['id_mesa']]);
-=======
             // 3. Verificar si la mesa tiene más pedidos activos antes de liberarla
             if ($pedido['id_mesa'] && $pedido['modo_consumo'] === 'stay') {
                 // Contar pedidos activos restantes en la mesa
@@ -247,7 +241,6 @@ class Pedido {
                     $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'libre' WHERE id_mesa = ?");
                     $stmtMesa->execute([$pedido['id_mesa']]);
                 }
->>>>>>> juani
             }
             
             $db->commit();
