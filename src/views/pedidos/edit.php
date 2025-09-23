@@ -570,27 +570,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="form-group">
         <label for="id_mesa">Mesa *</label>
         <div style="background: #e7f3ff; padding: 8px; border-radius: 4px; margin-bottom: 8px; font-size: 0.85rem; border-left: 4px solid #0066cc;">
-          ℹ️ Solo se puede cambiar a mesas con estado <strong>"libre"</strong>
+          ℹ️ Solo se muestran las mesas <strong>libres</strong> disponibles para seleccionar
         </div>
         <select name="id_mesa" id="id_mesa" required onchange="showMozoInfo()">
           <option value="">Seleccionar mesa</option>
-          <?php foreach ($mesas as $mesa): ?>
-            <?php
-            $disabled = ($mesa['estado'] !== 'libre' && $mesa['id_mesa'] != $pedido['id_mesa']);
-            $style = $disabled ? 'style="color: #999;"' : '';
-            ?>
+          <?php 
+          // Filtrar mesas: solo mostrar las libres
+          $mesasDisponibles = array_filter($mesas, function($mesa) {
+              return $mesa['estado'] === 'libre';
+          });
+          
+          foreach ($mesasDisponibles as $mesa): 
+            $esMesaActual = $mesa['id_mesa'] == $pedido['id_mesa'];
+            $esLibre = $mesa['estado'] === 'libre';
+          ?>
             <option value="<?= $mesa['id_mesa'] ?>"
                     data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
                     data-estado="<?= $mesa['estado'] ?>"
-                    <?= $mesa['id_mesa'] == $pedido['id_mesa'] ? 'selected' : '' ?>
-                    <?= $disabled ? 'disabled' : '' ?>
-                    <?= $style ?>>
+                    <?= $esMesaActual ? 'selected' : '' ?>>
               Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
-              <?php if ($mesa['id_mesa'] == $pedido['id_mesa']): ?>
+              <?php if ($esMesaActual): ?>
                 (Actual)
-              <?php endif; ?>
-              <?php if ($mesa['estado'] !== 'libre'): ?>
-                - [<?= ucfirst($mesa['estado']) ?>]
               <?php endif; ?>
             </option>
           <?php endforeach; ?>

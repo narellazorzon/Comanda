@@ -164,12 +164,18 @@ class Pedido {
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $pedidoId]);
             
+            // 4. Actualizar estado de la mesa a ocupada si se asignó una mesa
+            if (!empty($data['id_mesa'])) {
+                $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'ocupada' WHERE id_mesa = ?");
+                $stmtMesa->execute([$data['id_mesa']]);
+            }
+            
             // Confirmar transacción
             $db->commit();
             
             return $pedidoId;
             
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // Revertir transacción en caso de error
             $db->rollback();
             throw $e;
@@ -190,12 +196,46 @@ class Pedido {
     }
 
     /**
-     * Elimina un pedido por su ID.
+     * Elimina un pedido por su ID y libera la mesa si corresponde.
      */
     public static function delete(int $id): bool {
         $db = (new Database)->getConnection();
-        $stmt = $db->prepare("DELETE FROM pedidos WHERE id_pedido = ?");
-        return $stmt->execute([$id]);
+        
+        try {
+            $db->beginTransaction();
+            
+            // 1. Obtener información del pedido antes de eliminarlo
+            $stmtPedido = $db->prepare("SELECT id_mesa, modo_consumo FROM pedidos WHERE id_pedido = ?");
+            $stmtPedido->execute([$id]);
+            $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$pedido) {
+                $db->rollback();
+                return false;
+            }
+            
+            // 2. Eliminar el pedido
+            $stmt = $db->prepare("DELETE FROM pedidos WHERE id_pedido = ?");
+            $resultado = $stmt->execute([$id]);
+            
+            if (!$resultado) {
+                $db->rollback();
+                return false;
+            }
+            
+            // 3. Liberar la mesa si el pedido tenía una mesa asignada
+            if ($pedido['id_mesa'] && $pedido['modo_consumo'] === 'stay') {
+                $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'libre' WHERE id_mesa = ?");
+                $stmtMesa->execute([$pedido['id_mesa']]);
+            }
+            
+            $db->commit();
+            return true;
+            
+        } catch (\Exception $e) {
+            $db->rollback();
+            throw $e;
+        }
     }
 
     /**
@@ -264,17 +304,17 @@ class Pedido {
         try {
             $db->beginTransaction();
             
-            // 1. Validar que la mesa esté disponible si se está cambiando
+            // 1. Obtener mesa actual del pedido (siempre necesaria para liberar)
+            $stmtActual = $db->prepare("SELECT id_mesa FROM pedidos WHERE id_pedido = ?");
+            $stmtActual->execute([$id]);
+            $mesaActual = $stmtActual->fetchColumn();
+            
+            // 2. Validar que la mesa esté disponible si se está cambiando
             if (isset($data['id_mesa']) && $data['id_mesa']) {
                 // Verificar estado actual de la mesa
                 $stmtMesa = $db->prepare("SELECT estado, id_mozo FROM mesas WHERE id_mesa = ?");
                 $stmtMesa->execute([$data['id_mesa']]);
                 $mesaData = $stmtMesa->fetch(PDO::FETCH_ASSOC);
-
-                // Obtener mesa actual del pedido
-                $stmtActual = $db->prepare("SELECT id_mesa FROM pedidos WHERE id_pedido = ?");
-                $stmtActual->execute([$id]);
-                $mesaActual = $stmtActual->fetchColumn();
 
                 // Si la mesa no es libre y es diferente a la actual, lanzar error
                 if ($mesaData && $mesaData['estado'] !== 'libre' && $data['id_mesa'] != $mesaActual) {
@@ -284,7 +324,7 @@ class Pedido {
                 $idMozo = $mesaData ? $mesaData['id_mozo'] : null;
             }
 
-            // 2. Actualizar datos básicos del pedido incluyendo el mozo
+            // 3. Actualizar datos básicos del pedido incluyendo el mozo
             $stmt = $db->prepare("
                 UPDATE pedidos
                 SET id_mesa = ?, id_mozo = ?, modo_consumo = ?, forma_pago = ?, observaciones = ?
@@ -299,13 +339,13 @@ class Pedido {
                 $id
             ]);
             
-            // 3. Eliminar detalles existentes solo si se envían nuevos items
+            // 4. Eliminar detalles existentes solo si se envían nuevos items
             if (!empty($data['items'])) {
                 $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
                 $stmt->execute([$id]);
             }
 
-            // 4. Insertar nuevos detalles y calcular total
+            // 5. Insertar nuevos detalles y calcular total
             $total = 0.00;
             if (!empty($data['items'])) {
                 $stmtItem = $db->prepare("
@@ -340,14 +380,28 @@ class Pedido {
                 $total = $stmtTotal->fetchColumn();
             }
 
-            // 5. Actualizar el total del pedido
+            // 6. Actualizar el total del pedido
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $id]);
+            
+            // 7. Actualizar estado de la mesa si se cambió a una nueva mesa
+            // Los triggers de la base de datos no manejan cambios de mesa en edición, solo cambios de estado
+            if (isset($data['id_mesa']) && $data['id_mesa'] && $data['id_mesa'] != $mesaActual) {
+                // Cambiar estado de la mesa anterior a libre si existía
+                if ($mesaActual) {
+                    $stmtMesaAnterior = $db->prepare("UPDATE mesas SET estado = 'libre' WHERE id_mesa = ?");
+                    $stmtMesaAnterior->execute([$mesaActual]);
+                }
+                
+                // Cambiar estado de la nueva mesa a ocupada
+                $stmtMesaNueva = $db->prepare("UPDATE mesas SET estado = 'ocupada' WHERE id_mesa = ?");
+                $stmtMesaNueva->execute([$data['id_mesa']]);
+            }
             
             $db->commit();
             return true;
             
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $db->rollback();
             throw $e;
         }
