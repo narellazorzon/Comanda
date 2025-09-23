@@ -164,6 +164,12 @@ class Pedido {
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $pedidoId]);
             
+            // 4. Actualizar estado de la mesa a ocupada si se asignó una mesa
+            if (!empty($data['id_mesa'])) {
+                $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'ocupada' WHERE id_mesa = ?");
+                $stmtMesa->execute([$data['id_mesa']]);
+            }
+            
             // Confirmar transacción
             $db->commit();
             
@@ -190,12 +196,60 @@ class Pedido {
     }
 
     /**
-     * Elimina un pedido por su ID.
+     * Elimina un pedido por su ID y libera la mesa si no tiene más pedidos activos.
      */
     public static function delete(int $id): bool {
         $db = (new Database)->getConnection();
-        $stmt = $db->prepare("DELETE FROM pedidos WHERE id_pedido = ?");
-        return $stmt->execute([$id]);
+        
+        try {
+            $db->beginTransaction();
+            
+            // 1. Obtener información del pedido antes de eliminarlo
+            $stmtPedido = $db->prepare("SELECT id_mesa, modo_consumo FROM pedidos WHERE id_pedido = ?");
+            $stmtPedido->execute([$id]);
+            $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$pedido) {
+                $db->rollback();
+                return false;
+            }
+            
+            // 2. Eliminar el pedido
+            $stmt = $db->prepare("DELETE FROM pedidos WHERE id_pedido = ?");
+            $resultado = $stmt->execute([$id]);
+            
+            if (!$resultado) {
+                $db->rollback();
+                return false;
+            }
+            
+            // 3. Verificar si la mesa tiene más pedidos activos antes de liberarla
+            if ($pedido['id_mesa'] && $pedido['modo_consumo'] === 'stay') {
+                // Contar pedidos activos restantes en la mesa
+                $stmtCount = $db->prepare("
+                    SELECT COUNT(*) 
+                    FROM pedidos 
+                    WHERE id_mesa = ? 
+                    AND estado NOT IN ('cerrado', 'cancelado')
+                    AND modo_consumo = 'stay'
+                ");
+                $stmtCount->execute([$pedido['id_mesa']]);
+                $pedidosRestantes = $stmtCount->fetchColumn();
+                
+                // Solo liberar la mesa si no hay más pedidos activos
+                if ($pedidosRestantes == 0) {
+                    $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'libre' WHERE id_mesa = ?");
+                    $stmtMesa->execute([$pedido['id_mesa']]);
+                }
+            }
+            
+            $db->commit();
+            return true;
+            
+        } catch (\Exception $e) {
+            $db->rollback();
+            throw $e;
+        }
     }
 
     /**
