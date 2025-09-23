@@ -5,10 +5,11 @@ session_start();
 // Cargar autoload
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Incluir header para todas las páginas (excepto login y rutas de API)
+// Incluir header para todas las páginas (excepto login, cliente y rutas de API)
 $route = $_GET['route'] ?? 'cliente';
-$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado'];
-if ($route !== 'login' && !in_array($route, $apiRoutes)) {
+$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion'];
+$noHeaderRoutes = ['login', 'cliente', 'pago', 'pago-confirmacion'];
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
@@ -80,6 +81,10 @@ switch ($route) {
 
     case 'cliente':
         include __DIR__ . '/../src/views/cliente/index.php';
+        break;
+
+    case 'pago':
+        include __DIR__ . '/../src/views/cliente/pago.php';
         break;
 
     // Rutas de Mesas
@@ -244,6 +249,8 @@ switch ($route) {
 
     case 'reportes/rendimiento-personal':
         requireAdmin();
+        require_once __DIR__ . '/../src/controllers/ReporteController.php';
+        $resultado = \App\Controllers\ReporteController::rendimientoMozos();
         include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
         break;
 
@@ -263,6 +270,18 @@ switch ($route) {
     case 'cliente-pedido':
         require_once __DIR__ . '/../src/controllers/ClienteController.php';
         \App\Controllers\ClienteController::crearPedido();
+        break;
+
+    // Ruta para procesar pago
+    case 'pago-procesar':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::procesarPago();
+        break;
+
+    // Ruta para mostrar confirmación de pago
+    case 'pago-confirmacion':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::confirmacion();
         break;
 
     // Ruta del generador de QRs offline (solo administrador)
@@ -286,8 +305,8 @@ switch ($route) {
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login y rutas de API)
-if ($route !== 'login' && !in_array($route, $apiRoutes)) {
+// Incluir footer para todas las páginas (excepto login, cliente y rutas de API)
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>

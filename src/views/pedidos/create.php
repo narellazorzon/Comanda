@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'El nombre del cliente es obligatorio';
     } elseif ($modo_consumo === 'stay' && $id_mesa <= 0) {
         $error = 'Debe seleccionar una mesa para pedidos en el local';
-    } elseif (empty($items_pedido)) {
+    } elseif (empty($items_pedido) && !$is_edit) {
         $error = 'Debe agregar al menos un ítem al pedido';
     } else {
         try {

@@ -35,23 +35,35 @@ class ClienteController {
             header('Location: ' . url('cliente'));
             exit;
         }
-        
+
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+
+        header('Content-Type: application/json');
         
         try {
             $pedidoId = $_POST['pedido_id'] ?? null;
             $propinaMonto = floatval($_POST['propina_monto'] ?? 0);
             $mozoId = $_POST['mozo_id'] ?? null;
             $metodoPago = $_POST['metodo_pago'] ?? null;
+            $mesa = $_POST['mesa'] ?? null;
+
+            // Debug log
+            error_log("Payment processing data: " . json_encode([
+                'pedido_id' => $pedidoId,
+                'propina_monto' => $propinaMonto,
+                'mozo_id' => $mozoId,
+                'metodo_pago' => $metodoPago,
+                'mesa' => $mesa
+            ]));
             
             if (!$pedidoId) {
                 throw new Exception('ID de pedido no válido');
             }
             
             // Obtener el pedido
-            $pedido = Pedido::findWithDetails($pedidoId);
+            $pedido = Pedido::find($pedidoId);
             if (!$pedido) {
                 throw new Exception('Pedido no encontrado');
             }

@@ -53,10 +53,34 @@ class Pedido {
     public static function allByMozo(int $mozoId): array {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
-            SELECT * 
-            FROM pedidos 
-            WHERE id_mozo = ? 
+            SELECT *
+            FROM pedidos
+            WHERE id_mozo = ?
             ORDER BY fecha_hora DESC
+        ");
+        $stmt->execute([$mozoId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Devuelve los pedidos del día actual para las mesas asignadas a un mozo.
+     */
+    public static function todayByMesoAssigned(int $mozoId): array {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT p.*,
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   p.fecha_hora as fecha_creacion
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            WHERE DATE(p.fecha_hora) = CURDATE()
+            AND m.id_mozo = ?
+            ORDER BY p.fecha_hora DESC
         ");
         $stmt->execute([$mozoId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -240,25 +264,48 @@ class Pedido {
         try {
             $db->beginTransaction();
             
-            // 1. Actualizar datos básicos del pedido
+            // 1. Validar que la mesa esté disponible si se está cambiando
+            if (isset($data['id_mesa']) && $data['id_mesa']) {
+                // Verificar estado actual de la mesa
+                $stmtMesa = $db->prepare("SELECT estado, id_mozo FROM mesas WHERE id_mesa = ?");
+                $stmtMesa->execute([$data['id_mesa']]);
+                $mesaData = $stmtMesa->fetch(PDO::FETCH_ASSOC);
+
+                // Obtener mesa actual del pedido
+                $stmtActual = $db->prepare("SELECT id_mesa FROM pedidos WHERE id_pedido = ?");
+                $stmtActual->execute([$id]);
+                $mesaActual = $stmtActual->fetchColumn();
+
+                // Si la mesa no es libre y es diferente a la actual, lanzar error
+                if ($mesaData && $mesaData['estado'] !== 'libre' && $data['id_mesa'] != $mesaActual) {
+                    throw new \Exception("No se puede cambiar a la mesa seleccionada. Estado actual: " . $mesaData['estado']);
+                }
+
+                $idMozo = $mesaData ? $mesaData['id_mozo'] : null;
+            }
+
+            // 2. Actualizar datos básicos del pedido incluyendo el mozo
             $stmt = $db->prepare("
-                UPDATE pedidos 
-                SET id_mesa = ?, modo_consumo = ?, forma_pago = ?, observaciones = ?
+                UPDATE pedidos
+                SET id_mesa = ?, id_mozo = ?, modo_consumo = ?, forma_pago = ?, observaciones = ?
                 WHERE id_pedido = ?
             ");
             $stmt->execute([
                 $data['id_mesa'] ?? null,
+                $idMozo,
                 $data['modo_consumo'] ?? 'stay',
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $id
             ]);
             
-            // 2. Eliminar detalles existentes
-            $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
-            $stmt->execute([$id]);
-            
-            // 3. Insertar nuevos detalles y calcular total
+            // 3. Eliminar detalles existentes solo si se envían nuevos items
+            if (!empty($data['items'])) {
+                $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
+                $stmt->execute([$id]);
+            }
+
+            // 4. Insertar nuevos detalles y calcular total
             $total = 0.00;
             if (!empty($data['items'])) {
                 $stmtItem = $db->prepare("
@@ -286,9 +333,14 @@ class Pedido {
                         }
                     }
                 }
+            } else {
+                // Si no se envían items, mantener el total actual
+                $stmtTotal = $db->prepare("SELECT total FROM pedidos WHERE id_pedido = ?");
+                $stmtTotal->execute([$id]);
+                $total = $stmtTotal->fetchColumn();
             }
-            
-            // 4. Actualizar el total del pedido
+
+            // 5. Actualizar el total del pedido
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $id]);
             

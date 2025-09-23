@@ -226,13 +226,208 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .mozos-table {
         overflow-x: auto;
+    }
+
+    /* Responsive para tabla de ranking */
+    .table-responsive {
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+
+    .mozos-table table {
+        font-size: 0.875rem;
+    }
+
+    .mozos-table th,
+    .mozos-table td {
+        padding: 8px 10px;
+        white-space: nowrap;
+    }
+
+    .mozos-table th:first-child,
+    .mozos-table td:first-child {
+        padding-left: 15px;
+    }
+
+    .mozos-table th:last-child,
+    .mozos-table td:last-child {
+        padding-right: 15px;
+    }
+
+    /* Ajustar columnas para móviles */
+    .mozos-table th:nth-child(4),
+    .mozos-table td:nth-child(4) { /* Total Vendido */
+        min-width: 100px;
+    }
+
+    .mozos-table th:nth-child(5),
+    .mozos-table td:nth-child(5) { /* Total Propinas */
+        min-width: 100px;
+    }
+
+    .mozos-table th:nth-child(6),
+    .mozos-table td:nth-child(6) { /* Propina Promedio */
+        min-width: 100px;
+    }
+
+    .mozos-table th:nth-child(8),
+    .mozos-table td:nth-child(8) { /* Rendimiento */
+        min-width: 120px;
+    }
+
+    .rank-badge {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+    }
+
+    .mozo-name {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .progress {
+        height: 16px;
+    }
+
+    .progress-bar {
+        font-size: 0.7rem;
+        line-height: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .mozos-table {
+        font-size: 0.8rem;
+    }
+
+    .mozos-table th,
+    .mozos-table td {
+        padding: 6px 8px;
+    }
+
+    /* Ocultar columnas menos importantes en móviles muy pequeños */
+    .mozos-table th:nth-child(6),
+    .mozos-table td:nth-child(6) { /* Propina Promedio */
+        display: none;
+    }
+
+    .mozos-table th:nth-child(8),
+    .mozos-table td:nth-child(8) { /* Rendimiento */
+        display: none;
+    }
+
+    .table-responsive {
+        overflow-x: scroll;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Mejorar gráficos en móviles */
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    canvas {
+        max-height: 250px !important;
+    }
+
+    /* Ajustar botones en móviles */
+    .export-btn {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        float: none;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    /* Títulos más pequeños */
+    .card-header h5 {
+        font-size: 1rem;
+    }
+
+    /* Estadísticas más compactas */
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-card .value {
+        font-size: 1.4em;
+    }
+
+    /* Asegurar visibilidad del ranking */
+    .ranking-card {
+        margin: 0 -15px;
+        border-radius: 0;
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+    .ranking-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin: 0 !important;
+        background: #fff;
+    }
+
+    .ranking-table-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .ranking-table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .ranking-table-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    .ranking-table-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .mozos-table {
+        min-width: 600px !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* Ajustar tarjetas en móvil */
+    .card {
+        border-radius: 0.375rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Forzar visibilidad de la tabla */
+    .table-responsive {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Asegurar que el contenedor no colapse */
+    .card-body.p-0 {
+        padding: 0 !important;
+    }
+
+    /* Mensaje de scroll en móvil */
+    .ranking-card::after {
+        content: "→ Desliza para ver más";
+        display: block;
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.75rem;
+        padding: 8px;
+        background: #f8f9fa;
+        border-top: 1px solid #dee2e6;
     }
 }
 
@@ -272,6 +467,10 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 </style>
 
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
@@ -290,14 +489,22 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                         
                         <div class="col-md-3">
                             <label for="desde" class="form-label">Desde</label>
-                            <input type="date" class="form-control" id="desde" name="desde" 
-                                   value="<?= htmlspecialchars($desde) ?>" max="<?= date('Y-m-d') ?>">
+                            <input type="text" class="form-control" id="desde" name="desde"
+                                   value="<?= date('d/m/Y', strtotime($desde)) ?>"
+                                   placeholder="DD/MM/YYYY"
+                                   pattern="\d{2}/\d{2}/\d{4}">
+                            <input type="hidden" id="desde_hidden" name="desde"
+                                   value="<?= htmlspecialchars($desde) ?>">
                         </div>
-                        
+
                         <div class="col-md-3">
                             <label for="hasta" class="form-label">Hasta</label>
-                            <input type="date" class="form-control" id="hasta" name="hasta" 
-                                   value="<?= htmlspecialchars($hasta) ?>" max="<?= date('Y-m-d') ?>">
+                            <input type="text" class="form-control" id="hasta" name="hasta"
+                                   value="<?= date('d/m/Y', strtotime($hasta)) ?>"
+                                   placeholder="DD/MM/YYYY"
+                                   pattern="\d{2}/\d{2}/\d{4}">
+                            <input type="hidden" id="hasta_hidden" name="hasta"
+                                   value="<?= htmlspecialchars($hasta) ?>">
                         </div>
                         
                         <div class="col-md-3">
@@ -363,13 +570,13 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                 
                 <?php if ($agrupar === 'ninguno'): ?>
                     <!-- Vista de Ranking -->
-                    <div class="card mb-4">
+                    <div class="card mb-4 ranking-card">
                         <div class="card-header">
                             <h5 class="mb-0">🏆 Ranking de Rendimiento</h5>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
+                        <div class="card-body p-0">
+                            <div class="ranking-table-container">
+                                <table class="table table-hover mozos-table">
                                     <thead>
                                         <tr>
                                             <th width="60">#</th>
@@ -377,9 +584,9 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                             <th class="text-center">Pedidos</th>
                                             <th class="text-end">Total Vendido</th>
                                             <th class="text-end">Total Propinas</th>
-                                            <th class="text-end">Propina Promedio</th>
+                                            <th class="text-end d-none d-md-table-cell">Propina Promedio</th>
                                             <th class="text-center">Tasa Propina</th>
-                                            <th width="150">Rendimiento</th>
+                                            <th width="150" class="d-none d-lg-table-cell">Rendimiento</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -401,7 +608,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <strong><?= htmlspecialchars($kpi['mozo']) ?></strong>
+                                                    <strong class="mozo-name"><?= htmlspecialchars($kpi['mozo']) ?></strong>
                                                 </td>
                                                 <td class="text-center">
                                                     <span class="badge bg-primary"><?= $kpi['pedidos'] ?></span>
@@ -412,7 +619,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                                 <td class="text-end text-success">
                                                     <strong>$<?= number_format($kpi['propina_total'], 2) ?></strong>
                                                 </td>
-                                                <td class="text-end">
+                                                <td class="text-end d-none d-md-table-cell">
                                                     $<?= number_format($kpi['propina_promedio_por_pedido'], 2) ?>
                                                 </td>
                                                 <td class="text-center">
@@ -420,11 +627,11 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                                         <?= number_format($kpi['tasa_propina'] * 100, 2) ?>%
                                                     </span>
                                                 </td>
-                                                <td>
+                                                <td class="d-none d-lg-table-cell">
                                                     <div class="progress" style="height: 20px;">
-                                                        <div class="progress-bar bg-success" role="progressbar" 
+                                                        <div class="progress-bar bg-success" role="progressbar"
                                                              style="width: <?= $performancePercent ?>%"
-                                                             aria-valuenow="<?= $performancePercent ?>" 
+                                                             aria-valuenow="<?= $performancePercent ?>"
                                                              aria-valuemin="0" aria-valuemax="100">
                                                             <?= round($performancePercent) ?>%
                                                         </div>
@@ -536,7 +743,10 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     </div>
 </div>
 
+<!-- Scripts necesarios -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script>
 <?php if (!empty($kpis) && $agrupar === 'ninguno'): ?>
     // Datos para gráficos de ranking
@@ -645,4 +855,148 @@ function exportarCSV() {
     link.click();
     document.body.removeChild(link);
 }
+
+// Función para convertir fecha de DD/MM/YYYY a YYYY-MM-DD
+function convertDate(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return dateStr;
+    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+}
+
+// Función para convertir fecha de YYYY-MM-DD a DD/MM/YYYY
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+// Validar y convertir fechas al enviar el formulario
+document.querySelector('form').addEventListener('submit', function(e) {
+    const desdeInput = document.getElementById('desde');
+    const hastaInput = document.getElementById('hasta');
+    const desdeHidden = document.getElementById('desde_hidden');
+    const hastaHidden = document.getElementById('hasta_hidden');
+
+    // Validar formato DD/MM/YYYY
+    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+
+    if (!dateRegex.test(desdeInput.value)) {
+        e.preventDefault();
+        alert('El formato de la fecha "Desde" debe ser DD/MM/YYYY');
+        desdeInput.focus();
+        return;
+    }
+
+    if (!dateRegex.test(hastaInput.value)) {
+        e.preventDefault();
+        alert('El formato de la fecha "Hasta" debe ser DD/MM/YYYY');
+        hastaInput.focus();
+        return;
+    }
+
+    // Convertir fechas al formato YYYY-MM-DD para el formulario
+    desdeHidden.value = convertDate(desdeInput.value);
+    hastaHidden.value = convertDate(hastaInput.value);
+});
+
+// Formatear fecha al salir del campo
+document.getElementById('desde').addEventListener('blur', function() {
+    const value = this.value;
+    if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
+        // Auto-formatear si el usuario ingresa ddmmyyyy
+        const clean = value.replace(/\D/g, '');
+        if (clean.length === 8) {
+            this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
+        }
+    }
+});
+
+document.getElementById('hasta').addEventListener('blur', function() {
+    const value = this.value;
+    if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
+        // Auto-formatear si el usuario ingresa ddmmyyyy
+        const clean = value.replace(/\D/g, '');
+        if (clean.length === 8) {
+            this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
+        }
+    }
+});
+
+// Configuración en español para Flatpickr
+const spanishLocale = {
+    weekdays: {
+        shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+        longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+    },
+    months: {
+        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    },
+    daysInMonth: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+    firstDayOfWeek: 1,
+    ordinal: function(nth) {
+        const s = nth % 100;
+        if (s > 3 && s < 21) return 'º';
+        switch (s % 10) {
+            case 1: return 'º';
+            case 2: return 'º';
+            case 3: return 'º';
+            default: return 'º';
+        }
+    },
+    rangeSeparator: ' a ',
+    weekAbbreviation: 'Sem',
+    scrollTitle: 'Desplázate para incrementar',
+    toggleTitle: 'Haz clic para alternar',
+    amPM: ['AM', 'PM'],
+    yearAriaLabel: 'Año',
+    monthAriaLabel: 'Mes',
+    hourAriaLabel: 'Hora',
+    minuteAriaLabel: 'Minuto',
+    time_24hr: true
+};
+
+// Inicializar Flatpickr para los campos de fecha
+flatpickr("#desde", {
+    locale: spanishLocale,
+    dateFormat: "d/m/Y",
+    altInput: true,
+    altFormat: "d \\de F \\de Y",
+    maxDate: new Date(),
+    onChange: function(selectedDates, dateStr, instance) {
+        // Actualizar el campo hidden cuando cambia la fecha
+        document.getElementById('desde_hidden').value =
+            selectedDates[0] ? selectedDates[0].toISOString().split('T')[0] : '';
+    }
+});
+
+flatpickr("#hasta", {
+    locale: spanishLocale,
+    dateFormat: "d/m/Y",
+    altInput: true,
+    altFormat: "d \\de F \\de Y",
+    maxDate: new Date(),
+    onChange: function(selectedDates, dateStr, instance) {
+        // Actualizar el campo hidden cuando cambia la fecha
+        document.getElementById('hasta_hidden').value =
+            selectedDates[0] ? selectedDates[0].toISOString().split('T')[0] : '';
+    }
+});
+
+// Sincronizar valores iniciales
+document.addEventListener('DOMContentLoaded', function() {
+    const desdeInput = document.getElementById('desde');
+    const hastaInput = document.getElementById('hasta');
+    const desdeHidden = document.getElementById('desde_hidden');
+    const hastaHidden = document.getElementById('hasta_hidden');
+
+    // Establecer valores iniciales en los campos hidden
+    desdeHidden.value = '<?= htmlspecialchars($desde) ?>';
+    hastaHidden.value = '<?= htmlspecialchars($hasta) ?>';
+});
 </script>
