@@ -12,13 +12,13 @@ if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
 use App\Models\Reporte;
 
 // Parámetros de filtro
-$periodo = $_GET['periodo'] ?? 'mes';
+$periodo = $_GET['periodo'] ?? 'todos';
 $limite = (int)($_GET['limite'] ?? 10);
 
 // Validar período
-$periodos_validos = ['semana', 'mes', 'año'];
+$periodos_validos = ['semana', 'mes', 'año', 'todos'];
 if (!in_array($periodo, $periodos_validos)) {
-    $periodo = 'mes';
+    $periodo = 'todos';
 }
 
 // Obtener datos usando el modelo Reporte
@@ -28,15 +28,7 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 
 <style>
 /* Usar las mismas variables de color del dashboard principal */
-:root {
-  --background: #f7f1e1; /* beige muy claro */
-  --surface: #eee0be; /* blanco para cartas y tablas */
-  --primary: #a5a4a1; /* beige medio */
-  --secondary: #a1866f; /* marrón suave */
-  --accent: #eee0be; /* tonalidad intermedia */
-  --text: #3f3f3f; /* gris oscuro para texto */
-  --text-light: #ffffff; /* texto claro sobre fondo oscuro */
-}
+/* Variables CSS removidas - usar las del style.css global para mantener consistencia */
 
 body {
     background-color: var(--background);
@@ -46,22 +38,7 @@ body {
     color: var(--text);
 }
 
-nav {
-    background-color: var(--primary);
-    padding: 0.75rem 1rem;
-    border-bottom: 2px solid var(--secondary);
-}
-
-nav a {
-    color: var(--text);
-    text-decoration: none;
-    margin-right: 1rem;
-    font-weight: 600;
-}
-
-nav a:hover {
-    color: var(--secondary);
-}
+/* Estilos de nav removidos - ahora usa el nav estándar del header */
 
 main {
     max-width: 960px;
@@ -70,35 +47,56 @@ main {
 }
 
 .report-header {
-    background: var(--secondary);
+    background: linear-gradient(135deg, var(--secondary) 0%, #8b5e46 100%);
     color: var(--text-light);
     padding: 1.5rem;
     border-radius: 8px;
     margin-bottom: 2rem;
     text-align: center;
+    box-shadow: 0 4px 15px rgba(161, 134, 111, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.report-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .report-header h1 {
     margin: 0 0 10px 0;
-    font-size: 2.5em;
+    font-size: 2.2em;
+    font-weight: bold;
+    color: rgb(240, 229, 205);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
 }
 
 .report-header p {
     margin: 0;
-    opacity: 0.9;
+    opacity: 0.95;
     font-size: 1.1em;
+    position: relative;
+    z-index: 1;
 }
 
 .filters-section {
     background: var(--surface);
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     align-items: center;
     flex-wrap: wrap;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .filter-group {
@@ -137,37 +135,44 @@ main {
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-card {
     background: var(--surface);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .stat-card h3 {
-    margin: 0 0 10px 0;
+    margin: 0 0 6px 0;
     color: var(--text);
-    font-size: 0.9em;
+    font-size: 0.8em;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
 .stat-card .value {
-    font-size: 2em;
+    font-size: 1.6em;
     font-weight: bold;
     color: var(--secondary);
 }
 
 .platos-table {
     background: var(--surface);
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .platos-table table {
@@ -225,30 +230,47 @@ main {
 
 .back-btn {
     display: inline-block;
-    background: var(--secondary);
+    background: linear-gradient(135deg, var(--secondary) 0%, #8b5e46 100%);
     color: var(--text-light);
-    padding: 0.75rem 1.5rem;
+    padding: 0.6rem 1.2rem;
     border-radius: 4px;
     text-decoration: none;
     font-weight: 600;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
     margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(161, 134, 111, 0.3);
 }
 
 .back-btn:hover {
-    background-color: #8b5e46;
+    background: linear-gradient(135deg, #8b5e46 0%, var(--secondary) 100%);
     text-decoration: none;
     color: var(--text-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(161, 134, 111, 0.4);
 }
 
 @media (max-width: 600px) {
+    .report-header h1 {
+        font-size: 1.8em;
+    }
+    
     .filters-section {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.8rem;
     }
     
     .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+    
+    .stat-card {
+        padding: 0.8rem;
+    }
+    
+    .stat-card .value {
+        font-size: 1.4em;
     }
     
     .platos-table {
@@ -258,8 +280,6 @@ main {
 </style>
 
 <main>
-    <a href="index.php" class="back-btn">← Volver a Reportes</a>
-
     <div class="report-header">
         <h1>🍽️ Reporte de Platos Más Vendidos</h1>
         <p>Análisis de ventas por período de tiempo</p>
@@ -269,6 +289,7 @@ main {
         <div class="filter-group">
             <label for="periodo">Período:</label>
             <select name="periodo" id="periodo" onchange="updateFilters()">
+                <option value="todos" <?= $periodo === 'todos' ? 'selected' : '' ?>>Todos los Períodos</option>
                 <option value="semana" <?= $periodo === 'semana' ? 'selected' : '' ?>>Última Semana</option>
                 <option value="mes" <?= $periodo === 'mes' ? 'selected' : '' ?>>Último Mes</option>
                 <option value="año" <?= $periodo === 'año' ? 'selected' : '' ?>>Último Año</option>
@@ -370,5 +391,5 @@ function applyFilters() {
 </script>
 
 <div style="margin-top: 2rem; text-align: center;">
-    <a href="<?= url('reportes') ?>" class="access-btn">← Volver a Reportes</a>
+    <a href="<?= url('reportes') ?>" class="back-btn">← Volver a Reportes</a>
 </div>

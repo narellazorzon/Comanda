@@ -85,4 +85,36 @@ class LlamadoMesa {
             ORDER BY lm.hora_solicitud DESC
         ")->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Elimina un llamado de mesa.
+     */
+    public static function delete(int $id_llamado): bool {
+        try {
+            $db = (new Database)->getConnection();
+            $stmt = $db->prepare("DELETE FROM llamados_mesa WHERE id_llamado = ?");
+            $result = $stmt->execute([$id_llamado]);
+            $rows_affected = $stmt->rowCount();
+            
+            error_log("LlamadoMesa::delete - ID: $id_llamado, Result: " . ($result ? 'true' : 'false') . ", Rows affected: $rows_affected");
+            
+            return $result && $rows_affected > 0;
+        } catch (\Exception $e) {
+            error_log("LlamadoMesa::delete - Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Elimina automáticamente llamados con más de 20 minutos.
+     */
+    public static function deleteOldCalls(): int {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            DELETE FROM llamados_mesa 
+            WHERE TIMESTAMPDIFF(MINUTE, hora_solicitud, NOW()) > 20
+        ");
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
 }

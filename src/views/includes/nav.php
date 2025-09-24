@@ -18,7 +18,9 @@ $base_path = $is_in_reportes ? '../' : '';
 <nav class="navbar">
   <div class="nav-container">
     <div class="nav-logo">
-      <img src="<?= $base_url ?>/assets/img/logo.png" alt="Comanda" style="height: 70px; width: auto; max-height: 70px;">
+      <a href="<?= $base_url ?>/index.php?route=home" style="text-decoration: none; display: block;">
+        <img src="<?= $base_url ?>/assets/img/logo.png" alt="Comanda" style="height: 60px; width: auto; max-height: 60px;">
+      </a>
     </div>
     
     <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
@@ -28,22 +30,27 @@ $base_path = $is_in_reportes ? '../' : '';
     </button>
     
     <div class="nav-menu" id="nav-menu">
-      <?php if ($rol === 'administrador'): ?>
-        <a href="<?= $base_url ?>/index.php?route=home" class="nav-link">🏠 Inicio</a>
+      <?php if (empty($rol)): ?>
+        <button id="nav-llamar-mozo" class="nav-link btn-llamar-mozo" style="display:none;">🔔 Llamar Mozo</button>
+        <button id="nav-cart-button" class="nav-link" style="background:none;border:none;cursor:pointer;">🛒 Carrito</button>
+      <?php elseif ($rol === 'administrador'): ?>
         <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Mesas</a>
         <a href="<?= $base_url ?>/index.php?route=pedidos" class="nav-link">🍽️ Pedidos</a>
-        <a href="<?= $base_url ?>/index.php?route=mozos" class="nav-link">👥 Mozos</a>
+        <a href="<?= $base_url ?>/index.php?route=mozos" class="nav-link">👥 Personal</a>
         <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Carta</a>
         <a href="<?= $base_url ?>/index.php?route=reportes" class="nav-link">📊 Reportes</a>
-        <a href="<?= $base_url ?>/index.php?route=admin/qr-offline" class="nav-link">🏷️ QRs Mesa</a>
+        <a href="<?= $base_url ?>/index.php?route=admin/qr-offline" class="nav-link">📱 QR Mesas</a>
       <?php elseif ($rol === 'mozo'): ?>
-        <a href="<?= $base_url ?>/index.php?route=home" class="nav-link">🏠 Inicio</a>
         <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Ver Mesas</a>
         <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Ver Carta</a>
         <a href="<?= $base_url ?>/index.php?route=pedidos" class="nav-link">🍽️ Ver Pedidos</a>
         <a href="<?= $base_url ?>/index.php?route=llamados" class="nav-link">🔔 Llamados Mesa</a>
       <?php endif; ?>
-      <a href="<?= $base_url ?>/index.php?route=logout" class="nav-link logout">🚪 Cerrar sesión</a>
+      <?php if ($rol): ?>
+        <a href="<?= $base_url ?>/index.php?route=logout" class="nav-link logout">🚪 Cerrar sesión</a>
+      <?php else: ?>
+        <a href="<?= $base_url ?>/index.php?route=login" class="nav-link">🔐 Iniciar sesión</a>
+      <?php endif; ?>
     </div>
   </div>
 </nav>
@@ -73,5 +80,20 @@ document.addEventListener('DOMContentLoaded', function() {
             navToggle.classList.remove('active');
         }
     });
+
+    // Botón de carrito en el header para visitantes
+    const navCartBtn = document.getElementById('nav-cart-button');
+    if (navCartBtn) {
+        navCartBtn.addEventListener('click', function() {
+            const modal = document.getElementById('cart-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                const evt = new Event('renderCart');
+                document.dispatchEvent(evt);
+            } else {
+                window.location.href = '<?= $base_url ?>/index.php?route=cliente';
+            }
+        });
+    }
 });
 </script>

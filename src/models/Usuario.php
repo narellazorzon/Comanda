@@ -112,4 +112,19 @@ class Usuario {
         $stmt = $db->prepare("DELETE FROM usuarios WHERE id_usuario = ?");
         return $stmt->execute([$id]);
     }
+
+    public static function emailExists(string $email, int $excludeId = null): bool {
+        $db = (new Database)->getConnection();
+        $sql = "SELECT COUNT(*) FROM usuarios WHERE email = ?";
+        $params = [$email];
+        
+        if ($excludeId !== null) {
+            $sql .= " AND id_usuario != ?";
+            $params[] = $excludeId;
+        }
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn() > 0;
+    }
 }

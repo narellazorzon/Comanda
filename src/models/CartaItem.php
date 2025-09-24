@@ -8,6 +8,11 @@ class CartaItem {
     // ya tenías all()
     public static function all(): array {
         $db = (new Database)->getConnection();
+        return $db->query("SELECT * FROM carta WHERE disponibilidad = 1")->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    public static function allIncludingUnavailable(): array {
+        $db = (new Database)->getConnection();
         return $db->query("SELECT * FROM carta")->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -21,16 +26,17 @@ class CartaItem {
     public static function create(array $data): bool {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
-            INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad, imagen_url)
-            VALUES (?,?,?,?,?,?)
+            INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad, imagen_url, descuento)
+            VALUES (?,?,?,?,?,?,?)
         ");
         return $stmt->execute([
             $data['nombre'],
             $data['descripcion'],
             $data['precio'],
             $data['categoria'] ?? null,
-            isset($data['disponibilidad']) ? 1 : 0,
-            $data['imagen_url'] ?? null
+            $data['disponibilidad'] ?? 1,
+            $data['imagen_url'] ?? null,
+            $data['descuento'] ?? 0.00
         ]);
     }
 
@@ -38,7 +44,7 @@ class CartaItem {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
             UPDATE carta
-            SET nombre = ?, descripcion = ?, precio = ?, categoria = ?, disponibilidad = ?, imagen_url = ?
+            SET nombre = ?, descripcion = ?, precio = ?, categoria = ?, disponibilidad = ?, imagen_url = ?, descuento = ?
             WHERE id_item = ?
         ");
         return $stmt->execute([
@@ -46,15 +52,55 @@ class CartaItem {
             $data['descripcion'],
             $data['precio'],
             $data['categoria'] ?? null,
-            isset($data['disponibilidad']) ? 1 : 0,
+            $data['disponibilidad'] ?? 1,
             $data['imagen_url'] ?? null,
+            $data['descuento'] ?? 0.00,
             $id
         ]);
     }
 
+    public static function canDelete(int $id): bool {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("SELECT COUNT(*) as count FROM detalle_pedido WHERE id_item = ?");
+        $stmt->execute([$id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] == 0;
+    }
+
     public static function delete(int $id): bool {
         $db = (new Database)->getConnection();
-        $stmt = $db->prepare("DELETE FROM carta WHERE id_item = ?");
-        return $stmt->execute([$id]);
+        
+        error_log("CartaItem::delete() - ID: " . $id);
+        
+        try {
+            $db->beginTransaction();
+            
+            // Primero eliminar todas las referencias en detalle_pedido
+            error_log("CartaItem::delete() - Eliminando referencias en detalle_pedido");
+            $deleteDetalleStmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_item = ?");
+            $detalleResult = $deleteDetalleStmt->execute([$id]);
+            error_log("CartaItem::delete() - Detalle delete result: " . ($detalleResult ? 'true' : 'false'));
+            
+            // Luego eliminar el item de la carta
+            error_log("CartaItem::delete() - Eliminando item de carta");
+            $deleteCartaStmt = $db->prepare("DELETE FROM carta WHERE id_item = ?");
+            $cartaResult = $deleteCartaStmt->execute([$id]);
+            error_log("CartaItem::delete() - Carta delete result: " . ($cartaResult ? 'true' : 'false'));
+            
+            if ($cartaResult) {
+                $db->commit();
+                error_log("CartaItem::delete() - Transacción completada exitosamente");
+                return true;
+            } else {
+                $db->rollBack();
+                error_log("CartaItem::delete() - Error al eliminar item, rollback ejecutado");
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log("CartaItem::delete() - Error en transacción: " . $e->getMessage());
+            return false;
+        }
     }
 }

@@ -1,97 +1,220 @@
 <?php
-// src/controllers/PedidoController.php
 namespace App\Controllers;
 
 use App\Models\Pedido;
-use App\Models\DetallePedido;
-use App\Models\CartaItem;
 
-class PedidoController {
+require_once __DIR__ . '/../config/helpers.php';
+
+/**
+ * Endpoints administrativos y AJAX para pedidos.
+ */
+class PedidoController
+{
     /**
-     * Muestra todos los pedidos tanto para administradores como para mozos.
+     * Cambia el estado de un pedido y devuelve JSON para la UI.
      */
-    public static function index() {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        $rol = $_SESSION['user']['rol'] ?? '';
-        if (! in_array($rol, ['administrador','mozo'], true)) {
-            header('Location: login.php');
-            exit;
+    public static function updateEstado(): void
+    {
+        if (ob_get_level()) {
+            ob_clean();
         }
 
-        // Carga todos los pedidos
-        $pedidos = Pedido::all();
-        include __DIR__ . '/../../public/estado_pedidos.php';
-    }
+        header('Content-Type: application/json');
 
-    /**
-     * Crea un nuevo pedido con los ítems seleccionados.
-     */
-    public static function create() {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $idPedido = Pedido::create($_POST);
-            foreach ((array)($_POST['items'] ?? []) as $itemId) {
-                DetallePedido::create($idPedido, (int)$itemId);
+        try {
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
             }
-            header('Location: cme_pedidos.php');
-            exit;
-        }
-        $carta = CartaItem::all();
-        include __DIR__ . '/../../public/alta_pedido.php';
-    }
 
-    /**
-     * Avanza el estado de un pedido (pendiente → en_preparacion → listo).
-     */
-    public static function updateEstado() {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
+            $rol = $_SESSION['user']['rol'] ?? '';
+            if (!in_array($rol, ['administrador', 'mozo'], true)) {
+                echo json_encode(['success' => false, 'message' => 'No autorizado']);
+                exit;
+            }
+
+            $pedidoId = (int) ($_POST['id_pedido'] ?? 0);
+            $nuevoEstado = $_POST['estado'] ?? '';
+            $estadosValidos = ['pendiente', 'en_preparacion', 'servido', 'cerrado'];
+
+            if ($pedidoId <= 0 || !in_array($nuevoEstado, $estadosValidos, true)) {
+                echo json_encode(['success' => false, 'message' => 'Datos invalidos']);
+                exit;
+            }
+
+            $pedido = Pedido::find($pedidoId);
+            if (!$pedido) {
+                echo json_encode(['success' => false, 'message' => 'Pedido no encontrado']);
+                exit;
+            }
+
+            if ($pedido['estado'] === 'cerrado') {
+                echo json_encode(['success' => false, 'message' => 'No se puede modificar un pedido cerrado']);
+                exit;
+            }
+
+            if ($pedido['estado'] === $nuevoEstado) {
+                echo json_encode(['success' => false, 'message' => 'El pedido ya tiene ese estado']);
+                exit;
+            }
+
+            $resultado = Pedido::updateEstado($pedidoId, $nuevoEstado);
+            echo json_encode([
+                'success' => (bool) $resultado,
+                'message' => $resultado ? 'Estado actualizado correctamente' : 'Error al actualizar el estado',
+            ]);
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
         }
-        $rol = $_SESSION['user']['rol'] ?? '';
-        if (! in_array($rol, ['administrador','mozo'], true)) {
-            header('Location: login.php');
-            exit;
-        }
-        $id    = (int)($_POST['id_pedido'] ?? 0);
-        $nuevo = $_POST['estado'] ?? '';
-        $map   = ['pendiente','en_preparacion','listo'];
-        if ($id > 0 && in_array($nuevo, $map, true)) {
-            Pedido::updateEstado($id, $nuevo);
-        }
-        header('Location: estado_pedidos.php');
         exit;
     }
 
     /**
-     * Elimina (cancela) un pedido.
-     * Administradores pueden borrar cualquiera;
-     * comensales (QR) sólo sus mesas, mozos no borran.
+     * Elimina (soft-delete) un pedido. Solo administradores.
      */
-    public static function delete() {
+    public static function delete(): void
+    {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
-        $rol    = $_SESSION['user']['rol'] ?? '';
-        $id     = (int)($_GET['delete'] ?? 0);
-        $pedido = Pedido::find($id);
-        if (! $pedido) {
-            header('Location: cme_pedidos.php');
+
+        if (($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+            header('Location: ' . url('unauthorized'));
             exit;
         }
-        $mesaId = $_SESSION['mesa_id'] ?? null;
-        if ($rol === 'administrador'
-            || ($rol !== 'administrador' && $pedido['id_mesa'] === $mesaId)
-        ) {
-            Pedido::delete($id);
-        } else {
-            header('Location: unauthorized.php');
+
+        $pedidoId = (int) ($_GET['delete'] ?? $_GET['id'] ?? 0);
+        if ($pedidoId <= 0) {
+            header('Location: ' . url('pedidos', ['error' => 'ID de pedido invalido']));
             exit;
         }
-        header('Location: cme_pedidos.php');
+
+        $pedido = Pedido::find($pedidoId);
+        if ($pedido && $pedido['estado'] === 'cerrado') {
+            header('Location: ' . url('pedidos', ['error' => 'No se puede eliminar un pedido cerrado']));
+            exit;
+        }
+
+        $resultado = Pedido::delete($pedidoId);
+        header('Location: ' . url('pedidos', [
+            $resultado ? 'success' : 'error' => $resultado
+                ? 'Pedido eliminado correctamente'
+                : 'Error al eliminar el pedido'
+        ]));
         exit;
+    }
+
+    /**
+     * Devuelve informacion completa de un pedido (JSON).
+     */
+    public static function info(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        // Para obtener info del mozo de una mesa, permitir acceso sin autenticación
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (isset($input['accion']) && $input['accion'] === 'obtener_mozo_mesa') {
+            self::obtenerMozoMesa($input['numero_mesa'] ?? 0);
+            return;
+        }
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'], true)) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Permiso denegado']);
+            exit;
+        }
+
+        $pedidoId = (int) ($_GET['id'] ?? 0);
+        if ($pedidoId <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'ID de pedido requerido']);
+            exit;
+        }
+
+        $pedido = Pedido::find($pedidoId);
+        if (!$pedido) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Pedido no encontrado']);
+            exit;
+        }
+
+        $detalles = Pedido::getDetalles($pedidoId);
+        $items = [];
+        foreach ($detalles as $detalle) {
+            $items[] = [
+                'id_item' => $detalle['id_item'],
+                'nombre' => $detalle['item_nombre'] ?? $detalle['nombre'] ?? 'Item no disponible',
+                'categoria' => $detalle['item_categoria'] ?? $detalle['categoria'] ?? 'Sin categoria',
+                'precio' => $detalle['precio_actual'] ?? $detalle['precio'] ?? $detalle['precio_unitario'] ?? 0,
+                'cantidad' => $detalle['cantidad'] ?? 1,
+                'detalle' => $detalle['detalle'] ?? '',
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'pedido' => [
+                'id_pedido' => $pedido['id_pedido'],
+                'estado' => $pedido['estado'],
+                'modo_consumo' => $pedido['modo_consumo'],
+                'forma_pago' => $pedido['forma_pago'],
+                'observaciones' => $pedido['observaciones'],
+                'cliente_nombre' => $pedido['cliente_nombre'],
+                'cliente_email' => $pedido['cliente_email'],
+                'total' => $pedido['total'],
+                'fecha_creacion' => $pedido['fecha_creacion'],
+                'numero_mesa' => $pedido['numero_mesa'],
+                'nombre_mozo_completo' => $pedido['nombre_mozo_completo'],
+                'items' => $items,
+            ],
+        ]);
+        exit;
+    }
+
+    /**
+     * Obtiene información del mozo asignado a una mesa
+     */
+    private static function obtenerMozoMesa(int $numeroMesa): void
+    {
+        try {
+            // Obtener la mesa por número
+            $mesa = \App\Models\Mesa::findByNumero($numeroMesa);
+
+            if (!$mesa) {
+                echo json_encode(['success' => false, 'message' => 'Mesa no encontrada']);
+                exit;
+            }
+
+            // Si no hay mozo asignado
+            if (!$mesa['id_mozo']) {
+                echo json_encode(['success' => true, 'mozo' => null]);
+                exit;
+            }
+
+            // Obtener información del mozo
+            $mozo = \App\Models\Usuario::find($mesa['id_mozo']);
+
+            if ($mozo) {
+                echo json_encode([
+                    'success' => true,
+                    'mozo' => [
+                        'id_usuario' => $mozo['id_usuario'],
+                        'nombre' => $mozo['nombre'],
+                        'apellido' => $mozo['apellido']
+                    ]
+                ]);
+            } else {
+                echo json_encode(['success' => true, 'mozo' => null]);
+            }
+        } catch (\Exception $e) {
+            error_log("Error obtaining waiter info: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+        }
     }
 }

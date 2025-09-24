@@ -1,6 +1,5 @@
 <?php
 // src/views/errors/unauthorized.php
-require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div style="text-align: center; padding: 4rem 2rem;">
@@ -27,4 +26,3 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>

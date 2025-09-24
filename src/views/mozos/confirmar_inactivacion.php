@@ -45,7 +45,7 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
 
 ?>
 
-<h2>⚠️ Confirmar Inactivación de Mozo</h2>
+<h2>⚠️ Confirmar Inactivación del Personal</h2>
 
 <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin-bottom: 2rem;">
     <h3 style="margin: 0 0 15px 0; color: #856404;">🚨 Atención: Mozo con Mesas Asignadas</h3>

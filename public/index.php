@@ -5,18 +5,28 @@ session_start();
 // Cargar autoload
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Incluir header para todas las páginas (excepto login y cliente)
-$route = $_GET['route'] ?? 'home';
-if ($route !== 'login' && $route !== 'cliente') {
+// Incluir header para todas las páginas (excepto login, cliente y rutas de API)
+$route = $_GET['route'] ?? 'cliente';
+$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion'];
+$noHeaderRoutes = ['login', 'cliente', 'pago', 'pago-confirmacion'];
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
 // Obtener la ruta solicitada
-$route = $_GET['route'] ?? 'home';
+$route = $_GET['route'] ?? 'cliente';
 
 // Función para redirigir al login si no está autenticado
 function requireAuth() {
     if (empty($_SESSION['user'])) {
+        // Si es una petición AJAX, devolver JSON
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'No está autenticado. Por favor, inicie sesión.']);
+            exit;
+        }
+        // Si no es AJAX, redirigir normalmente
         header('Location: index.php?route=login');
         exit;
     }
@@ -31,10 +41,18 @@ function requireAdmin() {
     }
 }
 
-// Función para verificar permisos de mozo o administrador
+// Función para verificar permisos del personal o administrador
 function requireMozoOrAdmin() {
     requireAuth();
     if (!in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
+        // Si es una petición AJAX, devolver JSON
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'No tiene permisos para acceder a esta información']);
+            exit;
+        }
+        // Si no es AJAX, redirigir normalmente
         header('Location: index.php?route=unauthorized');
         exit;
     }
@@ -61,6 +79,14 @@ switch ($route) {
         include __DIR__ . '/../src/views/home/index.php';
         break;
 
+    case 'cliente':
+        include __DIR__ . '/../src/views/cliente/index.php';
+        break;
+
+    case 'pago':
+        include __DIR__ . '/../src/views/cliente/pago.php';
+        break;
+
     // Rutas de Mesas
     case 'mesas':
         requireMozoOrAdmin();
@@ -82,7 +108,19 @@ switch ($route) {
         include __DIR__ . '/../src/views/mesas/cambiar_mozo.php';
         break;
 
-    // Rutas de Mozos
+    case 'mesas/delete':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/MesaController.php';
+        \App\Controllers\MesaController::delete();
+        break;
+
+    case 'mesas/reactivate':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/MesaController.php';
+        \App\Controllers\MesaController::reactivate();
+        break;
+
+    // Rutas del Personal
     case 'mozos':
         requireAdmin();
         include __DIR__ . '/../src/views/mozos/index.php';
@@ -103,26 +141,48 @@ switch ($route) {
         include __DIR__ . '/../src/views/mozos/confirmar_inactivacion.php';
         break;
 
+    case 'mozos/confirmar-eliminacion':
+        requireAdmin();
+        include __DIR__ . '/../src/views/mozos/confirmar_eliminacion.php';
+        break;
+
     case 'mozos/procesar-inactivacion':
         requireAdmin();
         require_once __DIR__ . '/../src/controllers/MozoController.php';
         \App\Controllers\MozoController::procesarInactivacion();
         break;
 
+    case 'mozos/delete':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/MozoController.php';
+        \App\Controllers\MozoController::delete();
+        break;
+
+    case 'mozos/procesar-eliminacion':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/MozoController.php';
+        \App\Controllers\MozoController::procesarEliminacion();
+        break;
+
     // Rutas de Carta
     case 'carta':
         requireMozoOrAdmin();
-        include __DIR__ . '/../src/views/carta/index.php';
+        \App\Controllers\CartaController::index();
         break;
 
     case 'carta/create':
         requireAdmin();
-        include __DIR__ . '/../src/views/carta/create.php';
+        \App\Controllers\CartaController::create();
         break;
 
     case 'carta/edit':
         requireAdmin();
-        include __DIR__ . '/../src/views/carta/create.php';
+        \App\Controllers\CartaController::edit();
+        break;
+
+    case 'carta/delete':
+        requireAdmin();
+        \App\Controllers\CartaController::delete();
         break;
 
     // Rutas de Pedidos
@@ -140,6 +200,26 @@ switch ($route) {
         requireMozoOrAdmin();
         include __DIR__ . '/../src/views/pedidos/create.php';
         break;
+
+    case 'pedidos/delete':
+        requireAdmin();
+        \App\Controllers\PedidoController::delete();
+        break;
+
+    case 'pedidos/update-estado':
+        requireMozoOrAdmin();
+        \App\Controllers\PedidoController::updateEstado();
+        break;
+
+    case 'pedidos/info':
+        requireMozoOrAdmin();
+        \App\Controllers\PedidoController::info();
+        break;
+
+    case 'test-pedidos':
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Ruta de prueba funcionando']);
+        exit;
 
     // Rutas de Reportes
     case 'reportes':
@@ -167,31 +247,41 @@ switch ($route) {
         include __DIR__ . '/../src/views/reportes/ventas_por_categoria.php';
         break;
 
-    case 'reportes/rendimiento-mozos':
+    case 'reportes/rendimiento-personal':
         requireAdmin();
+        require_once __DIR__ . '/../src/controllers/ReporteController.php';
+        $resultado = \App\Controllers\ReporteController::rendimientoMozos();
         include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
         break;
 
-    case 'reportes/propina':
-        requireAdmin();
-        include __DIR__ . '/../src/views/reportes/propina.php';
-        break;
-
-    case 'reportes/recaudacion':
-        requireAdmin();
-        include __DIR__ . '/../src/views/reportes/recaudacion_mensual.php';
-        break;
-
-    // Rutas de Llamados (mozos y administradores)
+    // Rutas de Llamados (personal y administradores)
     case 'llamados':
         requireMozoOrAdmin();
         include __DIR__ . '/../src/views/llamados/index.php';
         break;
 
-    // Ruta del generador de QRs (solo administrador)
-    case 'admin/qr-generator':
-        requireAdmin();
-        include __DIR__ . '/../src/views/admin/generador_qr.php';
+    // Ruta para llamar personal desde cliente
+    case 'llamar-mozo':
+        require_once __DIR__ . '/../src/controllers/MozoController.php';
+        \App\Controllers\MozoController::llamarMozo();
+        break;
+
+    // Ruta para crear pedido desde cliente
+    case 'cliente-pedido':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::crearPedido();
+        break;
+
+    // Ruta para procesar pago
+    case 'pago-procesar':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::procesarPago();
+        break;
+
+    // Ruta para mostrar confirmación de pago
+    case 'pago-confirmacion':
+        require_once __DIR__ . '/../src/controllers/ClienteController.php';
+        \App\Controllers\ClienteController::confirmacion();
         break;
 
     // Ruta del generador de QRs offline (solo administrador)
@@ -200,20 +290,14 @@ switch ($route) {
         include __DIR__ . '/../src/views/admin/generador_qr_offline.php';
         break;
 
-    // Ruta para clientes (acceso público al menú)
-    case 'cliente':
-        // No requiere autenticación - es acceso público
-        include __DIR__ . '/../src/views/cliente/index.php';
-        break;
-
     case 'unauthorized':
         include __DIR__ . '/../src/views/errors/unauthorized.php';
         break;
 
     default:
-        // Si no está logueado, redirigir al login
+        // Si no está logueado, mostrar la vista pública del cliente
         if (empty($_SESSION['user'])) {
-            header('Location: index.php?route=login');
+            header('Location: index.php?route=cliente');
             exit;
         }
         // Si está logueado, mostrar el home
@@ -221,8 +305,8 @@ switch ($route) {
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login y cliente)
-if ($route !== 'login' && $route !== 'cliente') {
+// Incluir footer para todas las páginas (excepto login, cliente y rutas de API)
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>

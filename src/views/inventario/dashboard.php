@@ -149,13 +149,6 @@ if (!isset($estadisticas) || !isset($stock_bajo) || !isset($resumen_categorias))
         </div>
     </div>
 
-    <!-- Botones de acción -->
-    <div class="action-buttons">
-        <a href="<?= url('inventario/lista') ?>" class="btn-primary">📋 Ver Inventario Completo</a>
-        <a href="<?= url('inventario/movimientos') ?>" class="btn-primary">📈 Ver Movimientos</a>
-        <a href="<?= url('inventario/reportes') ?>" class="btn-primary">📊 Reportes</a>
-    </div>
-
     <!-- Alertas de stock bajo -->
     <?php if (!empty($stock_bajo)): ?>
     <div class="alerts-section">
@@ -172,20 +165,18 @@ if (!isset($estadisticas) || !isset($stock_bajo) || !isset($resumen_categorias))
             </div>
             <div>
                 <span style="color: #dc3545; font-weight: bold;">
-                    <?= $item['cantidad_disponible'] ?> <?= $item['unidad_medida'] ?>
+                        <?= $item['cantidad_disponible'] ?> unidades
                 </span>
                 <small>(mín: <?= $item['cantidad_minima'] ?>)</small>
             </div>
         </div>
         <?php endforeach; ?>
-        
-        <?php if (count($stock_bajo) > 10): ?>
         <div style="text-align: center; margin-top: 1rem;">
-            <a href="<?= url('inventario/lista?filtro=stock_bajo') ?>" class="btn-primary">Ver todos los items con stock bajo</a>
         </div>
         <?php endif; ?>
+
     </div>
-    <?php endif; ?>
+
 
     <!-- Resumen por categorías -->
     <div class="alerts-section">
@@ -218,17 +209,17 @@ if (!isset($estadisticas) || !isset($stock_bajo) || !isset($resumen_categorias))
 
     <!-- Información adicional -->
     <div class="alerts-section">
-        <h3>💡 Información</h3>
+        <h3>💡 Sistema de Inventarios Básico</h3>
         <div style="color: var(--text); line-height: 1.6;">
-            <p><strong>Sistema de Inventarios Básico:</strong></p>
+            <p><strong>Funcionalidades implementadas:</strong></p>
             <ul>
-                <li>✅ <strong>Control automático:</strong> El stock se descuenta automáticamente con cada venta</li>
-                <li>✅ <strong>Alertas inteligentes:</strong> Notificaciones cuando el stock está por debajo del mínimo</li>
+                <li>✅ <strong>Control automático:</strong> Stock se descuenta automáticamente con cada venta</li>
+                <li>✅ <strong>Alertas inteligentes:</strong> Notificaciones cuando stock está por debajo del mínimo</li>
                 <li>✅ <strong>Historial completo:</strong> Seguimiento de todos los movimientos de inventario</li>
                 <li>✅ <strong>Validaciones:</strong> Controles de seguridad para prevenir errores</li>
             </ul>
             
-            <p><strong>Para usar el sistema:</strong></p>
+            <p><strong>Para activar el sistema:</strong></p>
             <ol>
                 <li>Ejecutar <code>database/inventario.sql</code> para crear las tablas</li>
                 <li>Revisar y actualizar stock inicial según necesidades</li>

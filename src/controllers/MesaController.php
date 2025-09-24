@@ -1,36 +1,68 @@
 <?php
 namespace App\Controllers;
+
 use App\Models\Mesa;
 
-class MesaController {
-    public static function index() {
-        session_start();
-        $mesas = Mesa::all();
-        include __DIR__ . '/../../public/cme_mesas.php';
-    }
-    public static function create() {
-        session_start();
-        if ($_SERVER['REQUEST_METHOD']==='POST') {
-            Mesa::create($_POST);
-            header('Location: cme_mesas.php');
+require_once __DIR__ . '/../config/helpers.php';
+
+/**
+ * Acciones administrativas para mesas que necesitan logica de servidor.
+ */
+class MesaController
+{
+    /**
+     * Desactiva (soft delete) una mesa y redirige con feedback.
+     */
+    public static function delete(): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        $id = isset($_POST['id'])
+            ? (int) $_POST['id']
+            : (int) ($_GET['id'] ?? $_GET['delete'] ?? 0);
+
+        if ($id <= 0) {
+            header('Location: ' . url('mesas', ['error' => '1']));
             exit;
         }
-        include __DIR__ . '/../../public/alta_mesa.php';
+
+        $resultado = Mesa::delete($id);
+        if ($resultado['success']) {
+            header('Location: ' . url('mesas', ['success' => '1']));
+        } else {
+            $mensaje = urlencode($resultado['message']);
+            header('Location: ' . url('mesas', ['error' => '3', 'message' => $mensaje]));
+        }
+        exit;
     }
-    public static function edit($id) {
-        session_start();
-        $mesa = Mesa::find($id);
-        if ($_SERVER['REQUEST_METHOD']==='POST') {
-            Mesa::update($id, $_POST);
-            header('Location: cme_mesas.php');
+
+    /**
+     * Reactiva una mesa previamente desactivada.
+     */
+    public static function reactivate(): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        $id = isset($_POST['id'])
+            ? (int) $_POST['id']
+            : (int) ($_GET['id'] ?? 0);
+
+        if ($id <= 0) {
+            header('Location: ' . url('mesas', ['error' => '1']));
             exit;
         }
-        include __DIR__ . '/../../public/alta_mesa.php';
-    }
-    public static function delete($id) {
-        session_start();
-        Mesa::delete($id);
-        header('Location: cme_mesas.php');
+
+        $resultado = Mesa::reactivate($id);
+        if ($resultado['success']) {
+            header('Location: ' . url('mesas', ['success' => '2']));
+        } else {
+            $mensaje = urlencode($resultado['message']);
+            header('Location: ' . url('mesas', ['error' => '3', 'message' => $mensaje]));
+        }
         exit;
     }
 }

@@ -19,6 +19,10 @@ $css_path = $base_url . '/assets/css/style.css';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comanda</title>
     <link rel="stylesheet" href="<?= $css_path ?>?v=<?= time() ?>">
+    <!-- Modal de confirmación -->
+    <link rel="stylesheet" href="<?= $base_url ?>/assets/css/modal-confirmacion.css?v=<?= time() ?>">
+    <script src="<?= $base_url ?>/assets/js/modal-confirmacion.js?v=<?= time() ?>"></script>
+    <script></script>
 </head>
 <body>
 <?php include __DIR__ . '/nav.php'; ?>

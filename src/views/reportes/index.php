@@ -13,9 +13,108 @@ use App\Models\Reporte;
 
 // Obtener estadísticas generales del mes actual
 $stats = Reporte::estadisticasPeriodo('mes');
+
+// Diagnóstico para debuggear problemas
+$diagnostico = Reporte::diagnosticar();
 ?>
 
 <style>
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.welcome-section {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.stats-overview,
+.reports-grid {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.stat-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+.stat-card:nth-child(5) { animation-delay: 0.5s; }
+.stat-card:nth-child(6) { animation-delay: 0.6s; }
+.stat-card:nth-child(7) { animation-delay: 0.7s; }
+.stat-card:nth-child(8) { animation-delay: 0.8s; }
+.stat-card:nth-child(9) { animation-delay: 0.9s; }
+.stat-card:nth-child(10) { animation-delay: 1.0s; }
+
+.report-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.report-card:nth-child(1) { animation-delay: 0.1s; }
+.report-card:nth-child(2) { animation-delay: 0.2s; }
+.report-card:nth-child(3) { animation-delay: 0.3s; }
+.report-card:nth-child(4) { animation-delay: 0.4s; }
+.report-card:nth-child(5) { animation-delay: 0.5s; }
+.report-card:nth-child(6) { animation-delay: 0.6s; }
+.report-card:nth-child(7) { animation-delay: 0.7s; }
+.report-card:nth-child(8) { animation-delay: 0.8s; }
+.report-card:nth-child(9) { animation-delay: 0.9s; }
+.report-card:nth-child(10) { animation-delay: 1.0s; }
+
+/* Efectos de hover mejorados */
+.stat-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.report-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 /* Usar las mismas variables de color del dashboard principal */
 /* Variables CSS removidas - usar las del style.css global para mantener consistencia */
 
@@ -36,92 +135,96 @@ main {
 }
 
 .welcome-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .welcome-section h1 {
     color: var(--secondary);
-    font-size: 2.5em;
-    margin: 0 0 10px 0;
+    font-size: 2em;
+    margin: 0 0 8px 0;
     font-weight: bold;
 }
 
 .welcome-section p {
     color: var(--text);
-    font-size: 1.1em;
+    font-size: 1em;
     margin: 0;
+    opacity: 0.8;
 }
 
 .stats-overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-card {
     background: var(--surface);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .stat-card .icon {
-    font-size: 2.5em;
-    margin-bottom: 15px;
+    font-size: 1.8em;
+    margin-bottom: 8px;
     display: block;
 }
 
 .stat-card h3 {
-    margin: 0 0 10px 0;
+    margin: 0 0 6px 0;
     color: var(--text);
-    font-size: 0.9em;
+    font-size: 0.8em;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     font-weight: 600;
 }
 
 .stat-card .value {
-    font-size: 2.2em;
+    font-size: 1.6em;
     font-weight: bold;
     color: var(--secondary);
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .stat-card .subtitle {
     color: var(--text);
-    font-size: 0.9em;
+    font-size: 0.75em;
+    opacity: 0.8;
 }
 
 .reports-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .report-card {
     background: var(--surface);
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .report-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .report-card-header {
-    padding: 1.5rem;
+    padding: 1rem;
     color: var(--text-light);
     text-align: center;
 }
@@ -139,38 +242,38 @@ main {
 }
 
 .report-card-header .icon {
-    font-size: 2.5em;
-    margin-bottom: 15px;
+    font-size: 1.8em;
+    margin-bottom: 8px;
     display: block;
 }
 
 .report-card-header h3 {
-    margin: 0 0 10px 0;
-    font-size: 1.4em;
+    margin: 0 0 6px 0;
+    font-size: 1.1em;
     font-weight: 600;
 }
 
 .report-card-header p {
     margin: 0;
     opacity: 0.9;
-    font-size: 0.95em;
+    font-size: 0.8em;
 }
 
 .report-card-body {
-    padding: 1.5rem;
+    padding: 1rem;
 }
 
 .report-features {
     list-style: none;
     padding: 0;
-    margin: 0 0 20px 0;
+    margin: 0 0 15px 0;
 }
 
 .report-features li {
-    padding: 8px 0;
+    padding: 5px 0;
     border-bottom: 1px solid var(--accent);
     color: var(--text);
-    font-size: 0.9em;
+    font-size: 0.8em;
 }
 
 .report-features li:last-child {
@@ -188,7 +291,7 @@ main {
     display: inline-block;
     background: var(--secondary);
     color: var(--text-light);
-    padding: 0.75rem 1.5rem;
+    padding: 0.6rem 1.2rem;
     border-radius: 4px;
     text-decoration: none;
     font-weight: 600;
@@ -197,7 +300,7 @@ main {
     width: 100%;
     border: none;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 .access-btn:hover {
@@ -208,56 +311,76 @@ main {
 
 .info-section {
     background: var(--surface);
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .info-section h2 {
     color: var(--secondary);
-    margin-bottom: 1rem;
-    font-size: 1.8em;
+    margin-bottom: 0.8rem;
+    font-size: 1.4em;
 }
 
 .info-section p {
     color: var(--text);
-    line-height: 1.6;
-    margin-bottom: 1rem;
+    line-height: 1.5;
+    margin-bottom: 0.8rem;
+    font-size: 0.9em;
 }
 
 .info-section ul {
     color: var(--text);
-    line-height: 1.6;
+    line-height: 1.5;
+    font-size: 0.9em;
 }
 
 .info-section ul li {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
 }
 
 @media (max-width: 600px) {
     .welcome-section h1 {
-        font-size: 2em;
+        font-size: 1.6em;
     }
     
     .stats-overview {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
     }
     
     .reports-grid {
         grid-template-columns: 1fr;
+        gap: 0.8rem;
     }
     
     .stat-card {
-        padding: 1rem;
+        padding: 0.8rem;
+    }
+    
+    .stat-card .icon {
+        font-size: 1.5em;
+    }
+    
+    .stat-card .value {
+        font-size: 1.4em;
     }
     
     .report-card-header {
-        padding: 1rem;
+        padding: 0.8rem;
+    }
+    
+    .report-card-header .icon {
+        font-size: 1.5em;
     }
     
     .report-card-body {
-        padding: 1rem;
+        padding: 0.8rem;
+    }
+    
+    .info-section {
+        padding: 0.8rem;
     }
 }
 </style>
@@ -289,7 +412,7 @@ main {
         </div>
         <div class="stat-card">
             <span class="icon">👥</span>
-            <h3>Mozos Activos</h3>
+            <h3>Personal Activo</h3>
             <div class="value"><?= number_format($stats['mozos_activos'] ?? 0) ?></div>
             <div class="subtitle">Este mes</div>
         </div>
@@ -335,18 +458,18 @@ main {
         <div class="report-card">
             <div class="report-card-header mozos">
                 <span class="icon">👥</span>
-                <h3>Rendimiento de Mozos</h3>
+                <h3>Rendimiento del Personal</h3>
                 <p>Evaluación de productividad del personal</p>
             </div>
             <div class="report-card-body">
                 <ul class="report-features">
-                    <li>Ranking de mozos por ventas</li>
+                    <li>Ranking del personal por ventas</li>
                     <li>Análisis de productividad</li>
-                    <li>Promedio de pedidos por mozo</li>
+                    <li>Promedio de pedidos por empleado</li>
                     <li>Sistema de calificación</li>
                     <li>Métricas de rendimiento</li>
                 </ul>
-                <a href="<?= url('reportes/rendimiento-mozos') ?>" class="access-btn">Ver Reporte</a>
+                <a href="<?= url('reportes/rendimiento-personal') ?>" class="access-btn">Ver Reporte</a>
             </div>
         </div>
     </div>
@@ -358,9 +481,34 @@ main {
         <ul>
             <li><strong>Platos Más Vendidos:</strong> Identifica qué productos son más populares para optimizar tu menú y inventario.</li>
             <li><strong>Ventas por Categoría:</strong> Analiza qué categorías de productos generan más ingresos para tomar decisiones estratégicas.</li>
-            <li><strong>Rendimiento de Mozos:</strong> Evalúa la productividad de tu equipo para reconocer el buen trabajo e identificar áreas de mejora.</li>
+            <li><strong>Rendimiento del Personal:</strong> Evalúa la productividad de tu equipo para reconocer el buen trabajo e identificar áreas de mejora.</li>
         </ul>
         
         <p><strong>Consejo:</strong> Revisa estos reportes regularmente (semanal o mensualmente) para identificar tendencias y tomar decisiones informadas sobre tu negocio.</p>
     </div>
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+
+    <!-- Información de diagnóstico -->
+    <?php if ($diagnostico['pedidos_reporteables'] == 0): ?>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #856404; margin-top: 0;">⚠️ Información importante sobre reportes</h3>
+            <p style="color: #856404; margin-bottom: 10px;">
+                Los reportes necesitan pedidos completados para generar estadísticas. Estado actual de datos:
+            </p>
+            <ul style="color: #856404;">
+                <li><strong>Pedidos totales:</strong> <?= $diagnostico['pedidos_totales'] ?></li>
+                <li><strong>Detalles de pedido:</strong> <?= $diagnostico['detalles_pedido'] ?></li>
+                <li><strong>Pedidos completados (reporteables):</strong> <?= $diagnostico['pedidos_reporteables'] ?></li>
+            </ul>
+            <?php if (!empty($diagnostico['pedidos_por_estado'])): ?>
+                <p style="color: #856404;"><strong>Pedidos por estado:</strong></p>
+                <ul style="color: #856404;">
+                    <?php foreach ($diagnostico['pedidos_por_estado'] as $estado): ?>
+                        <li><?= ucfirst($estado['estado']) ?>: <?= $estado['cantidad'] ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+            <p style="color: #856404;">
+                <strong>Para ver reportes con datos:</strong> Crea pedidos y cambia su estado a "Pagado" o "Cerrado".
+            </p>
+        </div>
+    <?php endif; ?>

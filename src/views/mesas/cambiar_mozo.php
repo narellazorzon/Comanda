@@ -108,42 +108,39 @@ foreach ($mesas as $mesa) {
 }
 ?>
 
-<h2>🔄 Gestión de Asignación de Mozos</h2>
-
-<div style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin-bottom: 2rem; color: #0c5460;">
-    <h4 style="margin: 0 0 10px 0;">ℹ️ Funcionalidades Disponibles</h4>
-    <ul style="margin: 0; padding-left: 20px;">
-        <li><strong>Cambio Masivo:</strong> Transferir todas las mesas de un mozo a otro (útil en caso de enfermedad)</li>
-        <li><strong>Asignación Individual:</strong> Cambiar el mozo de una mesa específica</li>
-        <li><strong>Liberación:</strong> Quitar la asignación de mozo de una mesa</li>
-    </ul>
-</div>
+<h2>Gestión del Personal</h2>
 
 <?php if ($error): ?>
-    <div class="error" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-        <?= htmlspecialchars($error) ?>
+    <div class="alert error" style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; font-weight: 500; font-size: 0.85rem;">
+        ⚠️ <?= htmlspecialchars($error) ?>
     </div>
 <?php endif; ?>
 
 <?php if ($success): ?>
-    <div class="success" style="color: green; background: #e6ffe6; padding: 10px; border-radius: 4px; margin-bottom: 1rem;">
-        <?= htmlspecialchars($success) ?>
+    <div class="alert success" style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; font-weight: 500; font-size: 0.85rem;">
+        ✅ <?= htmlspecialchars($success) ?>
     </div>
 <?php endif; ?>
 
 <!-- Cambio Masivo de Mozo -->
-<div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin-bottom: 2rem;">
-    <h3 style="margin: 0 0 15px 0; color: #856404;">🚑 Cambio Masivo (Emergencia)</h3>
-    <p style="margin: 0 0 15px 0; color: #856404;">
-        <em>Usar cuando un mozo no puede trabajar y necesitas reasignar todas sus mesas.</em>
-    </p>
+<div class="card emergency" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 2px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);">
+    <div class="card-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+        <div style="background: #ffc107; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 1.2rem;">🚑</span>
+        </div>
+        <div>
+            <h3 style="margin: 0; color: #856404; font-size: 1rem; font-weight: 600;">Cambio Masivo</h3>
+            <p style="margin: 0.25rem 0 0 0; color: #856404; font-size: 0.8rem; opacity: 0.8;">Reasignar todas las mesas de un mozo</p>
+        </div>
+        <span class="badge" style="background: #ffc107; color: #212529; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.7rem; font-weight: bold; margin-left: auto;">EMERGENCIA</span>
+    </div>
     
-    <form method="post" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+    <form method="post" class="form-compact" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end;">
         <input type="hidden" name="accion" value="cambiar_mozo_masivo">
         
-        <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Mozo que no puede trabajar:</label>
-            <select name="mozo_origen" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; min-width: 200px;">
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: #856404; font-size: 0.8rem;">👤 Mozo que no puede trabajar:</label>
+            <select name="mozo_origen" required class="form-select">
                 <option value="">-- Seleccionar mozo --</option>
                 <?php foreach ($mesas_por_mozo as $data): ?>
                     <option value="<?= $data['mozo']['id'] ?>">
@@ -153,9 +150,9 @@ foreach ($mesas as $mesa) {
             </select>
         </div>
         
-        <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Reasignar a:</label>
-            <select name="mozo_destino" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; min-width: 200px;">
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: #856404; font-size: 0.8rem;">➡️ Reasignar a:</label>
+            <select name="mozo_destino" class="form-select">
                 <option value="">-- Sin asignar --</option>
                 <?php foreach ($mozos as $mozo): ?>
                     <option value="<?= $mozo['id_usuario'] ?>">
@@ -165,38 +162,64 @@ foreach ($mesas as $mesa) {
             </select>
         </div>
         
-        <button type="submit" class="button" style="background: #ffc107; color: #212529;">
-            Transferir Mesas
+        <button type="submit" class="btn btn-warning" style="background: #ffc107; color: #212529; border: none; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; font-size: 0.8rem; box-shadow: 0 1px 4px rgba(255, 193, 7, 0.3);">
+            🔄 Transferir
         </button>
     </form>
 </div>
 
 <!-- Estado Actual de Asignaciones -->
-<div style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 2rem;">
-    <h3 style="margin: 0 0 20px 0;">📊 Estado Actual de Asignaciones</h3>
+<div class="card" style="background: var(--surface); border: 2px solid #e0e0e0; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div class="card-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+        <div style="background: var(--secondary); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 1rem; color: white;">📊</span>
+        </div>
+        <div>
+            <h3 style="margin: 0; color: var(--secondary); font-size: 0.9rem; font-weight: 600;">Estado Actual</h3>
+            <p style="margin: 0.15rem 0 0 0; color: #666; font-size: 0.7rem;">Distribución de mesas por mozo</p>
+        </div>
+    </div>
     
     <!-- Mesas por Mozo -->
     <?php foreach ($mesas_por_mozo as $data): ?>
-        <div style="background: #f8f9fa; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-            <h4 style="margin: 0 0 10px 0; color: #495057;">
-                👤 <?= htmlspecialchars($data['mozo']['nombre']) ?>
-                <span style="background: #6c757d; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;">
+        <div class="mozo-group" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #dee2e6; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+            <div class="mozo-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="background: var(--secondary); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 1rem; color: white;">👤</span>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: var(--secondary); font-size: 0.9rem; font-weight: 600;">
+                            <?= htmlspecialchars($data['mozo']['nombre']) ?>
+                        </h4>
+                        <p style="margin: 0.15rem 0 0 0; color: #666; font-size: 0.7rem;">Mozo asignado</p>
+                    </div>
+                </div>
+                <span class="badge" style="background: var(--secondary); color: white; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.7rem; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                     <?= count($data['mesas']) ?> mesas
                 </span>
-            </h4>
+            </div>
             
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="mesas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.6rem;">
                 <?php foreach ($data['mesas'] as $mesa): ?>
-                    <div style="background: white; border: 1px solid #dee2e6; border-radius: 4px; padding: 8px 12px; display: flex; align-items: center; gap: 8px;">
-                        <strong>Mesa <?= $mesa['numero'] ?></strong>
+                    <div class="mesa-card" style="background: white; border: 1px solid #e9ecef; border-radius: 6px; padding: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem; transition: all 0.3s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <strong style="color: var(--secondary); font-size: 0.8rem; font-weight: 600;">🪑 <?= $mesa['numero'] ?></strong>
+                        </div>
                         <?php if (!empty($mesa['ubicacion'])): ?>
-                            <span style="color: #6c757d; font-size: 0.9em;">(<?= htmlspecialchars($mesa['ubicacion']) ?>)</span>
+                            <div style="color: #6c757d; font-size: 0.7rem; display: flex; align-items: center; gap: 0.25rem;">
+                                <span>📍</span>
+                                <span><?= htmlspecialchars($mesa['ubicacion']) ?></span>
+                            </div>
                         <?php endif; ?>
-                        <span style="padding: 2px 6px; border-radius: 8px; font-size: 0.7em; 
-                                     background: <?= $mesa['estado'] === 'libre' ? '#d4edda' : '#f8d7da' ?>; 
-                                     color: <?= $mesa['estado'] === 'libre' ? '#155724' : '#721c24' ?>;">
-                            <?= ucfirst($mesa['estado']) ?>
-                        </span>
+                        <div style="display: flex; justify-content: center;">
+                            <span class="estado-badge" style="padding: 0.2rem 0.4rem; border-radius: 8px; font-size: 0.7rem; font-weight: bold; 
+                                         background: <?= $mesa['estado'] === 'libre' ? '#d4edda' : ($mesa['estado'] === 'ocupada' ? '#f8d7da' : '#fff3cd') ?>; 
+                                         color: <?= $mesa['estado'] === 'libre' ? '#155724' : ($mesa['estado'] === 'ocupada' ? '#721c24' : '#856404') ?>; 
+                                         border: 1px solid <?= $mesa['estado'] === 'libre' ? '#c3e6cb' : ($mesa['estado'] === 'ocupada' ? '#f5c6cb' : '#ffeaa7') ?>;">
+                                <?= $mesa['estado'] === 'libre' ? '🟢' : ($mesa['estado'] === 'ocupada' ? '🔴' : '🟡') ?>
+                            </span>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -205,26 +228,44 @@ foreach ($mesas as $mesa) {
     
     <!-- Mesas Sin Asignar -->
     <?php if (!empty($mesas_sin_asignar)): ?>
-        <div style="background: #fff3cd; border-radius: 6px; padding: 15px;">
-            <h4 style="margin: 0 0 10px 0; color: #856404;">
-                ⚠️ Mesas Sin Asignar
-                <span style="background: #ffc107; color: #212529; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;">
+        <div class="mozo-group unassigned" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 8px; padding: 1rem; border: 1px solid #ffc107; box-shadow: 0 1px 4px rgba(255, 193, 7, 0.2);">
+            <div class="mozo-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="background: #ffc107; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 1rem; color: #212529;">⚠️</span>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #856404; font-size: 0.9rem; font-weight: 600;">
+                            Mesas Sin Asignar
+                        </h4>
+                        <p style="margin: 0.15rem 0 0 0; color: #856404; font-size: 0.7rem; opacity: 0.8;">Requieren asignación</p>
+                    </div>
+                </div>
+                <span class="badge" style="background: #ffc107; color: #212529; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.7rem; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                     <?= count($mesas_sin_asignar) ?> mesas
                 </span>
-            </h4>
+            </div>
             
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="mesas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.6rem;">
                 <?php foreach ($mesas_sin_asignar as $mesa): ?>
-                    <div style="background: white; border: 1px solid #ffc107; border-radius: 4px; padding: 8px 12px; display: flex; align-items: center; gap: 8px;">
-                        <strong>Mesa <?= $mesa['numero'] ?></strong>
+                    <div class="mesa-card" style="background: white; border: 1px solid #ffc107; border-radius: 6px; padding: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem; transition: all 0.3s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <strong style="color: var(--secondary); font-size: 0.8rem; font-weight: 600;">🪑 <?= $mesa['numero'] ?></strong>
+                        </div>
                         <?php if (!empty($mesa['ubicacion'])): ?>
-                            <span style="color: #6c757d; font-size: 0.9em;">(<?= htmlspecialchars($mesa['ubicacion']) ?>)</span>
+                            <div style="color: #6c757d; font-size: 0.7rem; display: flex; align-items: center; gap: 0.25rem;">
+                                <span>📍</span>
+                                <span><?= htmlspecialchars($mesa['ubicacion']) ?></span>
+                            </div>
                         <?php endif; ?>
-                        <span style="padding: 2px 6px; border-radius: 8px; font-size: 0.7em; 
-                                     background: <?= $mesa['estado'] === 'libre' ? '#d4edda' : '#f8d7da' ?>; 
-                                     color: <?= $mesa['estado'] === 'libre' ? '#155724' : '#721c24' ?>;">
-                            <?= ucfirst($mesa['estado']) ?>
-                        </span>
+                        <div style="display: flex; justify-content: center;">
+                            <span class="estado-badge" style="padding: 0.2rem 0.4rem; border-radius: 8px; font-size: 0.7rem; font-weight: bold; 
+                                         background: <?= $mesa['estado'] === 'libre' ? '#d4edda' : ($mesa['estado'] === 'ocupada' ? '#f8d7da' : '#fff3cd') ?>; 
+                                         color: <?= $mesa['estado'] === 'libre' ? '#155724' : ($mesa['estado'] === 'ocupada' ? '#721c24' : '#856404') ?>; 
+                                         border: 1px solid <?= $mesa['estado'] === 'libre' ? '#c3e6cb' : ($mesa['estado'] === 'ocupada' ? '#f5c6cb' : '#ffeaa7') ?>;">
+                                <?= $mesa['estado'] === 'libre' ? '🟢' : ($mesa['estado'] === 'ocupada' ? '🔴' : '🟡') ?>
+                            </span>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -233,15 +274,23 @@ foreach ($mesas as $mesa) {
 </div>
 
 <!-- Asignación Individual -->
-<div style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
-    <h3 style="margin: 0 0 15px 0;">🎯 Asignación Individual</h3>
+<div class="card" style="background: var(--surface); border: 2px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div class="card-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+        <div style="background: var(--primary); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 1.2rem; color: white;">🎯</span>
+        </div>
+        <div>
+            <h3 style="margin: 0; color: var(--secondary); font-size: 1rem; font-weight: 600;">Asignación Individual</h3>
+            <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.8rem;">Cambiar mozo de una mesa específica</p>
+        </div>
+    </div>
     
-    <form method="post" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+    <form method="post" class="form-compact" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end;">
         <input type="hidden" name="accion" value="asignar_mesa_individual">
         
-        <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Mesa:</label>
-            <select name="mesa_id" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; min-width: 150px;">
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--secondary); font-size: 0.8rem;">🪑 Mesa:</label>
+            <select name="mesa_id" required class="form-select">
                 <option value="">-- Seleccionar mesa --</option>
                 <?php foreach ($mesas as $mesa): ?>
                     <option value="<?= $mesa['id_mesa'] ?>">
@@ -259,9 +308,9 @@ foreach ($mesas as $mesa) {
             </select>
         </div>
         
-        <div>
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Nuevo mozo:</label>
-            <select name="nuevo_mozo" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; min-width: 200px;">
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--secondary); font-size: 0.8rem;">👤 Nuevo mozo:</label>
+            <select name="nuevo_mozo" class="form-select">
                 <option value="">-- Sin asignar --</option>
                 <?php foreach ($mozos as $mozo): ?>
                     <option value="<?= $mozo['id_usuario'] ?>">
@@ -271,14 +320,156 @@ foreach ($mesas as $mesa) {
             </select>
         </div>
         
-        <button type="submit" class="button" style="background: #007bff;">
-            Asignar
+        <button type="submit" class="btn btn-primary" style="background: var(--secondary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; font-size: 0.8rem; box-shadow: 0 1px 4px rgba(155, 114, 79, 0.94);">
+            ✅ Asignar
         </button>
     </form>
 </div>
 
-<div style="margin-top: 2rem; text-align: center;">
-    <a href="<?= url('mesas') ?>" class="button" style="background: #6c757d;">
-        Volver a Mesas
+<div style="text-align: center; margin-top: 1rem;">
+    <a href="<?= url('mesas') ?>" class="btn btn-secondary" style="background:rgb(124, 92, 70); color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 6px; font-weight: 600; transition: all 0.3s ease; display: inline-block; font-size: 0.8rem; box-shadow: 0 1px 4px rgba(127, 100, 82, 0.96);">
+        ← Volver a Mesas
     </a>
 </div>
+
+<style>
+/* Estilos globales para la página */
+.form-select {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 3px rgba(161, 134, 111, 0.15);
+    transform: translateY(-1px);
+}
+
+.btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.btn:active {
+    transform: translateY(-1px);
+}
+
+.btn-warning:hover {
+    background: #e0a800 !important;
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+}
+
+.btn-primary:hover {
+    background: #8a6f5a !important;
+    box-shadow: 0 6px 20px rgba(161, 134, 111, 0.4);
+}
+
+.btn-secondary:hover {
+    background: #654321 !important;
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+}
+
+.mesa-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    border-color: var(--secondary);
+}
+
+.mozo-group:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Animaciones de entrada */
+.mozo-group {
+    animation: slideInUp 0.6s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.mozo-group:nth-child(1) { animation-delay: 0.1s; }
+.mozo-group:nth-child(2) { animation-delay: 0.2s; }
+.mozo-group:nth-child(3) { animation-delay: 0.3s; }
+.mozo-group:nth-child(4) { animation-delay: 0.4s; }
+.mozo-group:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes slideInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Efectos de hover mejorados */
+.estado-badge {
+    transition: all 0.3s ease;
+}
+
+.mesa-card:hover .estado-badge {
+    transform: scale(1.05);
+}
+
+/* Responsive mejorado */
+@media (max-width: 768px) {
+    .form-compact {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    
+    .mesas-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .card {
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .mozo-group {
+        padding: 1rem !important;
+    }
+    
+    .mesa-card {
+        padding: 1rem !important;
+    }
+    
+    .page-header {
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .mesas-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .mozo-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.5rem !important;
+    }
+    
+    .badge {
+        align-self: flex-start !important;
+    }
+}
+</style>
