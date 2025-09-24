@@ -111,24 +111,33 @@ class Pedido {
             // Iniciar transacción
             $db->beginTransaction();
             
-            // 1. Crear el pedido
+            // 1. Crear el pedido - SIMPLIFICADO PARA DEBUG
             $stmt = $db->prepare("
                 INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago, observaciones, cliente_nombre, cliente_email)
                 VALUES (?,?,?,?,?,?,?,?,?)
             ");
-            $stmt->execute([
+            
+            $result = $stmt->execute([
                 $data['id_mesa'] ?? null,
                 $data['modo_consumo'] ?? 'stay',
-                0.00, // Temporal, se actualizará después
-                'pendiente',
-                $_SESSION['user']['id_usuario'] ?? null,
+                0.00,
+                'pendiente', // ESTADO HARDCODEADO
+                $data['id_mozo'] ?? ($_SESSION['user']['id_usuario'] ?? null),
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $data['cliente_nombre'] ?? null,
                 $data['cliente_email'] ?? null
             ]);
             
+            if (!$result) {
+                throw new \Exception('Error al insertar pedido');
+            }
+            
             $pedidoId = (int)$db->lastInsertId();
+            
+            if (!$pedidoId) {
+                throw new \Exception('No se pudo obtener ID del pedido');
+            }
             
             // 2. Guardar items del pedido y calcular total
             $total = 0.00;
@@ -160,7 +169,7 @@ class Pedido {
                 }
             }
             
-            // 3. Actualizar el total del pedido
+            // 3. Actualizar SOLO el total del pedido
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $pedidoId]);
             
@@ -169,6 +178,8 @@ class Pedido {
                 $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'ocupada' WHERE id_mesa = ?");
                 $stmtMesa->execute([$data['id_mesa']]);
             }
+            
+            // NO TOCAR MÁS EL ESTADO - debe quedar como 'pendiente' desde el INSERT
             
             // Confirmar transacción
             $db->commit();
