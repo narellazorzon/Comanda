@@ -108,6 +108,9 @@ class Pedido {
         $db = (new Database)->getConnection();
         
         try {
+            // Log para depuración
+            error_log("Pedido::create called with data: " . json_encode($data));
+
             // Iniciar transacción
             $db->beginTransaction();
             
@@ -116,18 +119,24 @@ class Pedido {
                 INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago, observaciones, cliente_nombre, cliente_email)
                 VALUES (?,?,?,?,?,?,?,?,?)
             ");
-            $stmt->execute([
+
+            // Asegurarnos de que el estado se establezca correctamente
+            $estado = 'pendiente';
+            $params = [
                 $data['id_mesa'] ?? null,
                 $data['modo_consumo'] ?? 'stay',
                 0.00, // Temporal, se actualizará después
-                'pendiente',
-                $_SESSION['user']['id_usuario'] ?? null,
+                $estado,
+                $data['id_mozo'] ?? null,
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $data['cliente_nombre'] ?? null,
                 $data['cliente_email'] ?? null
-            ]);
-            
+            ];
+
+            error_log("Creating pedido with estado: '$estado' (hex: " . bin2hex($estado) . ")");
+            $stmt->execute($params);
+
             $pedidoId = (int)$db->lastInsertId();
             
             // 2. Guardar items del pedido y calcular total

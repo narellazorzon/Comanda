@@ -319,7 +319,7 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
 
             <!-- Botones de acción -->
             <div class="action-buttons">
-                <a href="<?= url('cliente') ?>" class="btn btn-secondary">
+                <a href="<?= url('cliente') . (isset($_SESSION['mesa_qr']) ? '?mesa=' . $_SESSION['mesa_qr'] : '') ?>" class="btn btn-secondary">
                     Nuevo Pedido
                 </a>
                 <button onclick="window.print()" class="btn btn-primary">
