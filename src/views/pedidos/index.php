@@ -92,8 +92,7 @@ if ($rol === 'mozo') {
     $pedidos = Pedido::all();
 }
 
-// Incluir header DESPUÉS de procesar POST
-require_once __DIR__ . '/../includes/header.php';
+// El header ya se incluye en public/index.php
 ?>
 
 <style>

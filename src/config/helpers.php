@@ -5,6 +5,11 @@
  * Obtiene la URL base del proyecto
  */
 function getBaseUrl() {
+    // Si no estamos en un contexto web, usar localhost
+    if (!isset($_SERVER['HTTP_HOST'])) {
+        return 'http://localhost/Comanda/public';
+    }
+    
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
     $script_name = $_SERVER['SCRIPT_NAME'];

@@ -1,5 +1,10 @@
 <?php
 // public/index.php - Punto de entrada principal con routing MVC
+
+// Habilitar reporte de errores para debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 
 // Cargar autoload
