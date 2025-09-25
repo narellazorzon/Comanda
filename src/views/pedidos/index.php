@@ -74,6 +74,7 @@ function obtenerIconoEstado($estado) {
         'pendiente' => '⏳',
         'en_preparacion' => '👨‍🍳',
         'servido' => '✅',
+        'cuenta' => '💳',
         'cerrado' => '🔒'
     ];
     
@@ -211,6 +212,9 @@ require_once __DIR__ . '/../includes/header.php';
       </button>
       <button class="status-filter-btn" data-status="servido" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         ✅ Servido
+      </button>
+      <button class="status-filter-btn" data-status="cuenta" style="padding: 4px 8px; border: none; background: #fff3cd; color: #856404; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
+        💳 Cuenta
       </button>
       <button class="status-filter-btn" data-status="cerrado" style="padding: 4px 8px; border: none; background: #e2e3e5; color: #383d41; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         🔒 Cerrado
@@ -740,6 +744,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (status === 'servido') {
                     btn.style.background = '#d4edda';
                     btn.style.color = '#155724';
+                } else if (status === 'cuenta') {
+                    btn.style.background = '#fff3cd';
+                    btn.style.color = '#856404';
                 } else if (status === 'cerrado') {
                     btn.style.background = '#e2e3e5';
                     btn.style.color = '#383d41';

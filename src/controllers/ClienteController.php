@@ -85,8 +85,7 @@ class ClienteController {
                 ]);
             }
             
-            // Actualizar estado del pedido a "cuenta"
-            Pedido::updateEstado($pedidoId, 'cuenta');
+            // El pedido se mantiene como "pendiente" hasta que el mozo lo gestione
             
             // Guardar información en sesión para confirmación
             $_SESSION['ultimo_pago'] = [
