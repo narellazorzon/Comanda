@@ -96,8 +96,8 @@ class Pedido {
                 $data['id_mesa'] ?? null,
                 $data['modo_consumo'] ?? 'stay',
                 0.00, // Temporal, se actualizará después
-                'pendiente',
-                $_SESSION['user']['id_usuario'] ?? null,
+                $data['estado'] ?? 'pendiente', // Usar el estado pasado o 'pendiente' por defecto
+                $data['id_mozo'] ?? $_SESSION['user']['id_usuario'] ?? null,
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $data['cliente_nombre'] ?? null,
@@ -110,8 +110,8 @@ class Pedido {
             $total = 0.00;
             if (!empty($data['items'])) {
                 $stmtItem = $db->prepare("
-                    INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario, detalle)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario)
+                    VALUES (?, ?, ?, ?)
                 ");
                 
                 $stmtPrecio = $db->prepare("SELECT precio FROM carta WHERE id_item = ?");
@@ -119,7 +119,6 @@ class Pedido {
                 foreach ($data['items'] as $item) {
                     $cantidad = (int)($item['cantidad'] ?? 1);
                     $idItem = (int)($item['id_item'] ?? 0);
-                    $detalle = $item['detalle'] ?? '';
                     
                     if ($cantidad > 0 && $idItem > 0) {
                         // Obtener precio actual del item
@@ -131,7 +130,7 @@ class Pedido {
                             $total += $subtotal;
                             
                             // Guardar detalle
-                            $stmtItem->execute([$pedidoId, $idItem, $cantidad, $precio, $detalle]);
+                            $stmtItem->execute([$pedidoId, $idItem, $cantidad, $precio]);
                         }
                     }
                 }
@@ -281,8 +280,8 @@ class Pedido {
             $total = 0.00;
             if (!empty($data['items'])) {
                 $stmtItem = $db->prepare("
-                    INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario, detalle)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario)
+                    VALUES (?, ?, ?, ?)
                 ");
                 
                 $stmtPrecio = $db->prepare("SELECT precio FROM carta WHERE id_item = ?");
@@ -290,7 +289,6 @@ class Pedido {
                 foreach ($data['items'] as $item) {
                     $cantidad = (int)($item['cantidad'] ?? 1);
                     $idItem = (int)($item['id_item'] ?? 0);
-                    $detalle = $item['detalle'] ?? '';
                     
                     if ($cantidad > 0 && $idItem > 0) {
                         // Obtener precio actual del item

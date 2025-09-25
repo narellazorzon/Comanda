@@ -74,7 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'observaciones' => $observaciones,
                 'cliente_nombre' => $cliente_nombre,
                 'cliente_email' => $cliente_email,
-                'items' => $items_pedido
+                'items' => $items_pedido,
+                'id_mozo' => $_SESSION['user']['id_usuario'] ?? null
             ];
             
             // Solo incluir mesa si es modo 'stay'
