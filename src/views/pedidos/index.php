@@ -115,6 +115,7 @@ require_once __DIR__ . '/../includes/header.php';
     transform: scale(1);
   }
 }
+</style>
 
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
     <div style="flex: 1;">
@@ -125,97 +126,6 @@ require_once __DIR__ . '/../includes/header.php';
                 🍽️ Vista de pedidos - Gestiona los pedidos de las mesas
             </div>
         <?php endif; ?>
-    </div>
-</div>
-
-<!-- Panel de Filtros -->
-<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-        <h4 style="margin: 0; color: #6c757d; font-size: 1rem;">
-            <span style="margin-right: 0.5rem;">🔍</span>Filtros de búsqueda
-        </h4>
-    </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
-        <!-- Filtro por Estado -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Estado:
-            </label>
-            <select id="filtro-estado" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-                <option value="">Todos los estados</option>
-                <option value="pendiente">⏳ Pendiente</option>
-                <option value="en_preparacion">👨‍🍳 En preparación</option>
-                <option value="servido">✅ Servido</option>
-                <option value="cuenta">💳 Cuenta</option>
-                <option value="cerrado">🔒 Cerrado</option>
-            </select>
-        </div>
-        
-        <!-- Filtro por Mesa -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Mesa:
-            </label>
-            <select id="filtro-mesa" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-                <option value="">Todas las mesas</option>
-                <option value="takeaway">🥡 Takeaway</option>
-                <?php foreach ($mesas as $mesa): ?>
-                    <option value="<?= $mesa['numero'] ?>">Mesa <?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?? 'Sin ubicación' ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        
-        <!-- Filtro por Mozo -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Mozo:
-            </label>
-            <select id="filtro-mozo" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-                <option value="">Todos los mozos</option>
-                <?php foreach ($mozos as $mozo): ?>
-                    <option value="<?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>">
-                        <?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        
-        <!-- Filtro por Fecha -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Fecha:
-            </label>
-            <input type="date" id="filtro-fecha" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-        </div>
-        
-        <!-- Filtro por Rango de Total -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Total mínimo:
-            </label>
-            <input type="number" id="filtro-total-min" placeholder="$0.00" step="0.01" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-        </div>
-        
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Total máximo:
-            </label>
-            <input type="number" id="filtro-total-max" placeholder="$999.99" step="0.01" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-        </div>
-    </div>
-    
-    <!-- Botones de acción -->
-    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-        <button onclick="aplicarFiltros()" style="padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
-            Aplicar Filtros
-        </button>
-        <button onclick="limpiarFiltros()" style="padding: 0.5rem 1rem; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Limpiar
-        </button>
-        <span id="contador-resultados" style="margin-left: auto; padding: 0.5rem 1rem; color: #6c757d; font-size: 0.875rem;">
-            Mostrando <span id="num-resultados"><?= count($pedidos) ?></span> pedido(s)
-        </span>
     </div>
 </div>
 
