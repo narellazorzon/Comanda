@@ -3988,5 +3988,3 @@ $iconosCategorias = [
             </div>
         </div>
     </div>
-</body>
-</html>
