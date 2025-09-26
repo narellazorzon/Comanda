@@ -74,7 +74,6 @@ function obtenerIconoEstado($estado) {
         'pendiente' => '⏳',
         'en_preparacion' => '👨‍🍳',
         'servido' => '✅',
-        'cuenta' => '💳',
         'cerrado' => '🔒'
     ];
     
@@ -116,18 +115,108 @@ require_once __DIR__ . '/../includes/header.php';
     transform: scale(1);
   }
 }
+
+/* Estilos para el header de gestión */
+.management-header {
+  background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
+  color: white !important;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.management-header * {
+  color: white !important;
+}
+
+.management-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white !important;
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  color: white !important;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.header-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para el header */
+@media (max-width: 768px) {
+  .management-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .management-header h1 {
+    margin-bottom: 0.5rem;
+    min-width: auto;
+  }
+  
+  .header-actions {
+    justify-content: center;
+  }
+  
+  .header-btn {
+    flex: 1;
+    text-align: center;
+    min-width: 120px;
+  }
+}
 </style>
 
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
-    <div style="flex: 1;">
-        <?php if ($rol === 'administrador'): ?>
-            <a href="<?= url('pedidos/create') ?>" class="button">Nuevo Pedido</a>
-        <?php else: ?>
-            <div style="background: #d1ecf1; padding: 10px; border-radius: 4px; color: #0c5460;">
-                🍽️ Vista de pedidos - Gestiona los pedidos de las mesas
-            </div>
-        <?php endif; ?>
+<!-- Header de gestión -->
+<div class="management-header">
+  <h1><?= $rol === 'administrador' ? '🍽️ Gestión de Pedidos' : 'Consulta de Pedidos' ?></h1>
+  <?php if ($rol === 'administrador'): ?>
+    <div class="header-actions">
+      <a href="<?= url('pedidos/create') ?>" class="header-btn">
+        ➕ Nuevo Pedido
+      </a>
     </div>
+  <?php endif; ?>
 </div>
 
 <!-- Sistema de notificaciones temporales -->
@@ -212,9 +301,6 @@ require_once __DIR__ . '/../includes/header.php';
       </button>
       <button class="status-filter-btn" data-status="servido" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         ✅ Servido
-      </button>
-      <button class="status-filter-btn" data-status="cuenta" style="padding: 4px 8px; border: none; background: #fff3cd; color: #856404; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
-        💳 Cuenta
       </button>
       <button class="status-filter-btn" data-status="cerrado" style="padding: 4px 8px; border: none; background: #e2e3e5; color: #383d41; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.3s ease;">
         🔒 Cerrado
@@ -744,9 +830,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (status === 'servido') {
                     btn.style.background = '#d4edda';
                     btn.style.color = '#155724';
-                } else if (status === 'cuenta') {
-                    btn.style.background = '#fff3cd';
-                    btn.style.color = '#856404';
                 } else if (status === 'cerrado') {
                     btn.style.background = '#e2e3e5';
                     btn.style.color = '#383d41';
