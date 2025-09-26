@@ -139,6 +139,52 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
         <td><?= htmlspecialchars($m['email']) ?></td>
         <td>
           <?php
+          // Obtener mesas asignadas al mozo
+          $mesasAsignadas = Mesa::getMesasByMozo($m['id_usuario']);
+          if (empty($mesasAsignadas)) {
+              echo '<span style="color: #6c757d; font-style: italic;">Sin mesas asignadas</span>';
+          } else {
+              // Contar mesas por estado
+              $mesasLibres = array_filter($mesasAsignadas, fn($m) => $m['estado'] === 'libre');
+              $mesasOcupadas = array_filter($mesasAsignadas, fn($m) => $m['estado'] === 'ocupada');
+              $totalMesas = count($mesasAsignadas);
+              
+              echo '<div style="margin-bottom: 4px;">';
+              echo '<span style="font-size: 0.8em; color: #666; font-weight: 500;">';
+              echo '📊 ' . $totalMesas . ' mesa' . ($totalMesas > 1 ? 's' : '') . ' asignada' . ($totalMesas > 1 ? 's' : '');
+              if (count($mesasLibres) > 0) echo ' • ' . count($mesasLibres) . ' libre' . (count($mesasLibres) > 1 ? 's' : '');
+              if (count($mesasOcupadas) > 0) echo ' • ' . count($mesasOcupadas) . ' ocupada' . (count($mesasOcupadas) > 1 ? 's' : '');
+              echo '</span>';
+              echo '</div>';
+              
+              echo '<div style="display: flex; flex-wrap: wrap; gap: 4px;">';
+              foreach ($mesasAsignadas as $mesa) {
+                  // Definir color según el estado de la mesa
+                  $estadoMesa = $mesa['estado'];
+                  if ($estadoMesa === 'libre') {
+                      $bgColor = '#e8f5e8';
+                      $textColor = '#2e7d32';
+                      $icono = '🟢';
+                  } elseif ($estadoMesa === 'ocupada') {
+                      $bgColor = '#fff3e0';
+                      $textColor = '#f57c00';
+                      $icono = '🟡';
+                  } else {
+                      $bgColor = '#f3e5f5';
+                      $textColor = '#7b1fa2';
+                      $icono = '🟣';
+                  }
+                  
+                  echo '<span style="background: ' . $bgColor . '; color: ' . $textColor . '; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 500; display: inline-flex; align-items: center; gap: 3px;" title="Mesa ' . $mesa['numero'] . ' - ' . ucfirst($estadoMesa) . '">';
+                  echo $icono . ' Mesa ' . $mesa['numero'];
+                  echo '</span>';
+              }
+              echo '</div>';
+          }
+          ?>
+        </td>
+        <td>
+          <?php
           // Definir colores según el estado
           $estado = $m['estado'];
           if ($estado === 'activo') {
@@ -156,11 +202,14 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
           </span>
         </td>
         <td>
-          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;">
+          <a href="<?= url('mesas/cambiar-mozo', ['mozo_id' => $m['id_usuario']]) ?>" class="btn-action mesas-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #17a2b8; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Gestionar mesas asignadas">
+            🍽️
+          </a>
+          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Editar mozo">
             ✏️
           </a>
           <?php if (!$esAdminActual): ?>
-            <a href="<?= url('mozos/delete', ['delete' => $m['id_usuario']]) ?>" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
+            <a href="<?= url('mozos/delete', ['delete' => $m['id_usuario']]) ?>" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Eliminar mozo"
                onclick="return confirm('¿Estás seguro de eliminar a <?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>?')">
               ❌
             </a>
