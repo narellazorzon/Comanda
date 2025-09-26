@@ -3,11 +3,22 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Config\PedidoStateManager;
+use App\Config\SystemConstants;
 use PDO;
 
+/**
+ * Modelo para la gestión de pedidos
+ *
+ * Este modelo maneja todas las operaciones relacionadas con pedidos,
+ * incluyendo su creación, actualización, cancelación y consulta.
+ * Utiliza el PedidoStateManager para validar transiciones de estado.
+ */
 class Pedido {
     /**
      * Devuelve todos los pedidos con información de mesa y mozo, ordenados por fecha desc.
+     *
+     * @return array Lista de todos los pedidos con información completa
      */
     public static function all(): array {
         $db = (new Database)->getConnection();
@@ -28,6 +39,8 @@ class Pedido {
 
     /**
      * Devuelve todos los pedidos del día actual con información de mesa y mozo.
+     *
+     * @return array Lista de pedidos de hoy
      */
     public static function todayOnly(): array {
         $db = (new Database)->getConnection();
@@ -49,6 +62,9 @@ class Pedido {
 
     /**
      * Devuelve todos los pedidos asignados a un mozo.
+     *
+     * @param int $mozoId ID del mozo
+     * @return array Lista de pedidos del mozo
      */
     public static function allByMozo(int $mozoId): array {
         $db = (new Database)->getConnection();
@@ -64,6 +80,11 @@ class Pedido {
 
     /**
      * Devuelve los pedidos del día actual para las mesas asignadas a un mozo.
+     *
+     * Este método es útil para que los mozos vean solo los pedidos de sus mesas asignadas.
+     *
+     * @param int $mozoId ID del mozo
+     * @return array Lista de pedidos de hoy del mozo
      */
     public static function todayByMesoAssigned(int $mozoId): array {
         $db = (new Database)->getConnection();
@@ -88,6 +109,9 @@ class Pedido {
 
     /**
      * Devuelve todos los pedidos de una mesa (cliente).
+     *
+     * @param int $mesaId ID de la mesa
+     * @return array Lista de pedidos de la mesa
      */
     public static function allByMesa(int $mesaId): array {
         $db = (new Database)->getConnection();
