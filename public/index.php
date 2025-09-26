@@ -7,8 +7,9 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 // Incluir header para todas las páginas (excepto login, cliente y rutas de API)
 $route = $_GET['route'] ?? 'cliente';
-$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion'];
-$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion'];
+$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion',
+                'mobile/api-login', 'mobile/api-logout', 'mobile/api-pedidos-activos', 'mobile/api-notificaciones', 'mobile/api-actualizar-estado'];
+$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion', 'mobile'];
 if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
@@ -18,7 +19,7 @@ $route = $_GET['route'] ?? 'cliente';
 
 // Función para redirigir al login si no está autenticado
 function requireAuth() {
-    if (empty($_SESSION['user'])) {
+    if (empty($_SESSION['usuario'])) {
         // Si es una petición AJAX, devolver JSON
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
             header('Content-Type: application/json');
@@ -35,7 +36,7 @@ function requireAuth() {
 // Función para verificar permisos de administrador
 function requireAdmin() {
     requireAuth();
-    if ($_SESSION['user']['rol'] !== 'administrador') {
+    if ($_SESSION['usuario']['rol'] !== 'administrador') {
         header('Location: index.php?route=unauthorized');
         exit;
     }
@@ -44,7 +45,7 @@ function requireAdmin() {
 // Función para verificar permisos del personal o administrador
 function requireMozoOrAdmin() {
     requireAuth();
-    if (!in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
+    if (!in_array($_SESSION['usuario']['rol'], ['mozo', 'administrador'])) {
         // Si es una petición AJAX, devolver JSON
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
             header('Content-Type: application/json');
@@ -62,7 +63,7 @@ function requireMozoOrAdmin() {
 switch ($route) {
     case 'login':
         // Si ya está logueado, redirigir al home
-        if (!empty($_SESSION['user'])) {
+        if (!empty($_SESSION['usuario'])) {
             header('Location: index.php?route=home');
             exit;
         }
@@ -227,6 +228,27 @@ switch ($route) {
         include __DIR__ . '/../src/views/reportes/index.php';
         break;
 
+    case 'reportes/dashboard':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/ReportesController.php';
+        $controller = new \App\Controllers\ReportesController();
+        $controller->dashboard();
+        break;
+
+    case 'reportes/api-dashboard':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/ReportesController.php';
+        $controller = new \App\Controllers\ReportesController();
+        $controller->apiDashboard();
+        break;
+
+    case 'reportes/ventas-por-periodo':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/ReportesController.php';
+        $controller = new \App\Controllers\ReportesController();
+        $controller->ventasPorPeriodo();
+        break;
+
     case 'reportes/platos-mas-vendidos':
         requireAdmin();
         include __DIR__ . '/../src/views/reportes/platos_mas_vendidos.php';
@@ -290,13 +312,50 @@ switch ($route) {
         include __DIR__ . '/../src/views/admin/generador_qr_offline.php';
         break;
 
+    // Rutas de la App Móvil
+    case 'mobile':
+        require_once __DIR__ . '/../src/controllers/MobileAppController.php';
+        $controller = new \App\Controllers\MobileAppController();
+        $controller->index();
+        break;
+
+    case 'mobile/api-login':
+        require_once __DIR__ . '/../src/controllers/MobileAppController.php';
+        $controller = new \App\Controllers\MobileAppController();
+        $controller->apiLogin();
+        break;
+
+    case 'mobile/api-logout':
+        require_once __DIR__ . '/../src/controllers/MobileAppController.php';
+        $controller = new \App\Controllers\MobileAppController();
+        $controller->apiLogout();
+        break;
+
+    case 'mobile/api-pedidos-activos':
+        require_once __DIR__ . '/../src/controllers/MobileAppController.php';
+        $controller = new \App\Controllers\MobileAppController();
+        $controller->apiPedidosActivos();
+        break;
+
+    case 'mobile/api-notificaciones':
+        require_once __DIR__ . '/../src/controllers/MobileAppController.php';
+        $controller = new \App\Controllers\MobileAppController();
+        $controller->apiNotificaciones();
+        break;
+
+    case 'mobile/api-actualizar-estado':
+        require_once __DIR__ . '/../src/controllers/MobileAppController.php';
+        $controller = new \App\Controllers\MobileAppController();
+        $controller->apiActualizarEstadoPedido();
+        break;
+
     case 'unauthorized':
         include __DIR__ . '/../src/views/errors/unauthorized.php';
         break;
 
     default:
         // Si no está logueado, mostrar la vista pública del cliente
-        if (empty($_SESSION['user'])) {
+        if (empty($_SESSION['usuario'])) {
             header('Location: index.php?route=cliente');
             exit;
         }

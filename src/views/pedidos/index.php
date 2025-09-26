@@ -13,12 +13,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Verificar permisos
-if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
+if (empty($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], ['mozo', 'administrador'])) {
     header('Location: ' . url('login'));
     exit;
 }
 
-$rol = $_SESSION['user']['rol'];
+$rol = $_SESSION['usuario']['rol'];
 
 // Función para validar transiciones de estado
 function validarTransicionEstado($estado_actual, $nuevo_estado) {
@@ -85,7 +85,7 @@ function obtenerIconoEstado($estado) {
 // Cargar pedidos según el rol
 if ($rol === 'mozo') {
     // Los mozos solo ven pedidos del día actual de sus mesas asignadas
-    $mozoId = $_SESSION['user']['id_usuario'];
+    $mozoId = $_SESSION['usuario']['id_usuario'];
     $pedidos = Pedido::todayByMesoAssigned($mozoId);
 } else {
     // Los administradores ven todos los pedidos

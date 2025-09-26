@@ -2,7 +2,7 @@
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
-$rol = $_SESSION['user']['rol'] ?? '';
+$rol = $_SESSION['usuario']['rol'] ?? '';
 
 // Determinar la ruta base del proyecto
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
@@ -38,13 +38,14 @@ $base_path = $is_in_reportes ? '../' : '';
         <a href="<?= $base_url ?>/index.php?route=pedidos" class="nav-link">🍽️ Pedidos</a>
         <a href="<?= $base_url ?>/index.php?route=mozos" class="nav-link">👥 Personal</a>
         <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Carta</a>
-        <a href="<?= $base_url ?>/index.php?route=reportes" class="nav-link">📊 Reportes</a>
+        <a href="<?= $base_url ?>/index.php?route=reportes/dashboard" class="nav-link">📊 Dashboard</a>
         <a href="<?= $base_url ?>/index.php?route=admin/qr-offline" class="nav-link">📱 QR Mesas</a>
       <?php elseif ($rol === 'mozo'): ?>
         <a href="<?= $base_url ?>/index.php?route=mesas" class="nav-link">🪑 Ver Mesas</a>
         <a href="<?= $base_url ?>/index.php?route=carta" class="nav-link">📋 Ver Carta</a>
         <a href="<?= $base_url ?>/index.php?route=pedidos" class="nav-link">🍽️ Ver Pedidos</a>
         <a href="<?= $base_url ?>/index.php?route=llamados" class="nav-link">🔔 Llamados Mesa</a>
+        <a href="<?= $base_url ?>/index.php?route=mobile" class="nav-link">📱 App Móvil</a>
       <?php endif; ?>
       <?php if ($rol): ?>
         <a href="<?= $base_url ?>/index.php?route=logout" class="nav-link logout">🚪 Cerrar sesión</a>

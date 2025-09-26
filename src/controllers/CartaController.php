@@ -12,7 +12,7 @@ class CartaController {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
-        if (($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+        if (($_SESSION['usuario']['rol'] ?? '') !== 'administrador') {
             header('Location: ' . url('unauthorized'));
             exit;
         }
@@ -23,7 +23,7 @@ class CartaController {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
-        if (!in_array(($_SESSION['user']['rol'] ?? ''), ['administrador', 'mozo'])) {
+        if (!in_array(($_SESSION['usuario']['rol'] ?? ''), ['administrador', 'mozo'])) {
             header('Location: ' . url('unauthorized'));
             exit;
         }

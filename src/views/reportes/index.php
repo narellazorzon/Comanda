@@ -1,15 +1,7 @@
-<?php 
-require_once __DIR__ . '/../../../vendor/autoload.php';
-require_once __DIR__ . '/../../config/helpers.php';
-
-// La sesión ya está iniciada desde public/index.php
-// Verificar autenticación y permisos
-if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
-    header('Location: ' . url('unauthorized'));
-    exit;
-}
-
-use App\Models\Reporte;
+<?php
+// Redirigir al nuevo dashboard
+header('Location: index.php?route=reportes/dashboard');
+exit;
 
 // Obtener estadísticas generales del mes actual
 $stats = Reporte::estadisticasPeriodo('mes');
@@ -387,7 +379,7 @@ main {
 
 <!-- Contenido dentro del main que ya viene del header -->
     <div class="welcome-section">
-        <h1>Bienvenido, <?= htmlspecialchars($_SESSION['user']['nombre']) ?></h1>
+        <h1>Bienvenido, <?= htmlspecialchars($_SESSION['usuario']['nombre']) ?></h1>
         <p>Sistema de Reportes - Análisis de Ventas y Rendimiento</p>
     </div>
 

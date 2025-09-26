@@ -26,7 +26,7 @@ class PedidoController
                 session_start();
             }
 
-            $rol = $_SESSION['user']['rol'] ?? '';
+            $rol = $_SESSION['usuario']['rol'] ?? '';
             if (!in_array($rol, ['administrador', 'mozo'], true)) {
                 echo json_encode(['success' => false, 'message' => 'No autorizado']);
                 exit;
@@ -78,7 +78,7 @@ class PedidoController
             session_start();
         }
 
-        if (($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+        if (($_SESSION['usuario']['rol'] ?? '') !== 'administrador') {
             header('Location: ' . url('unauthorized'));
             exit;
         }
@@ -123,7 +123,7 @@ class PedidoController
             session_start();
         }
 
-        if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'], true)) {
+        if (empty($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], ['mozo', 'administrador'], true)) {
             http_response_code(403);
             echo json_encode(['success' => false, 'error' => 'Permiso denegado']);
             exit;

@@ -9,7 +9,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 ?>
 <!-- Header con saludo -->
 <div class="home-header">
-    <h1>Hola, <?= htmlspecialchars($_SESSION['user']['nombre']) ?></h1>
+    <h1>Hola, <?= htmlspecialchars($_SESSION['usuario']['nombre']) ?></h1>
     <p class="home-subtitle">Sistema de Gestión de Restaurante</p>
 </div>
 
@@ -28,7 +28,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
             <a href="<?= $base_url ?>/index.php?route=mesas" class="widget-btn primary">
                 <span class="btn-text">Ver Mesas</span>
             </a>
-            <?php if ($_SESSION['user']['rol'] === 'administrador'): ?>
+            <?php if ($_SESSION['usuario']['rol'] === 'administrador'): ?>
             <a href="<?= $base_url ?>/index.php?route=mesas/create" class="widget-btn secondary">
                 <span class="btn-icon">➕</span>
                 <span class="btn-text">Nueva Mesa</span>
@@ -68,7 +68,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
             <a href="<?= $base_url ?>/index.php?route=carta" class="widget-btn primary">
                 <span class="btn-text">Ver Carta</span>
             </a>
-            <?php if ($_SESSION['user']['rol'] === 'administrador'): ?>
+            <?php if ($_SESSION['usuario']['rol'] === 'administrador'): ?>
             <a href="<?= $base_url ?>/index.php?route=carta/create" class="widget-btn secondary">
                 <span class="btn-icon">➕</span>
                 <span class="btn-text">Nuevo Ítem</span>
@@ -77,7 +77,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
         </div>
     </div>
 
-    <?php if ($_SESSION['user']['rol'] === 'administrador'): ?>
+    <?php if ($_SESSION['usuario']['rol'] === 'administrador'): ?>
     <!-- Widget Mozos -->
     <div class="widget">
         <div class="widget-header">
@@ -113,7 +113,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
     </div>
     <?php endif; ?>
 
-    <?php if ($_SESSION['user']['rol'] === 'mozo'): ?>
+    <?php if ($_SESSION['usuario']['rol'] === 'mozo'): ?>
     <!-- Widget Llamados -->
     <div class="widget">
         <div class="widget-header">

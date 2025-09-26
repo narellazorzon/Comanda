@@ -59,7 +59,7 @@ class AuthController {
         }
 
         // Login exitoso
-        $_SESSION['user'] = $usuario;
+        $_SESSION['usuario'] = $usuario;
         header('Location: ' . $base_url . '/index.php?route=home');
         exit;
     }

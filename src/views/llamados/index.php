@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 // Personal y administradores pueden acceder
-if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
+if (empty($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], ['mozo', 'administrador'])) {
     header('Location: ../../public/index.php?route=unauthorized');
     exit;
 }
@@ -79,8 +79,8 @@ if (isset($_GET['atender'])) {
 $mensaje_atendido = isset($_GET['atendido']) && $_GET['atendido'] == '1';
 
 // Si es un mozo, solo mostrar sus llamados; si es admin, mostrar todos
-$user_id = $_SESSION['user']['id_usuario'];
-$user_rol = $_SESSION['user']['rol'];
+$user_id = $_SESSION['usuario']['id_usuario'];
+$user_rol = $_SESSION['usuario']['rol'];
 
 if ($user_rol === 'mozo') {
     // Obtener llamados solo de las mesas asignadas a este mozo

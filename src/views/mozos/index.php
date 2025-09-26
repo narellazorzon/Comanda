@@ -12,7 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 // Solo administradores pueden acceder
-if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+if (empty($_SESSION['usuario']) || ($_SESSION['usuario']['rol'] ?? '') !== 'administrador') {
     header('Location: ' . url('login'));
     exit;
 }
@@ -33,8 +33,8 @@ if (isset($_GET['delete'])) {
 $mozos = Usuario::allByRole('mozo');
 
 // Si el usuario actual es administrador, agregarlo a la lista para que pueda cambiar su contraseña
-if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
-    $adminActual = $_SESSION['user'];
+if (($_SESSION['usuario']['rol'] ?? '') === 'administrador') {
+    $adminActual = $_SESSION['usuario'];
     // Verificar si el admin ya está en la lista (por si acaso)
     $adminEnLista = false;
     foreach ($mozos as $mozo) {
@@ -125,7 +125,7 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
     </tr>
   <?php else: ?>
     <?php foreach ($mozos as $m): ?>
-      <?php $esAdminActual = ($_SESSION['user']['id_usuario'] ?? 0) == $m['id_usuario']; ?>
+      <?php $esAdminActual = ($_SESSION['usuario']['id_usuario'] ?? 0) == $m['id_usuario']; ?>
       <tr data-mozo-id="<?= $m['id_usuario'] ?>" style="border-bottom: 1px solid #e0e0e0; <?= $esAdminActual ? 'background-color: #fff8e1;' : '' ?>">
         <td><?= $m['id_usuario'] ?></td>
         <td>
@@ -236,7 +236,7 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
     </div>
   <?php else: ?>
     <?php foreach ($mozos as $m): ?>
-      <?php $esAdminActual = ($_SESSION['user']['id_usuario'] ?? 0) == $m['id_usuario']; ?>
+      <?php $esAdminActual = ($_SESSION['usuario']['id_usuario'] ?? 0) == $m['id_usuario']; ?>
       <div class="mobile-card <?= $esAdminActual ? 'admin-current' : '' ?>" data-mozo-id="<?= $m['id_usuario'] ?>">
         <div class="card-header">
           <div class="card-title">

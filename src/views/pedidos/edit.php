@@ -13,12 +13,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Personal y administradores pueden editar pedidos
-if (empty($_SESSION['user']) || !in_array($_SESSION['user']['rol'], ['mozo', 'administrador'])) {
+if (empty($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], ['mozo', 'administrador'])) {
     header('Location: ' . url('login'));
     exit;
 }
 
-$rol = $_SESSION['user']['rol'];
+$rol = $_SESSION['usuario']['rol'];
 $error = '';
 $success = '';
 

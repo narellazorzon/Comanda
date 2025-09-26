@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../config/helpers.php';
 
 // La sesión ya está iniciada desde public/index.php
 // Verificar autenticación y permisos
-if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
+if (empty($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
     header('Location: ' . url('unauthorized'));
     exit;
 }

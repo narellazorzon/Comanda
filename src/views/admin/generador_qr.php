@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // La función requireAdmin() ya está definida en index.php
 // Solo verificamos que el usuario sea administrador
-if (!isset($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
     header('Location: index.php?route=unauthorized');
     exit;
 }

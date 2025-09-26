@@ -35,7 +35,7 @@ class MozoController {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
-        if (($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+        if (($_SESSION['usuario']['rol'] ?? '') !== 'administrador') {
             header('Location: ' . url('unauthorized'));
             exit;
         }

@@ -18,7 +18,7 @@ class InventarioController
             session_start();
         }
         
-        if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
+        if (empty($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
             header('Location: index.php?route=unauthorized');
             exit;
         }
@@ -47,7 +47,7 @@ class InventarioController
             session_start();
         }
         
-        if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
+        if (empty($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
             header('Location: index.php?route=unauthorized');
             exit;
         }
@@ -74,7 +74,7 @@ class InventarioController
             session_start();
         }
         
-        if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
+        if (empty($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
             header('Location: index.php?route=unauthorized');
             exit;
         }
@@ -94,7 +94,7 @@ class InventarioController
             $id_item = $_POST['id_item'] ?? '';
             $nueva_cantidad = $_POST['nueva_cantidad'] ?? '';
             $motivo = $_POST['motivo'] ?? '';
-            $id_usuario = $_SESSION['user']['id_usuario'];
+            $id_usuario = $_SESSION['usuario']['id_usuario'];
             
             $resultado = Inventario::actualizarStock(
                 (int) $id_item,
@@ -126,7 +126,7 @@ class InventarioController
             session_start();
         }
         
-        if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
+        if (empty($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'administrador') {
             header('Location: index.php?route=unauthorized');
             exit;
         }
@@ -158,7 +158,7 @@ class InventarioController
             session_start();
         }
         
-        if (empty($_SESSION['user'])) {
+        if (empty($_SESSION['usuario'])) {
             echo json_encode(['error' => 'No autenticado']);
             exit;
         }
