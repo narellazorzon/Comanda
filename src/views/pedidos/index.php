@@ -115,107 +115,234 @@ if ($rol === 'mozo') {
   }
 }
 
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
-    <div style="flex: 1;">
-        <?php if ($rol === 'administrador'): ?>
-            <a href="<?= url('pedidos/create') ?>" class="button">Nuevo Pedido</a>
-        <?php else: ?>
-            <div style="background: #d1ecf1; padding: 10px; border-radius: 4px; color: #0c5460;">
-                🍽️ Vista de pedidos - Gestiona los pedidos de las mesas
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
+/* Estilos para el header de gestión */
+.management-header {
+  background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
+  color: white !important;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
 
-<!-- Panel de Filtros -->
-<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-        <h4 style="margin: 0; color: #6c757d; font-size: 1rem;">
-            <span style="margin-right: 0.5rem;">🔍</span>Filtros de búsqueda
-        </h4>
+.management-header * {
+  color: white !important;
+}
+
+.management-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white !important;
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  color: white !important;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.header-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para el header */
+@media (max-width: 768px) {
+  .management-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .management-header h1 {
+    margin-bottom: 0.5rem;
+    min-width: auto;
+  }
+  
+  .header-actions {
+    justify-content: center;
+  }
+  
+  .header-btn {
+    flex: 1;
+    text-align: center;
+    min-width: 120px;
+  }
+}
+
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.management-header {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.filters-container {
+  animation: slideInUp 0.7s ease-out;
+}
+
+.pedidos-container {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+/* Animación para las filas de pedidos */
+.pedido-row {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Delays escalonados para las filas */
+.pedido-row:nth-child(1) { animation-delay: 0.1s; }
+.pedido-row:nth-child(2) { animation-delay: 0.2s; }
+.pedido-row:nth-child(3) { animation-delay: 0.3s; }
+.pedido-row:nth-child(4) { animation-delay: 0.4s; }
+.pedido-row:nth-child(5) { animation-delay: 0.5s; }
+.pedido-row:nth-child(6) { animation-delay: 0.6s; }
+.pedido-row:nth-child(7) { animation-delay: 0.7s; }
+.pedido-row:nth-child(8) { animation-delay: 0.8s; }
+.pedido-row:nth-child(9) { animation-delay: 0.9s; }
+.pedido-row:nth-child(10) { animation-delay: 1.0s; }
+.pedido-row:nth-child(11) { animation-delay: 1.1s; }
+.pedido-row:nth-child(12) { animation-delay: 1.2s; }
+.pedido-row:nth-child(13) { animation-delay: 1.3s; }
+.pedido-row:nth-child(14) { animation-delay: 1.4s; }
+.pedido-row:nth-child(15) { animation-delay: 1.5s; }
+
+/* Animación para las tarjetas de pedidos en vista móvil */
+.mobile-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Delays escalonados para las tarjetas */
+.mobile-card:nth-child(1) { animation-delay: 0.1s; }
+.mobile-card:nth-child(2) { animation-delay: 0.2s; }
+.mobile-card:nth-child(3) { animation-delay: 0.3s; }
+.mobile-card:nth-child(4) { animation-delay: 0.4s; }
+.mobile-card:nth-child(5) { animation-delay: 0.5s; }
+.mobile-card:nth-child(6) { animation-delay: 0.6s; }
+.mobile-card:nth-child(7) { animation-delay: 0.7s; }
+.mobile-card:nth-child(8) { animation-delay: 0.8s; }
+.mobile-card:nth-child(9) { animation-delay: 0.9s; }
+.mobile-card:nth-child(10) { animation-delay: 1.0s; }
+.mobile-card:nth-child(11) { animation-delay: 1.1s; }
+.mobile-card:nth-child(12) { animation-delay: 1.2s; }
+.mobile-card:nth-child(13) { animation-delay: 1.3s; }
+.mobile-card:nth-child(14) { animation-delay: 1.4s; }
+.mobile-card:nth-child(15) { animation-delay: 1.5s; }
+
+/* Efectos de hover mejorados para pedidos */
+.pedido-row:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.mobile-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animación para mensaje de "no hay pedidos" */
+.no-pedidos-message {
+  animation: bounceIn 1s ease-out;
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Animación para el contenedor de filtros */
+.filters-content {
+  animation: slideInUp 0.5s ease-out;
+}
+</style>
+
+<!-- Header de gestión -->
+<div class="management-header">
+  <h1><?= $rol === 'administrador' ? '🍽️ Gestión de Pedidos' : 'Consulta de Pedidos' ?></h1>
+  <?php if ($rol === 'administrador'): ?>
+    <div class="header-actions">
+      <a href="<?= url('pedidos/create') ?>" class="header-btn">
+        ➕ Nuevo Pedido
+      </a>
     </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
-        <!-- Filtro por Estado -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Estado:
-            </label>
-            <select id="filtro-estado" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-                <option value="">Todos los estados</option>
-                <option value="pendiente">⏳ Pendiente</option>
-                <option value="en_preparacion">👨‍🍳 En preparación</option>
-                <option value="servido">✅ Servido</option>
-                <option value="cuenta">💳 Cuenta</option>
-                <option value="cerrado">🔒 Cerrado</option>
-            </select>
-        </div>
-        
-        <!-- Filtro por Mesa -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Mesa:
-            </label>
-            <select id="filtro-mesa" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-                <option value="">Todas las mesas</option>
-                <option value="takeaway">🥡 Takeaway</option>
-                <?php foreach ($mesas as $mesa): ?>
-                    <option value="<?= $mesa['numero'] ?>">Mesa <?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?? 'Sin ubicación' ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        
-        <!-- Filtro por Mozo -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Mozo:
-            </label>
-            <select id="filtro-mozo" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-                <option value="">Todos los mozos</option>
-                <?php foreach ($mozos as $mozo): ?>
-                    <option value="<?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>">
-                        <?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        
-        <!-- Filtro por Fecha -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Fecha:
-            </label>
-            <input type="date" id="filtro-fecha" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-        </div>
-        
-        <!-- Filtro por Rango de Total -->
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Total mínimo:
-            </label>
-            <input type="number" id="filtro-total-min" placeholder="$0.00" step="0.01" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-        </div>
-        
-        <div>
-            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #495057; font-weight: 500;">
-                Total máximo:
-            </label>
-            <input type="number" id="filtro-total-max" placeholder="$999.99" step="0.01" style="width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white;">
-        </div>
-    </div>
-    
-    <!-- Botones de acción -->
-    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-        <button onclick="aplicarFiltros()" style="padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
-            Aplicar Filtros
-        </button>
-        <button onclick="limpiarFiltros()" style="padding: 0.5rem 1rem; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Limpiar
-        </button>
-        <span id="contador-resultados" style="margin-left: auto; padding: 0.5rem 1rem; color: #6c757d; font-size: 0.875rem;">
-            Mostrando <span id="num-resultados"><?= count($pedidos) ?></span> pedido(s)
-        </span>
-    </div>
+  <?php endif; ?>
 </div>
 
 <!-- Sistema de notificaciones temporales -->
@@ -330,7 +457,7 @@ if ($rol === 'mozo') {
   <tbody>
     <?php if (empty($pedidos)): ?>
       <tr>
-        <td colspan="<?= $rol === 'administrador' ? '9' : '8' ?>">No hay pedidos registrados.</td>
+        <td colspan="<?= $rol === 'administrador' ? '9' : '8' ?>" class="no-pedidos-message">No hay pedidos registrados.</td>
       </tr>
     <?php else: ?>
       <?php foreach ($pedidos as $pedido): ?>
@@ -453,7 +580,7 @@ if ($rol === 'mozo') {
 <!-- Vista móvil con tarjetas -->
 <div class="mobile-cards">
   <?php if (empty($pedidos)): ?>
-    <div class="mobile-card" style="text-align: center; padding: 1rem; color: #666;">
+    <div class="mobile-card no-pedidos-message" style="text-align: center; padding: 1rem; color: #666;">
       No hay pedidos registrados.
     </div>
   <?php else: ?>

@@ -13,7 +13,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Incluir header para todas las páginas (excepto login, cliente y rutas de API)
 $route = $_GET['route'] ?? 'cliente';
 $apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion'];
-$noHeaderRoutes = ['login', 'cliente', 'pago', 'pago-confirmacion'];
+$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion'];
 if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
