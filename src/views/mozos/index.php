@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Controllers\MozoController;
 use App\Models\Usuario;
+use App\Models\Mesa;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -88,13 +89,13 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
   <div style="display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap;">
     <label style="font-weight: 600; color: var(--secondary); font-size: 0.85rem;">📊 Estado:</label>
     <div class="status-filters" style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
-      <button class="status-filter-btn active" data-status="all" style="padding: 4px 8px; border: none; background: var(--secondary); color: white; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
+      <button class="status-filter-btn active" data-status="all" style="padding: 4px 8px; border: none; background: var(--secondary); color: white; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
         Todas
       </button>
-      <button class="status-filter-btn" data-status="activo" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
+      <button class="status-filter-btn" data-status="activo" style="padding: 4px 8px; border: none; background: #d4edda; color: #155724; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
         ✅ Activo
       </button>
-      <button class="status-filter-btn" data-status="inactivo" style="padding: 4px 8px; border: none; background: #f8d7da; color: #721c24; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease;">
+      <button class="status-filter-btn" data-status="inactivo" style="padding: 4px 8px; border: none; background: #f8d7da; color: #721c24; border-radius: 12px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
         ❌ Inactivo
       </button>
     </div>
@@ -112,6 +113,7 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
       <th>ID</th>
       <th>Nombre</th>
       <th>Email</th>
+      <th>Mesas Asignadas</th>
       <th>Estado</th>
       <th>Acciones</th>
     </tr>
@@ -119,7 +121,7 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
   <tbody>
   <?php if (empty($mozos)): ?>
     <tr>
-      <td colspan="5">No hay mozos registrados.</td>
+      <td colspan="6">No hay mozos registrados.</td>
     </tr>
   <?php else: ?>
     <?php foreach ($mozos as $m): ?>
@@ -135,6 +137,52 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
           <?php endif; ?>
         </td>
         <td><?= htmlspecialchars($m['email']) ?></td>
+        <td>
+          <?php
+          // Obtener mesas asignadas al mozo
+          $mesasAsignadas = Mesa::getMesasByMozo($m['id_usuario']);
+          if (empty($mesasAsignadas)) {
+              echo '<span style="color: #6c757d; font-style: italic;">Sin mesas asignadas</span>';
+          } else {
+              // Contar mesas por estado
+              $mesasLibres = array_filter($mesasAsignadas, fn($m) => $m['estado'] === 'libre');
+              $mesasOcupadas = array_filter($mesasAsignadas, fn($m) => $m['estado'] === 'ocupada');
+              $totalMesas = count($mesasAsignadas);
+              
+              echo '<div style="margin-bottom: 4px;">';
+              echo '<span style="font-size: 0.8em; color: #666; font-weight: 500;">';
+              echo '📊 ' . $totalMesas . ' mesa' . ($totalMesas > 1 ? 's' : '') . ' asignada' . ($totalMesas > 1 ? 's' : '');
+              if (count($mesasLibres) > 0) echo ' • ' . count($mesasLibres) . ' libre' . (count($mesasLibres) > 1 ? 's' : '');
+              if (count($mesasOcupadas) > 0) echo ' • ' . count($mesasOcupadas) . ' ocupada' . (count($mesasOcupadas) > 1 ? 's' : '');
+              echo '</span>';
+              echo '</div>';
+              
+              echo '<div style="display: flex; flex-wrap: wrap; gap: 4px;">';
+              foreach ($mesasAsignadas as $mesa) {
+                  // Definir color según el estado de la mesa
+                  $estadoMesa = $mesa['estado'];
+                  if ($estadoMesa === 'libre') {
+                      $bgColor = '#e8f5e8';
+                      $textColor = '#2e7d32';
+                      $icono = '🟢';
+                  } elseif ($estadoMesa === 'ocupada') {
+                      $bgColor = '#fff3e0';
+                      $textColor = '#f57c00';
+                      $icono = '🟡';
+                  } else {
+                      $bgColor = '#f3e5f5';
+                      $textColor = '#7b1fa2';
+                      $icono = '🟣';
+                  }
+                  
+                  echo '<span style="background: ' . $bgColor . '; color: ' . $textColor . '; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 500; display: inline-flex; align-items: center; gap: 3px;" title="Mesa ' . $mesa['numero'] . ' - ' . ucfirst($estadoMesa) . '">';
+                  echo $icono . ' Mesa ' . $mesa['numero'];
+                  echo '</span>';
+              }
+              echo '</div>';
+          }
+          ?>
+        </td>
         <td>
           <?php
           // Definir colores según el estado
@@ -154,11 +202,14 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
           </span>
         </td>
         <td>
-          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;">
+          <a href="<?= url('mesas/cambiar-mozo', ['mozo_id' => $m['id_usuario']]) ?>" class="btn-action mesas-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #17a2b8; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Gestionar mesas asignadas">
+            🍽️
+          </a>
+          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Editar mozo">
             ✏️
           </a>
           <?php if (!$esAdminActual): ?>
-            <a href="<?= url('mozos/delete', ['delete' => $m['id_usuario']]) ?>" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
+            <a href="<?= url('mozos/delete', ['delete' => $m['id_usuario']]) ?>" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Eliminar mozo"
                onclick="return confirm('¿Estás seguro de eliminar a <?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>?')">
               ❌
             </a>
@@ -241,6 +292,110 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
     <?php endforeach; ?>
   <?php endif; ?>
 </div>
+
+<script>
+// Función para aplicar los filtros de mozos
+function aplicarFiltrosMozos() {
+    const filtroNombre = document.getElementById('filtro-nombre').value.toLowerCase();
+    const filtroEstado = document.getElementById('filtro-estado').value.toLowerCase();
+    const filtroEmail = document.getElementById('filtro-email').value.toLowerCase();
+    const filtroMesas = document.getElementById('filtro-mesas').value;
+    
+    const filas = document.querySelectorAll('.mozo-row');
+    let contadorVisible = 0;
+    
+    filas.forEach(fila => {
+        const nombre = fila.dataset.nombre;
+        const email = fila.dataset.email;
+        const estado = fila.dataset.estado;
+        const mesas = parseInt(fila.dataset.mesas);
+        
+        let mostrar = true;
+        
+        // Filtro por nombre
+        if (filtroNombre && !nombre.includes(filtroNombre)) {
+            mostrar = false;
+        }
+        
+        // Filtro por estado
+        if (filtroEstado && estado !== filtroEstado) {
+            mostrar = false;
+        }
+        
+        // Filtro por email
+        if (filtroEmail && !email.includes(filtroEmail)) {
+            mostrar = false;
+        }
+        
+        // Filtro por mesas asignadas
+        if (filtroMesas) {
+            if (filtroMesas === 'con-mesas' && mesas === 0) {
+                mostrar = false;
+            } else if (filtroMesas === 'sin-mesas' && mesas > 0) {
+                mostrar = false;
+            }
+        }
+        
+        // Mostrar u ocultar la fila
+        if (mostrar) {
+            fila.style.display = '';
+            contadorVisible++;
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+    
+    // Actualizar contador
+    document.getElementById('num-mozos').textContent = contadorVisible;
+    
+    // Mostrar mensaje si no hay resultados
+    if (contadorVisible === 0 && filas.length > 0) {
+        let filaNoResultados = document.getElementById('fila-no-mozos');
+        if (!filaNoResultados) {
+            const tbody = document.querySelector('.table tbody');
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.id = 'fila-no-mozos';
+            nuevaFila.innerHTML = `<td colspan="6" style="text-align: center; padding: 2rem; color: #6c757d;">
+                <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">👤 No se encontraron mozos con los filtros aplicados</div>
+                <div style="font-size: 0.9rem;">Intenta ajustar los criterios de búsqueda</div>
+            </td>`;
+            tbody.appendChild(nuevaFila);
+        }
+    } else {
+        const filaNoResultados = document.getElementById('fila-no-mozos');
+        if (filaNoResultados) {
+            filaNoResultados.remove();
+        }
+    }
+}
+
+function limpiarFiltrosMozos() {
+    document.getElementById('filtro-nombre').value = '';
+    document.getElementById('filtro-estado').value = '';
+    document.getElementById('filtro-email').value = '';
+    document.getElementById('filtro-mesas').value = '';
+    
+    const filas = document.querySelectorAll('.mozo-row');
+    filas.forEach(fila => {
+        fila.style.display = '';
+    });
+    
+    document.getElementById('num-mozos').textContent = filas.length;
+    
+    const filaNoResultados = document.getElementById('fila-no-mozos');
+    if (filaNoResultados) {
+        filaNoResultados.remove();
+    }
+}
+
+// Agregar eventos a los filtros
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('filtro-nombre').addEventListener('input', aplicarFiltrosMozos);
+    document.getElementById('filtro-estado').addEventListener('change', aplicarFiltrosMozos);
+    document.getElementById('filtro-email').addEventListener('input', aplicarFiltrosMozos);
+    document.getElementById('filtro-mesas').addEventListener('change', aplicarFiltrosMozos);
+});
+</script>
 
 
 <script>
@@ -456,10 +611,111 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.management-header {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.table-responsive,
+.mobile-cards {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.table tbody tr {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+.table tbody tr:nth-child(6) { animation-delay: 0.6s; }
+.table tbody tr:nth-child(7) { animation-delay: 0.7s; }
+.table tbody tr:nth-child(8) { animation-delay: 0.8s; }
+.table tbody tr:nth-child(9) { animation-delay: 0.9s; }
+.table tbody tr:nth-child(10) { animation-delay: 1.0s; }
+
+.mobile-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.mobile-card:nth-child(1) { animation-delay: 0.1s; }
+.mobile-card:nth-child(2) { animation-delay: 0.2s; }
+.mobile-card:nth-child(3) { animation-delay: 0.3s; }
+.mobile-card:nth-child(4) { animation-delay: 0.4s; }
+.mobile-card:nth-child(5) { animation-delay: 0.5s; }
+.mobile-card:nth-child(6) { animation-delay: 0.6s; }
+.mobile-card:nth-child(7) { animation-delay: 0.7s; }
+.mobile-card:nth-child(8) { animation-delay: 0.8s; }
+.mobile-card:nth-child(9) { animation-delay: 0.9s; }
+.mobile-card:nth-child(10) { animation-delay: 1.0s; }
+
+/* Efectos de hover mejorados */
+.table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.mobile-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.filters-container {
+  animation: slideInUp 0.7s ease-out;
+}
+
 /* Estilos para el administrador actual */
 .admin-current {
     border-left: 4px solid #ffd700 !important;
     box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3) !important;
+    animation: pulse 2s infinite;
 }
 
 .admin-badge {
@@ -491,8 +747,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .toggle-filters-btn:hover {
     background: linear-gradient(135deg, rgb(190, 141, 56) 0%, rgb(170, 125, 50) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .filters-container {
@@ -540,9 +797,20 @@ document.addEventListener('DOMContentLoaded', function() {
         gap: 0.15rem;
     }
     
-    .search-filter .status-filter-btn {
+    .search-filter     .status-filter-btn {
         font-size: 0.6rem;
         padding: 2px 4px;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    .status-filter-btn:hover {
+        transform: translateY(-1px) scale(1.05);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    .status-filter-btn.active {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     
     /* Reducir tamaño general de elementos en móvil */
@@ -666,8 +934,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     .card-actions .btn-action:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transform: translateY(-2px) scale(1.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
     
     .card-actions .edit-btn {
@@ -731,8 +1000,9 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .btn-action:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .edit-btn {
@@ -757,6 +1027,17 @@ document.addEventListener('DOMContentLoaded', function() {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+/* Efectos de hover para botones de filtro en desktop */
+.status-filter-btn:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.status-filter-btn.active {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* En desktop, mantener botón visible */
@@ -826,9 +1107,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .header-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   color: white !important;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .header-btn.secondary {

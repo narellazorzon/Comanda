@@ -4,10 +4,12 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\Pedido;
+use App\Models\Mesa;
+use App\Models\Usuario;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    // La sesión ya está iniciada desde public/index.php
 }
 
 // Verificar permisos
@@ -82,8 +84,9 @@ function obtenerIconoEstado($estado) {
 
 // Cargar pedidos según el rol
 if ($rol === 'mozo') {
-    // Los mozos solo ven pedidos del día actual
-    $pedidos = Pedido::todayOnly();
+    // Los mozos solo ven pedidos del día actual de sus mesas asignadas
+    $mozoId = $_SESSION['user']['id_usuario'];
+    $pedidos = Pedido::todayByMesoAssigned($mozoId);
 } else {
     // Los administradores ven todos los pedidos
     $pedidos = Pedido::all();
@@ -156,84 +159,23 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
-/* Estilos para filtros desplegables */
-.toggle-filters-btn {
-    display: block;
-    width: 100%;
-    padding: 0.6rem 1rem;
-    background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.toggle-filters-btn:hover {
-    background: linear-gradient(135deg, rgb(190, 141, 56) 0%, rgb(170, 125, 50) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.filters-container {
-    background: rgb(238, 224, 191);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin-bottom: 1rem;
-    overflow: hidden;
-}
-
-#filtersContent {
-    display: none;
-    padding: 1rem;
-}
-
-.filter-group {
-    margin-bottom: 1rem;
-}
-
-.filter-group:last-child {
-    margin-bottom: 0;
-}
-
-.filter-group input,
-.filter-group select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.85rem;
-}
-
-.status-filters {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.status-filter-btn {
-    padding: 0.4rem 0.8rem;
-    border: none;
-    background: #f8f9fa;
-    color: #495057;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.status-filter-btn:hover {
-    background: #e9ecef;
-}
-
-.status-filter-btn.active {
-    background: rgb(83, 52, 31);
-    color: white;
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Estilos para el header de gestión */
@@ -243,10 +185,12 @@ require_once __DIR__ . '/../includes/header.php';
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .management-header * {
@@ -259,12 +203,14 @@ require_once __DIR__ . '/../includes/header.php';
   font-weight: 600;
   color: white !important;
   flex: 1;
+  min-width: 200px;
 }
 
 .header-actions {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .header-btn {
@@ -273,18 +219,20 @@ require_once __DIR__ . '/../includes/header.php';
   background: rgba(255, 255, 255, 0.2);
   color: white !important;
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
 }
 
 .header-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   color: white !important;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .header-btn.secondary {
@@ -296,20 +244,17 @@ require_once __DIR__ . '/../includes/header.php';
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Responsive para móvil */
+/* Responsive para el header */
 @media (max-width: 768px) {
   .management-header {
-    padding: 8px;
-    margin-bottom: 8px;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
+    text-align: center;
   }
   
   .management-header h1 {
-    font-size: 0.9rem;
-    text-align: center;
     margin-bottom: 0.5rem;
+    min-width: auto;
   }
   
   .header-actions {
@@ -317,28 +262,151 @@ require_once __DIR__ . '/../includes/header.php';
   }
   
   .header-btn {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.6rem;
+    flex: 1;
+    text-align: center;
+    min-width: 120px;
   }
+}
+
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.management-header {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.filters-container {
+  animation: slideInUp 0.7s ease-out;
+}
+
+.pedidos-container {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+/* Animación para las filas de pedidos */
+.pedido-row {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Delays escalonados para las filas */
+.pedido-row:nth-child(1) { animation-delay: 0.1s; }
+.pedido-row:nth-child(2) { animation-delay: 0.2s; }
+.pedido-row:nth-child(3) { animation-delay: 0.3s; }
+.pedido-row:nth-child(4) { animation-delay: 0.4s; }
+.pedido-row:nth-child(5) { animation-delay: 0.5s; }
+.pedido-row:nth-child(6) { animation-delay: 0.6s; }
+.pedido-row:nth-child(7) { animation-delay: 0.7s; }
+.pedido-row:nth-child(8) { animation-delay: 0.8s; }
+.pedido-row:nth-child(9) { animation-delay: 0.9s; }
+.pedido-row:nth-child(10) { animation-delay: 1.0s; }
+.pedido-row:nth-child(11) { animation-delay: 1.1s; }
+.pedido-row:nth-child(12) { animation-delay: 1.2s; }
+.pedido-row:nth-child(13) { animation-delay: 1.3s; }
+.pedido-row:nth-child(14) { animation-delay: 1.4s; }
+.pedido-row:nth-child(15) { animation-delay: 1.5s; }
+
+/* Animación para las tarjetas de pedidos en vista móvil */
+.mobile-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Delays escalonados para las tarjetas */
+.mobile-card:nth-child(1) { animation-delay: 0.1s; }
+.mobile-card:nth-child(2) { animation-delay: 0.2s; }
+.mobile-card:nth-child(3) { animation-delay: 0.3s; }
+.mobile-card:nth-child(4) { animation-delay: 0.4s; }
+.mobile-card:nth-child(5) { animation-delay: 0.5s; }
+.mobile-card:nth-child(6) { animation-delay: 0.6s; }
+.mobile-card:nth-child(7) { animation-delay: 0.7s; }
+.mobile-card:nth-child(8) { animation-delay: 0.8s; }
+.mobile-card:nth-child(9) { animation-delay: 0.9s; }
+.mobile-card:nth-child(10) { animation-delay: 1.0s; }
+.mobile-card:nth-child(11) { animation-delay: 1.1s; }
+.mobile-card:nth-child(12) { animation-delay: 1.2s; }
+.mobile-card:nth-child(13) { animation-delay: 1.3s; }
+.mobile-card:nth-child(14) { animation-delay: 1.4s; }
+.mobile-card:nth-child(15) { animation-delay: 1.5s; }
+
+/* Efectos de hover mejorados para pedidos */
+.pedido-row:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.mobile-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animación para mensaje de "no hay pedidos" */
+.no-pedidos-message {
+  animation: bounceIn 1s ease-out;
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Animación para el contenedor de filtros */
+.filters-content {
+  animation: slideInUp 0.5s ease-out;
 }
 </style>
 
-
 <!-- Header de gestión -->
 <div class="management-header">
-  <h1><?= $rol === 'administrador' ? '📋 Gestión de Pedidos' : '📋 Pedidos del Día' ?></h1>
-  <div class="header-actions">
-    <a href="<?= url('pedidos/create') ?>" class="header-btn">
-      ➕ Nuevo Pedido
-    </a>
-  </div>
+  <h1><?= $rol === 'administrador' ? '🍽️ Gestión de Pedidos' : 'Consulta de Pedidos' ?></h1>
+  <?php if ($rol === 'administrador'): ?>
+    <div class="header-actions">
+      <a href="<?= url('pedidos/create') ?>" class="header-btn">
+        ➕ Nuevo Pedido
+      </a>
+    </div>
+  <?php endif; ?>
 </div>
-
-<?php if ($rol === 'mozo'): ?>
-  <div style="background: #d1ecf1; padding: 8px; border-radius: 4px; margin-bottom: 0.8rem; color: #0c5460; font-size: 0.85rem;">
-    📅 Mostrando únicamente los pedidos del día de hoy (<?= date('d/m/Y') ?>)
-  </div>
-<?php endif; ?>
 
 <!-- Sistema de notificaciones temporales -->
 <div id="notification-container"></div>
@@ -452,11 +520,16 @@ require_once __DIR__ . '/../includes/header.php';
   <tbody>
     <?php if (empty($pedidos)): ?>
       <tr>
-        <td colspan="<?= $rol === 'administrador' ? '9' : '8' ?>">No hay pedidos registrados.</td>
+        <td colspan="<?= $rol === 'administrador' ? '9' : '8' ?>" class="no-pedidos-message">No hay pedidos registrados.</td>
       </tr>
     <?php else: ?>
       <?php foreach ($pedidos as $pedido): ?>
-        <tr>
+        <tr class="pedido-row" 
+            data-estado="<?= htmlspecialchars($pedido['estado']) ?>"
+            data-mesa="<?= htmlspecialchars($pedido['numero_mesa'] ?? 'takeaway') ?>"
+            data-mozo="<?= htmlspecialchars($pedido['nombre_mozo_completo'] ?? '') ?>"
+            data-fecha="<?= date('Y-m-d', strtotime($pedido['fecha_hora'] ?? $pedido['fecha_creacion'])) ?>"
+            data-total="<?= $pedido['total'] ?>">
           <td><?= htmlspecialchars($pedido['id_pedido']) ?></td>
           <td><?= htmlspecialchars($pedido['numero_mesa'] ?? 'N/A') ?></td>
           <td><?= htmlspecialchars($pedido['nombre_mozo_completo'] ?? 'N/A') ?></td>
@@ -539,7 +612,7 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Vista móvil con tarjetas -->
 <div class="mobile-cards">
   <?php if (empty($pedidos)): ?>
-    <div class="mobile-card" style="text-align: center; padding: 1rem; color: #666;">
+    <div class="mobile-card no-pedidos-message" style="text-align: center; padding: 1rem; color: #666;">
       No hay pedidos registrados.
     </div>
   <?php else: ?>
@@ -1928,6 +2001,141 @@ document.addEventListener('DOMContentLoaded', function() {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+<script>
+// Función para aplicar los filtros
+function aplicarFiltros() {
+    const filtroEstado = document.getElementById('filtro-estado').value.toLowerCase();
+    const filtroMesa = document.getElementById('filtro-mesa').value.toLowerCase();
+    const filtroMozo = document.getElementById('filtro-mozo').value.toLowerCase();
+    const filtroFecha = document.getElementById('filtro-fecha').value;
+    const filtroTotalMin = parseFloat(document.getElementById('filtro-total-min').value) || 0;
+    const filtroTotalMax = parseFloat(document.getElementById('filtro-total-max').value) || 999999;
+    
+    const filas = document.querySelectorAll('.pedido-row');
+    let contadorVisible = 0;
+    
+    filas.forEach(fila => {
+        const estado = fila.dataset.estado;
+        const mesa = fila.dataset.mesa.toLowerCase();
+        const mozo = fila.dataset.mozo.toLowerCase();
+        const fecha = fila.dataset.fecha;
+        const total = parseFloat(fila.dataset.total);
+        
+        let mostrar = true;
+        
+        // Filtro por estado
+        if (filtroEstado && estado !== filtroEstado) {
+            mostrar = false;
+        }
+        
+        // Filtro por mesa
+        if (filtroMesa) {
+            if (filtroMesa === 'takeaway' && mesa !== 'takeaway') {
+                mostrar = false;
+            } else if (filtroMesa !== 'takeaway' && mesa !== filtroMesa) {
+                mostrar = false;
+            }
+        }
+        
+        // Filtro por mozo
+        if (filtroMozo && !mozo.includes(filtroMozo.toLowerCase())) {
+            mostrar = false;
+        }
+        
+        // Filtro por fecha
+        if (filtroFecha && fecha !== filtroFecha) {
+            mostrar = false;
+        }
+        
+        // Filtro por rango de total
+        if (total < filtroTotalMin || total > filtroTotalMax) {
+            mostrar = false;
+        }
+        
+        // Mostrar u ocultar la fila
+        if (mostrar) {
+            fila.style.display = '';
+            contadorVisible++;
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+    
+    // Actualizar contador de resultados
+    document.getElementById('num-resultados').textContent = contadorVisible;
+    
+    // Si no hay resultados visibles, mostrar mensaje
+    if (contadorVisible === 0 && filas.length > 0) {
+        // Verificar si ya existe la fila de "sin resultados"
+        let filaNoResultados = document.getElementById('fila-no-resultados');
+        if (!filaNoResultados) {
+            const tbody = document.querySelector('.table tbody');
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.id = 'fila-no-resultados';
+            nuevaFila.innerHTML = `<td colspan="${document.querySelector('.table thead tr').children.length}" style="text-align: center; padding: 2rem; color: #6c757d;">
+                <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">🔍 No se encontraron pedidos con los filtros aplicados</div>
+                <div style="font-size: 0.9rem;">Intenta ajustar los criterios de búsqueda</div>
+            </td>`;
+            tbody.appendChild(nuevaFila);
+        }
+    } else {
+        // Remover fila de "sin resultados" si existe
+        const filaNoResultados = document.getElementById('fila-no-resultados');
+        if (filaNoResultados) {
+            filaNoResultados.remove();
+        }
+    }
+}
+
+// Función para limpiar todos los filtros
+function limpiarFiltros() {
+    document.getElementById('filtro-estado').value = '';
+    document.getElementById('filtro-mesa').value = '';
+    document.getElementById('filtro-mozo').value = '';
+    document.getElementById('filtro-fecha').value = '';
+    document.getElementById('filtro-total-min').value = '';
+    document.getElementById('filtro-total-max').value = '';
+    
+    // Mostrar todas las filas
+    const filas = document.querySelectorAll('.pedido-row');
+    filas.forEach(fila => {
+        fila.style.display = '';
+    });
+    
+    // Actualizar contador
+    document.getElementById('num-resultados').textContent = filas.length;
+    
+    // Remover fila de "sin resultados" si existe
+    const filaNoResultados = document.getElementById('fila-no-resultados');
+    if (filaNoResultados) {
+        filaNoResultados.remove();
+    }
+}
+
+// Aplicar filtros automáticamente cuando cambian los valores
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar eventos a todos los filtros para aplicar automáticamente
+    const filtros = ['filtro-estado', 'filtro-mesa', 'filtro-mozo', 'filtro-fecha', 'filtro-total-min', 'filtro-total-max'];
+    
+    filtros.forEach(filtroId => {
+        const elemento = document.getElementById(filtroId);
+        if (elemento) {
+            elemento.addEventListener('change', aplicarFiltros);
+            if (elemento.type === 'number' || elemento.type === 'text') {
+                elemento.addEventListener('input', aplicarFiltros);
+            }
+        }
+    });
+    
+    // Aplicar filtros si hay valores en la URL (para mantener estado)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('estado')) {
+        document.getElementById('filtro-estado').value = urlParams.get('estado');
+        aplicarFiltros();
+    }
+});
+</script>
 
 
 .state-btn.cerrado {

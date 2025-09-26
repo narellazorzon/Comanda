@@ -134,6 +134,85 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 </div>
 
 <style>
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.home-header {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.widgets-grid {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.widget {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.widget:nth-child(1) { animation-delay: 0.1s; }
+.widget:nth-child(2) { animation-delay: 0.2s; }
+.widget:nth-child(3) { animation-delay: 0.3s; }
+.widget:nth-child(4) { animation-delay: 0.4s; }
+.widget:nth-child(5) { animation-delay: 0.5s; }
+.widget:nth-child(6) { animation-delay: 0.6s; }
+.widget:nth-child(7) { animation-delay: 0.7s; }
+.widget:nth-child(8) { animation-delay: 0.8s; }
+.widget:nth-child(9) { animation-delay: 0.9s; }
+.widget:nth-child(10) { animation-delay: 1.0s; }
+
+/* Efectos de hover mejorados */
+.widget:hover {
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.widget-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 /* Estilos para el menú inicial con widgets */
 .home-header {
     text-align: center;

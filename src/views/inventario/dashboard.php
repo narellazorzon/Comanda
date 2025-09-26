@@ -165,14 +165,18 @@ if (!isset($estadisticas) || !isset($stock_bajo) || !isset($resumen_categorias))
             </div>
             <div>
                 <span style="color: #dc3545; font-weight: bold;">
-                    <?= $item['cantidad_disponible'] ?> <?= $item['unidad_medida'] ?>
+                        <?= $item['cantidad_disponible'] ?> unidades
                 </span>
                 <small>(mín: <?= $item['cantidad_minima'] ?>)</small>
             </div>
         </div>
         <?php endforeach; ?>
+        <div style="text-align: center; margin-top: 1rem;">
+        </div>
+        <?php endif; ?>
+
     </div>
-    <?php endif; ?>
+
 
     <!-- Resumen por categorías -->
     <div class="alerts-section">

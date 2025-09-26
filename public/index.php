@@ -20,8 +20,10 @@ require_once __DIR__ . '/../src/config/ClientSession.php';
 
 // Obtener la ruta solicitada primero
 $route = $_GET['route'] ?? 'cliente';
-$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'test-pedidos', 'cliente/procesar-pago'];
+<<<<<<< HEAD
+$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'test-pedidos', 'cliente/procesar-pago', 'pago', 'pago-procesar', 'pago-confirmacion'];
 $clienteRoutes = ['cliente', 'cliente-pago', 'cliente-confirmacion'];
+$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion'];
 
 // Si estamos en una ruta de cliente, asegurar contexto de cliente
 if (in_array($route, $clienteRoutes)) {
@@ -31,7 +33,7 @@ if (in_array($route, $clienteRoutes)) {
 }
 
 // Incluir header para todas las páginas (excepto login, rutas de API y páginas del cliente)
-if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes)) {
+if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes) && !in_array($route, $noHeaderRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
@@ -360,8 +362,8 @@ switch ($route) {
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login, rutas de API y páginas del cliente)
-if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes)) {
+// Incluir footer para todas las páginas (excepto login, rutas de API, páginas del cliente y rutas sin header)
+if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes) && !in_array($route, $noHeaderRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>

@@ -3657,11 +3657,12 @@ $iconosCategorias = [
                 document.getElementById('pago-confirmacion-modal').style.display = 'none';
 
                 // Redirigir al menú con la mesa
-                let redirectUrl = '<?= $base_url ?>/index.php?route=cliente';
                 const urlParams = new URLSearchParams(window.location.search);
-                const mesaActual = urlParams.get('mesa');
-                if (mesaActual) {
-                    redirectUrl += `&mesa=${mesaActual}`;
+                urlParams.delete('route');
+                let redirectUrl = '<?= $base_url ?>/index.php?route=cliente';
+                const extraParams = urlParams.toString();
+                if (extraParams) {
+                    redirectUrl += `&${extraParams}`;
                 }
                 console.log('Redirecting to:', redirectUrl);
                 window.location.href = redirectUrl;
@@ -3696,11 +3697,12 @@ $iconosCategorias = [
 
                 // Redirigir después de 20 segundos
                 setTimeout(() => {
-                    let redirectUrl = '<?= $base_url ?>/index.php?route=cliente';
                     const urlParams = new URLSearchParams(window.location.search);
-                    const mesaActual = urlParams.get('mesa');
-                    if (mesaActual) {
-                        redirectUrl += `&mesa=${mesaActual}`;
+                    urlParams.delete('route');
+                    let redirectUrl = '<?= $base_url ?>/index.php?route=cliente';
+                    const extraParams = urlParams.toString();
+                    if (extraParams) {
+                        redirectUrl += `&${extraParams}`;
                     }
                     console.log('Auto-redirecting to:', redirectUrl);
                     window.location.href = redirectUrl;
@@ -3979,5 +3981,3 @@ $iconosCategorias = [
             </div>
         </div>
     </div>
-</body>
-</html>

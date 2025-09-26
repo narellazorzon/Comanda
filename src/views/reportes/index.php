@@ -19,6 +19,102 @@ $diagnostico = Reporte::diagnosticar();
 ?>
 
 <style>
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.welcome-section {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.stats-overview,
+.reports-grid {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.stat-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+.stat-card:nth-child(5) { animation-delay: 0.5s; }
+.stat-card:nth-child(6) { animation-delay: 0.6s; }
+.stat-card:nth-child(7) { animation-delay: 0.7s; }
+.stat-card:nth-child(8) { animation-delay: 0.8s; }
+.stat-card:nth-child(9) { animation-delay: 0.9s; }
+.stat-card:nth-child(10) { animation-delay: 1.0s; }
+
+.report-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.report-card:nth-child(1) { animation-delay: 0.1s; }
+.report-card:nth-child(2) { animation-delay: 0.2s; }
+.report-card:nth-child(3) { animation-delay: 0.3s; }
+.report-card:nth-child(4) { animation-delay: 0.4s; }
+.report-card:nth-child(5) { animation-delay: 0.5s; }
+.report-card:nth-child(6) { animation-delay: 0.6s; }
+.report-card:nth-child(7) { animation-delay: 0.7s; }
+.report-card:nth-child(8) { animation-delay: 0.8s; }
+.report-card:nth-child(9) { animation-delay: 0.9s; }
+.report-card:nth-child(10) { animation-delay: 1.0s; }
+
+/* Efectos de hover mejorados */
+.stat-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.report-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 /* Usar las mismas variables de color del dashboard principal */
 /* Variables CSS removidas - usar las del style.css global para mantener consistencia */
 
@@ -73,8 +169,9 @@ main {
 }
 
 .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .stat-card .icon {
@@ -121,8 +218,9 @@ main {
 }
 
 .report-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .report-card-header {

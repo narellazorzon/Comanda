@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\Mesa;
+use App\Models\Usuario;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -876,6 +877,107 @@ function confirmarReactivacionMesa(id, numero) {
 document.addEventListener('DOMContentLoaded', function() {
     initFilters();
 });
+
+// === FUNCIONALIDAD DE FILTROS ===
+function aplicarFiltrosMesas() {
+    const filtroNumero = document.getElementById('filtro-numero').value.toLowerCase();
+    const filtroEstado = document.getElementById('filtro-estado').value.toLowerCase();
+    const filtroUbicacion = document.getElementById('filtro-ubicacion').value.toLowerCase();
+    const filtroMozo = document.getElementById('filtro-mozo').value.toLowerCase();
+    
+    const filas = document.querySelectorAll('.mesa-row');
+    let contadorVisible = 0;
+    
+    filas.forEach(fila => {
+        const numero = fila.dataset.numero.toLowerCase();
+        const estado = fila.dataset.estado.toLowerCase();
+        const ubicacion = fila.dataset.ubicacion.toLowerCase();
+        const mozo = fila.dataset.mozo.toLowerCase();
+        
+        let mostrar = true;
+        
+        // Filtro por número (búsqueda parcial)
+        if (filtroNumero && !numero.includes(filtroNumero)) {
+            mostrar = false;
+        }
+        
+        // Filtro por estado
+        if (filtroEstado && estado !== filtroEstado) {
+            mostrar = false;
+        }
+        
+        // Filtro por ubicación
+        if (filtroUbicacion && ubicacion !== filtroUbicacion) {
+            mostrar = false;
+        }
+        
+        // Filtro por mozo
+        if (filtroMozo) {
+            if (filtroMozo === 'sin-asignar' && mozo !== 'sin-asignar') {
+                mostrar = false;
+            } else if (filtroMozo !== 'sin-asignar' && mozo !== filtroMozo) {
+                mostrar = false;
+            }
+        }
+        
+        // Mostrar u ocultar la fila
+        if (mostrar) {
+            fila.style.display = '';
+            contadorVisible++;
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+    
+    // Actualizar contador
+    document.getElementById('num-mesas').textContent = contadorVisible;
+    
+    // Mostrar mensaje si no hay resultados
+    if (contadorVisible === 0 && filas.length > 0) {
+        let filaNoResultados = document.getElementById('fila-no-mesas');
+        if (!filaNoResultados) {
+            const tbody = document.querySelector('.table tbody');
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.id = 'fila-no-mesas';
+            const numColumnas = document.querySelector('.table thead tr').children.length;
+            nuevaFila.innerHTML = `<td colspan="${numColumnas}" style="text-align: center; padding: 2rem; color: #6c757d;">
+                <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">🪑 No se encontraron mesas con los filtros aplicados</div>
+                <div style="font-size: 0.9rem;">Intenta ajustar los criterios de búsqueda</div>
+            </td>`;
+            tbody.appendChild(nuevaFila);
+        }
+    } else {
+        const filaNoResultados = document.getElementById('fila-no-mesas');
+        if (filaNoResultados) {
+            filaNoResultados.remove();
+        }
+    }
+}
+
+function limpiarFiltrosMesas() {
+    document.getElementById('filtro-numero').value = '';
+    document.getElementById('filtro-estado').value = '';
+    document.getElementById('filtro-ubicacion').value = '';
+    document.getElementById('filtro-mozo').value = '';
+    
+    const filas = document.querySelectorAll('.mesa-row');
+    filas.forEach(fila => {
+        fila.style.display = '';
+    });
+    
+    document.getElementById('num-mesas').textContent = filas.length;
+    
+    const filaNoResultados = document.getElementById('fila-no-mesas');
+    if (filaNoResultados) {
+        filaNoResultados.remove();
+    }
+}
+
+// Agregar eventos a los filtros
+document.getElementById('filtro-numero').addEventListener('input', aplicarFiltrosMesas);
+document.getElementById('filtro-estado').addEventListener('change', aplicarFiltrosMesas);
+document.getElementById('filtro-ubicacion').addEventListener('change', aplicarFiltrosMesas);
+document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltrosMesas);
 </script>
 
 <!-- Incluir CSS y JS del modal de confirmación -->
@@ -883,6 +985,84 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.management-header {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.tabs-container,
+.mesas-grid {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.mesa-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.mesa-card:nth-child(1) { animation-delay: 0.1s; }
+.mesa-card:nth-child(2) { animation-delay: 0.2s; }
+.mesa-card:nth-child(3) { animation-delay: 0.3s; }
+.mesa-card:nth-child(4) { animation-delay: 0.4s; }
+.mesa-card:nth-child(5) { animation-delay: 0.5s; }
+.mesa-card:nth-child(6) { animation-delay: 0.6s; }
+.mesa-card:nth-child(7) { animation-delay: 0.7s; }
+.mesa-card:nth-child(8) { animation-delay: 0.8s; }
+.mesa-card:nth-child(9) { animation-delay: 0.9s; }
+.mesa-card:nth-child(10) { animation-delay: 1.0s; }
+
+/* Efectos de hover mejorados */
+.mesa-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.filters-container {
+  animation: slideInUp 0.7s ease-out;
+}
+
 /* Estilos para pestañas - CRÍTICO: Debe ir primero para evitar FOUC */
 .tabs-container {
   margin-bottom: 1.2rem;
@@ -1293,9 +1473,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .header-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   color: white !important;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .header-btn.secondary {

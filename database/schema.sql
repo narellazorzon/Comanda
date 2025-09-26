@@ -34,7 +34,7 @@ CREATE TABLE usuarios (
 CREATE TABLE mesas (
   id_mesa        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   numero         INT NOT NULL UNIQUE,
-  estado         ENUM('libre','ocupada','reservada') NOT NULL DEFAULT 'libre',
+  estado         ENUM('libre','ocupada') NOT NULL DEFAULT 'libre',
   ubicacion      VARCHAR(100) NULL,
   id_mozo        INT UNSIGNED NULL,
   fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -54,7 +54,6 @@ CREATE TABLE carta (
   categoria      VARCHAR(50) NULL,
   disponibilidad TINYINT(1) NOT NULL DEFAULT 1,
   imagen_url     VARCHAR(255) NULL,
-  descuento      DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -66,13 +65,10 @@ CREATE TABLE pedidos (
   id_mesa      INT UNSIGNED NULL,
   modo_consumo ENUM('stay','takeaway') NOT NULL,
   total        DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  estado       ENUM('pendiente','en_preparacion','pagado','cerrado') NOT NULL DEFAULT 'pendiente',
+  estado       ENUM('pendiente','en_preparacion','servido','cuenta','cerrado') NOT NULL DEFAULT 'pendiente',
   fecha_hora   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   id_mozo      INT UNSIGNED NULL,
-  forma_pago   ENUM('efectivo','tarjeta','transferencia') NULL,
   observaciones TEXT NULL,
-  cliente_nombre VARCHAR(100) NULL,
-  cliente_email VARCHAR(100) NULL,
   FOREIGN KEY (id_mesa) 
     REFERENCES mesas(id_mesa)
       ON UPDATE CASCADE ON DELETE SET NULL,
@@ -173,7 +169,7 @@ INSERT INTO usuarios (nombre, apellido, email, contrasenia, rol, estado) VALUES
 -- Administrador (password: admin123)
 ('Admin', 'Sistema', 'admin@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'administrador', 'activo'),
 
--- Personal activo (password: mozo123)
+-- Mozos activos (password: mozo123)
 ('Juan', 'Pérez', 'juan.perez@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'mozo', 'activo'),
 ('María', 'García', 'maria.garcia@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'mozo', 'activo'),
 ('Carlos', 'López', 'carlos.lopez@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'mozo', 'activo'),
@@ -263,19 +259,19 @@ INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad) VALUE
 -- -------------------------------------------------
 -- 14. Pedidos de prueba
 -- -------------------------------------------------
-INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago, observaciones, fecha_hora) VALUES
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, observaciones, fecha_hora) VALUES
 -- Pedidos activos
-(2, 'stay', 45.50, 'en_preparacion', 2, NULL, 'Cliente pidió el bife bien cocido', '2024-01-09 19:30:00'),
-(5, 'stay', 32.00, 'pendiente', 3, NULL, NULL, '2024-01-09 20:15:00'),
-(10, 'stay', 78.50, 'pagado', 5, 'tarjeta', 'Mesa celebrando cumpleaños', '2024-01-09 18:45:00'),
+(2, 'stay', 45.50, 'en_preparacion', 2, 'Cliente pidió el bife bien cocido', '2024-01-09 19:30:00'),
+(5, 'stay', 32.00, 'pendiente', 3, NULL, '2024-01-09 20:15:00'),
+(10, 'stay', 78.50, 'servido', 5, 'Mesa celebrando cumpleaños', '2024-01-09 18:45:00'),
 
 -- Pedidos takeaway
-(NULL, 'takeaway', 23.50, 'pagado', 4, 'efectivo', 'Pedido para retirar en 15 minutos', '2024-01-09 20:00:00'),
-(NULL, 'takeaway', 12.00, 'cerrado', 2, 'transferencia', NULL, '2024-01-09 19:00:00'),
+(NULL, 'takeaway', 23.50, 'cuenta', 4, 'Pedido para retirar en 15 minutos', '2024-01-09 20:00:00'),
+(NULL, 'takeaway', 12.00, 'cerrado', 2, NULL, '2024-01-09 19:00:00'),
 
 -- Pedidos históricos
-(1, 'stay', 67.00, 'cerrado', 2, 'efectivo', NULL, '2024-01-08 21:30:00'),
-(4, 'stay', 89.50, 'cerrado', 3, 'tarjeta', 'Mesa muy satisfecha', '2024-01-08 20:15:00'),
+(1, 'stay', 67.00, 'cerrado', 2, NULL, '2024-01-08 21:30:00'),
+(4, 'stay', 89.50, 'cerrado', 3, 'Mesa muy satisfecha', '2024-01-08 20:15:00'),
 (7, 'stay', 34.50, 'cerrado', 4, NULL, '2024-01-07 19:45:00');
 
 -- -------------------------------------------------
@@ -349,347 +345,60 @@ INSERT INTO pagos (id_pedido, monto, medio_pago, estado_transaccion, fecha_hora)
 (8, 34.50, 'Efectivo', 'aprobado', '2024-01-07 19:50:00');
 
 -- =====================================================
--- TRIGGERS BÁSICOS PARA CONSISTENCIA - SISTEMA COMANDA
--- =====================================================
-
--- 1. TRIGGER: Actualizar estado de mesa al crear pedido
-DELIMITER $$
-CREATE TRIGGER tr_pedido_insert_update_mesa
-    AFTER INSERT ON pedidos
-    FOR EACH ROW
-BEGIN
-    -- Solo actualizar si el pedido es tipo "stay" (para mesa)
-    IF NEW.modo_consumo = 'stay' AND NEW.id_mesa IS NOT NULL THEN
-        -- Actualizar mesa a ocupada cuando se crea un pedido
-        UPDATE mesas 
-        SET estado = 'ocupada' 
-        WHERE id_mesa = NEW.id_mesa;
-    END IF;
-END$$
-DELIMITER ;
-
--- 2. TRIGGER: Actualizar estado de mesa al cerrar pedido
-DELIMITER $$
-CREATE TRIGGER tr_pedido_update_mesa_estado
-    AFTER UPDATE ON pedidos
-    FOR EACH ROW
-BEGIN
-    -- Solo procesar cambios de estado para pedidos tipo "stay"
-    IF NEW.modo_consumo = 'stay' AND NEW.id_mesa IS NOT NULL THEN
-        -- Si el pedido se cierra, verificar si quedan pedidos activos en la mesa
-        IF NEW.estado = 'cerrado' AND OLD.estado != 'cerrado' THEN
-            -- Contar pedidos activos en la mesa (no cerrados)
-            SET @pedidos_activos = (
-                SELECT COUNT(*)
-                FROM pedidos
-                WHERE id_mesa = NEW.id_mesa 
-                AND estado != 'cerrado'
-                AND modo_consumo = 'stay'
-            );
-            
-            -- Si no hay pedidos activos, liberar la mesa
-            IF @pedidos_activos = 0 THEN
-                UPDATE mesas 
-                SET estado = 'libre' 
-                WHERE id_mesa = NEW.id_mesa;
-            END IF;
-        END IF;
-        
-        -- Si el pedido se reactiva (de cerrado a otro estado), ocupar la mesa
-        IF OLD.estado = 'cerrado' AND NEW.estado != 'cerrado' THEN
-            UPDATE mesas 
-            SET estado = 'ocupada' 
-            WHERE id_mesa = NEW.id_mesa;
-        END IF;
-    END IF;
-END$$
-DELIMITER ;
-
--- 3. TRIGGER: Prevenir eliminación de mesa ocupada
-DELIMITER $$
-CREATE TRIGGER tr_mesa_delete_check
-    BEFORE DELETE ON mesas
-    FOR EACH ROW
-BEGIN
-    -- Verificar si hay pedidos activos en la mesa
-    SET @pedidos_activos = (
-        SELECT COUNT(*)
-        FROM pedidos
-        WHERE id_mesa = OLD.id_mesa 
-        AND estado != 'cerrado'
-        AND modo_consumo = 'stay'
-    );
-    
-    -- Si hay pedidos activos, prevenir eliminación
-    IF @pedidos_activos > 0 THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'No se puede eliminar una mesa con pedidos activos';
-    END IF;
-END$$
-DELIMITER ;
-
--- 4. TRIGGER: Prevenir inactivación de mozo con mesas ocupadas
-DELIMITER $$
-CREATE TRIGGER tr_usuario_update_check_mesas
-    BEFORE UPDATE ON usuarios
-    FOR EACH ROW
-BEGIN
-    -- Solo verificar cuando se inactiva un mozo
-    IF OLD.estado = 'activo' AND NEW.estado = 'inactivo' AND NEW.rol = 'mozo' THEN
-        -- Verificar si tiene mesas con pedidos activos
-        SET @mesas_ocupadas = (
-            SELECT COUNT(*)
-            FROM mesas m
-            JOIN pedidos p ON m.id_mesa = p.id_mesa
-            WHERE m.id_mozo = OLD.id_usuario 
-            AND p.estado != 'cerrado'
-            AND p.modo_consumo = 'stay'
-        );
-        
-        -- Si tiene mesas ocupadas, prevenir inactivación
-        IF @mesas_ocupadas > 0 THEN
-            SIGNAL SQLSTATE '45000' 
-            SET MESSAGE_TEXT = 'No se puede inactivar un mozo que tiene mesas ocupadas con pedidos activos';
-        END IF;
-    END IF;
-END$$
-DELIMITER ;
-
--- =====================================================
--- SISTEMA BÁSICO DE INVENTARIOS - SISTEMA COMANDA
--- =====================================================
-
--- Tabla de inventario para items de carta
-CREATE TABLE inventario (
-    id_inventario INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    id_item INT UNSIGNED NOT NULL,
-    cantidad_disponible INT NOT NULL DEFAULT 0,
-    cantidad_minima INT NOT NULL DEFAULT 5,
-    unidad_medida ENUM('unidad','porcion','kg','litro','gramo') NOT NULL DEFAULT 'unidad',
-    costo_unitario DECIMAL(10,2) NULL,
-    fecha_ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    estado ENUM('disponible','agotado','discontinuado') NOT NULL DEFAULT 'disponible',
-    notas TEXT NULL,
-    
-    CONSTRAINT fk_inventario_item 
-        FOREIGN KEY (id_item) REFERENCES carta(id_item) 
-        ON UPDATE CASCADE ON DELETE CASCADE,
-        
-    INDEX idx_inventario_item (id_item),
-    INDEX idx_inventario_estado (estado),
-    INDEX idx_inventario_stock_bajo (cantidad_disponible)
-) ENGINE=InnoDB;
-
--- Tabla de movimientos de inventario (historial)
-CREATE TABLE inventario_movimientos (
-    id_movimiento INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    id_item INT UNSIGNED NOT NULL,
-    tipo_movimiento ENUM('entrada','salida','ajuste','venta') NOT NULL,
-    cantidad INT NOT NULL,
-    cantidad_anterior INT NOT NULL,
-    cantidad_nueva INT NOT NULL,
-    motivo VARCHAR(200) NULL,
-    id_pedido INT UNSIGNED NULL,
-    id_usuario INT UNSIGNED NULL,
-    fecha_movimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    CONSTRAINT fk_movimiento_item 
-        FOREIGN KEY (id_item) REFERENCES carta(id_item) 
-        ON UPDATE CASCADE ON DELETE CASCADE,
-        
-    CONSTRAINT fk_movimiento_pedido 
-        FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido) 
-        ON UPDATE CASCADE ON DELETE SET NULL,
-        
-    CONSTRAINT fk_movimiento_usuario 
-        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) 
-        ON UPDATE CASCADE ON DELETE SET NULL,
-        
-    INDEX idx_movimiento_item (id_item),
-    INDEX idx_movimiento_fecha (fecha_movimiento),
-    INDEX idx_movimiento_tipo (tipo_movimiento)
-) ENGINE=InnoDB;
-
--- TRIGGER: Descontar stock automáticamente en ventas
-DELIMITER $$
-CREATE TRIGGER tr_detalle_pedido_descontar_stock
-    AFTER INSERT ON detalle_pedido
-    FOR EACH ROW
-BEGIN
-    DECLARE stock_actual INT DEFAULT 0;
-    DECLARE stock_nuevo INT DEFAULT 0;
-    
-    -- Obtener stock actual
-    SELECT cantidad_disponible INTO stock_actual
-    FROM inventario 
-    WHERE id_item = NEW.id_item;
-    
-    -- Solo descontar si existe registro de inventario
-    IF stock_actual IS NOT NULL THEN
-        -- Calcular nuevo stock
-        SET stock_nuevo = stock_actual - NEW.cantidad;
-        
-        -- Actualizar inventario
-        UPDATE inventario 
-        SET cantidad_disponible = stock_nuevo,
-            estado = CASE 
-                WHEN stock_nuevo <= 0 THEN 'agotado'
-                WHEN stock_nuevo <= cantidad_minima THEN 'disponible'
-                ELSE 'disponible'
-            END
-        WHERE id_item = NEW.id_item;
-        
-        -- Registrar movimiento
-        INSERT INTO inventario_movimientos (
-            id_item, tipo_movimiento, cantidad, 
-            cantidad_anterior, cantidad_nueva, 
-            motivo, id_pedido
-        ) VALUES (
-            NEW.id_item, 'venta', NEW.cantidad,
-            stock_actual, stock_nuevo,
-            'Venta automática', 
-            NEW.id_pedido
-        );
-    END IF;
-END$$
-DELIMITER ;
-
--- Vista: Items con stock bajo
-CREATE VIEW vista_stock_bajo AS
-SELECT 
-    c.nombre as item_nombre,
-    c.categoria,
-    i.cantidad_disponible,
-    i.cantidad_minima,
-    i.unidad_medida,
-    i.estado,
-    i.fecha_ultima_actualizacion
-FROM inventario i
-JOIN carta c ON i.id_item = c.id_item
-WHERE i.cantidad_disponible <= i.cantidad_minima
-   OR i.estado = 'agotado'
-ORDER BY i.cantidad_disponible ASC;
-
--- Vista: Resumen de inventario por categoría
-CREATE VIEW vista_inventario_categoria AS
-SELECT 
-    c.categoria,
-    COUNT(*) as total_items,
-    SUM(CASE WHEN i.estado = 'disponible' THEN 1 ELSE 0 END) as items_disponibles,
-    SUM(CASE WHEN i.estado = 'agotado' THEN 1 ELSE 0 END) as items_agotados,
-    SUM(CASE WHEN i.cantidad_disponible <= i.cantidad_minima THEN 1 ELSE 0 END) as items_stock_bajo,
-    AVG(i.cantidad_disponible) as promedio_stock
-FROM inventario i
-JOIN carta c ON i.id_item = c.id_item
-GROUP BY c.categoria
-ORDER BY c.categoria;
-
--- Insertar inventario inicial para todos los items de carta existentes
-INSERT INTO inventario (id_item, cantidad_disponible, cantidad_minima, unidad_medida, costo_unitario, estado)
-SELECT 
-    id_item,
-    CASE 
-        WHEN categoria = 'Entradas' THEN 25
-        WHEN categoria LIKE '%Carne%' OR categoria LIKE '%Ave%' OR categoria LIKE '%Pescado%' THEN 15
-        WHEN categoria = 'Postres' THEN 20
-        WHEN categoria = 'Bebidas' THEN 50
-        ELSE 10
-    END as cantidad_inicial,
-    CASE 
-        WHEN categoria = 'Entradas' THEN 5
-        WHEN categoria LIKE '%Carne%' OR categoria LIKE '%Ave%' OR categoria LIKE '%Pescado%' THEN 3
-        WHEN categoria = 'Postres' THEN 5
-        WHEN categoria = 'Bebidas' THEN 10
-        ELSE 2
-    END as minimo,
-    CASE 
-        WHEN categoria = 'Bebidas' THEN 'litro'
-        WHEN categoria = 'Postres' THEN 'porcion'
-        ELSE 'unidad'
-    END as unidad,
-    precio * 0.4 as costo_estimado,
-    'disponible'
-FROM carta
-WHERE NOT EXISTS (SELECT 1 FROM inventario WHERE inventario.id_item = carta.id_item);
-
--- Procedimiento: Actualizar stock manualmente
-DELIMITER $$
-CREATE PROCEDURE sp_actualizar_stock(
-    IN p_id_item INT,
-    IN p_nueva_cantidad INT,
-    IN p_motivo VARCHAR(200),
-    IN p_id_usuario INT
-)
-BEGIN
-    DECLARE cantidad_anterior INT DEFAULT 0;
-    DECLARE cantidad_minima_item INT DEFAULT 0;
-    
-    -- Obtener cantidad actual y mínima
-    SELECT cantidad_disponible, cantidad_minima
-    INTO cantidad_anterior, cantidad_minima_item
-    FROM inventario 
-    WHERE id_item = p_id_item;
-    
-    -- Actualizar inventario
-    UPDATE inventario 
-    SET cantidad_disponible = p_nueva_cantidad,
-        estado = CASE 
-            WHEN p_nueva_cantidad <= 0 THEN 'agotado'
-            WHEN p_nueva_cantidad <= cantidad_minima_item THEN 'disponible'
-            ELSE 'disponible'
-        END
-    WHERE id_item = p_id_item;
-    
-    -- Registrar movimiento
-    INSERT INTO inventario_movimientos (
-        id_item, tipo_movimiento, cantidad,
-        cantidad_anterior, cantidad_nueva,
-        motivo, id_usuario
-    ) VALUES (
-        p_id_item, 
-        CASE 
-            WHEN p_nueva_cantidad > cantidad_anterior THEN 'entrada'
-            WHEN p_nueva_cantidad < cantidad_anterior THEN 'salida'
-            ELSE 'ajuste'
-        END,
-        ABS(p_nueva_cantidad - cantidad_anterior),
-        cantidad_anterior, 
-        p_nueva_cantidad,
-        p_motivo, 
-        p_id_usuario
-    );
-END$$
-DELIMITER ;
-
--- =====================================================
--- COMENTARIOS FINALES
+-- COMENTARIOS SOBRE EL ESQUEMA FINAL
 -- =====================================================
 
 /*
-ESQUEMA COMPLETO CON MEJORAS:
+MEJORAS IMPLEMENTADAS:
 
-1. ESQUEMA BASE:
-   ✅ Todas las tablas del sistema original
-   ✅ Datos de prueba completos
-   ✅ Índices optimizados
+1. ASIGNACIÓN DE MOZOS A MESAS:
+   - Campo id_mozo en tabla mesas
+   - Relación con tabla usuarios
+   - Índice para optimización
 
-2. TRIGGERS DE CONSISTENCIA:
-   ✅ Control automático de estados de mesa
-   ✅ Prevención de eliminaciones problemáticas
-   ✅ Validaciones de integridad
+2. ESTADOS COMPLETOS DE PEDIDOS:
+   - pendiente: Pedido recién creado
+   - en_preparacion: Pedido siendo preparado en cocina
+   - servido: Pedido servido al cliente
+   - cuenta: Cliente solicita la cuenta
+   - cerrado: Pedido finalizado, mesa liberada
 
-3. SISTEMA DE INVENTARIOS:
-   ✅ Control de stock automático
-   ✅ Historial de movimientos
-   ✅ Alertas de stock bajo
-   ✅ Vistas y procedimientos
+3. DATOS DE PRUEBA COMPLETOS:
+   - 1 Administrador + 6 Mozos (5 activos, 1 inactivo)
+   - 15 Mesas distribuidas entre mozos y algunas sin asignar
+   - Carta completa con 30 items organizados por categorías
+   - 8 Pedidos de prueba en diferentes estados
+   - Detalles de pedidos con items reales
+   - Llamados de mesa activos y completados
+   - Propinas y pagos históricos
+
+4. FUNCIONALIDADES SOPORTADAS:
+   - Gestión completa de mozos con inactivación inteligente
+   - Asignación y reasignación de mesas
+   - Llamados de mesa con información de mozo asignado
+   - Seguimiento completo de pedidos con estados descriptivos
+   - Sistema de propinas y pagos
+   - Reportes con datos reales para pruebas
 
 CREDENCIALES DE PRUEBA:
 - Admin: admin@comanda.com / admin123
-- Personal: [nombre.apellido]@comanda.com / mozo123
+- Mozos: [nombre.apellido]@comanda.com / mozo123
+  Ej: juan.perez@comanda.com / mozo123
 
-IMPORTANTE:
-- Solo importar este archivo (schema.sql)
-- Incluye todas las funcionalidades
-- Triggers y sistema de inventarios integrados
+ESTRUCTURA DE MESAS:
+- Mesas 1-3: Juan Pérez (Terraza)
+- Mesas 4-6: María García (Interior)  
+- Mesas 7-8: Carlos López (Barra)
+- Mesas 9-10: Ana Martínez (Jardín)
+- Mesas 11-12: Diego Rodríguez (VIP)
+- Mesas 13-15: Sin asignar
+
+NOTA: Para aplicar triggers de consistencia de datos, ejecutar también:
+database/triggers.sql
+
+Esto agregará:
+- Actualización automática de estado de mesas
+- Prevención de eliminación de mesas ocupadas  
+- Auditoría de cambios críticos
+- Validaciones de integridad de datos
 */

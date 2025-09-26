@@ -8,6 +8,7 @@ composer.lock
 
 # Archivos de configuración local
 src/config/database.local.php
+config/local.php
 .env
 .env.local
 
@@ -49,24 +50,30 @@ nbproject/
 # Archivos de base de datos locales
 *.sql.gz
 *.sql.zip
+backup*.sql
 database/backup/
 database/migrations/local/
 
 # Archivos subidos por usuarios (si aplica)
 public/uploads/
 public/assets/uploads/
+uploads/temp/
 
 # Archivos de testing
-test_*.php
+test*.html
+test*.php
 tests/coverage/
 phpunit.xml
 .phpunit.result.cache
+debug*.php
 
 # Archivos de documentación local
 docs/local/
 *.todo
 TODO.md
 REPORTE_*.md
+SISTEMA_*.md
+DEPLOYMENT_CHECKLIST.md
 
 # Node modules (si se usa algún bundler)
 node_modules/
@@ -98,5 +105,5 @@ update_*.sql
 create_*.php
 check_*.php
 quick_*.php
-SISTEMA_*.md
-DEPLOYMENT_CHECKLIST.md
+*.tmp
+tatus

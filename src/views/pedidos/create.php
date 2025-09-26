@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'El nombre del cliente es obligatorio';
     } elseif ($modo_consumo === 'stay' && $id_mesa <= 0) {
         $error = 'Debe seleccionar una mesa para pedidos en el local';
-    } elseif (empty($items_pedido)) {
+    } elseif (empty($items_pedido) && !$is_edit) {
         $error = 'Debe agregar al menos un ítem al pedido';
     } else {
         try {
@@ -940,21 +940,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        id="detalle_<?= $index ?>" 
                        class="item-detail-input" 
                        value="<?= htmlspecialchars($detalle['detalle']) ?>"
-                       placeholder="Ej: sin sal, sin condimentos...">
+                       placeholder="Ej: sin sal, sin condimentos..."
+                       onchange="updateItemDetail(<?= $index ?>, this.value)"
+                       maxlength="100">
               </div>
               <div class="item-controls">
-                <div class="qty">
-                  <button type="button" onclick="changeQuantity(<?= $index ?>, -1)">-</button>
-                  <span id="qty_<?= $index ?>"><?= $detalle['cantidad'] ?></span>
-                  <button type="button" onclick="changeQuantity(<?= $index ?>, 1)">+</button>
+                <div class="quantity-controls">
+                  <button type="button" class="quantity-btn" onclick="changeQuantity(<?= $index ?>, -1)">-</button>
+                  <input type="number" class="quantity-input" value="<?= $detalle['cantidad'] ?>" min="1" max="99" 
+                         onchange="updateQuantity(<?= $index ?>, this.value)">
+                  <button type="button" class="quantity-btn" onclick="changeQuantity(<?= $index ?>, 1)">+</button>
                 </div>
-                <div class="item-subtotal">
-                  $<?= number_format($detalle['subtotal'], 2) ?>
-                </div>
-                <button type="button" class="btn-remove" onclick="removeItem(<?= $index ?>)">
-                  ❌
+                <div class="item-total">$<?= number_format($detalle['subtotal'], 2) ?></div>
+                <button type="button" class="remove-item-btn" onclick="removeItem(<?= $index ?>)">
+                  🗑️ Eliminar
                 </button>
               </div>
+              <input type="hidden" name="items[<?= $index ?>][id_item]" value="<?= $detalle['id_item'] ?>">
+              <input type="hidden" name="items[<?= $index ?>][cantidad]" value="<?= $detalle['cantidad'] ?>">
+              <input type="hidden" name="items[<?= $index ?>][precio_unitario]" value="<?= $detalle['precio_unitario'] ?>">
+              <input type="hidden" name="items[<?= $index ?>][detalle]" value="<?= htmlspecialchars($detalle['detalle']) ?>">
             </div>
           <?php endforeach; ?>
         <?php endif; ?>
@@ -1363,6 +1368,9 @@ document.addEventListener('DOMContentLoaded', function() {
         precioOriginal: <?= $detalle['precio_unitario'] ?>
       });
     <?php endforeach; ?>
+    
+    // Actualizar itemIndex para evitar conflictos
+    itemIndex = <?= count($detalles) ?>;
     
     console.log('Items cargados desde PHP:', items);
     updateTotal();
