@@ -205,6 +205,133 @@ require_once __DIR__ . '/../includes/header.php';
     min-width: 120px;
   }
 }
+
+/* Efectos bounce y animaciones globales */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplicar animación de entrada a elementos principales */
+.management-header {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.filters-container {
+  animation: slideInUp 0.7s ease-out;
+}
+
+.pedidos-container {
+  animation: fadeInScale 0.8s ease-out;
+}
+
+/* Animación para las filas de pedidos */
+.pedido-row {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Delays escalonados para las filas */
+.pedido-row:nth-child(1) { animation-delay: 0.1s; }
+.pedido-row:nth-child(2) { animation-delay: 0.2s; }
+.pedido-row:nth-child(3) { animation-delay: 0.3s; }
+.pedido-row:nth-child(4) { animation-delay: 0.4s; }
+.pedido-row:nth-child(5) { animation-delay: 0.5s; }
+.pedido-row:nth-child(6) { animation-delay: 0.6s; }
+.pedido-row:nth-child(7) { animation-delay: 0.7s; }
+.pedido-row:nth-child(8) { animation-delay: 0.8s; }
+.pedido-row:nth-child(9) { animation-delay: 0.9s; }
+.pedido-row:nth-child(10) { animation-delay: 1.0s; }
+.pedido-row:nth-child(11) { animation-delay: 1.1s; }
+.pedido-row:nth-child(12) { animation-delay: 1.2s; }
+.pedido-row:nth-child(13) { animation-delay: 1.3s; }
+.pedido-row:nth-child(14) { animation-delay: 1.4s; }
+.pedido-row:nth-child(15) { animation-delay: 1.5s; }
+
+/* Animación para las tarjetas de pedidos en vista móvil */
+.mobile-card {
+  animation: slideInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+/* Delays escalonados para las tarjetas */
+.mobile-card:nth-child(1) { animation-delay: 0.1s; }
+.mobile-card:nth-child(2) { animation-delay: 0.2s; }
+.mobile-card:nth-child(3) { animation-delay: 0.3s; }
+.mobile-card:nth-child(4) { animation-delay: 0.4s; }
+.mobile-card:nth-child(5) { animation-delay: 0.5s; }
+.mobile-card:nth-child(6) { animation-delay: 0.6s; }
+.mobile-card:nth-child(7) { animation-delay: 0.7s; }
+.mobile-card:nth-child(8) { animation-delay: 0.8s; }
+.mobile-card:nth-child(9) { animation-delay: 0.9s; }
+.mobile-card:nth-child(10) { animation-delay: 1.0s; }
+.mobile-card:nth-child(11) { animation-delay: 1.1s; }
+.mobile-card:nth-child(12) { animation-delay: 1.2s; }
+.mobile-card:nth-child(13) { animation-delay: 1.3s; }
+.mobile-card:nth-child(14) { animation-delay: 1.4s; }
+.mobile-card:nth-child(15) { animation-delay: 1.5s; }
+
+/* Efectos de hover mejorados para pedidos */
+.pedido-row:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.mobile-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animación para mensaje de "no hay pedidos" */
+.no-pedidos-message {
+  animation: bounceIn 1s ease-out;
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Animación para el contenedor de filtros */
+.filters-content {
+  animation: slideInUp 0.5s ease-out;
+}
 </style>
 
 <!-- Header de gestión -->
@@ -331,7 +458,7 @@ require_once __DIR__ . '/../includes/header.php';
   <tbody>
     <?php if (empty($pedidos)): ?>
       <tr>
-        <td colspan="<?= $rol === 'administrador' ? '9' : '8' ?>">No hay pedidos registrados.</td>
+        <td colspan="<?= $rol === 'administrador' ? '9' : '8' ?>" class="no-pedidos-message">No hay pedidos registrados.</td>
       </tr>
     <?php else: ?>
       <?php foreach ($pedidos as $pedido): ?>
@@ -454,7 +581,7 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Vista móvil con tarjetas -->
 <div class="mobile-cards">
   <?php if (empty($pedidos)): ?>
-    <div class="mobile-card" style="text-align: center; padding: 1rem; color: #666;">
+    <div class="mobile-card no-pedidos-message" style="text-align: center; padding: 1rem; color: #666;">
       No hay pedidos registrados.
     </div>
   <?php else: ?>
