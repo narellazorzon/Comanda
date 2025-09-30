@@ -21,6 +21,50 @@ class ClienteController {
     }
     
     /**
+     * Obtiene los platos más vendidos por categoría
+     */
+    public static function getPlatosMasVendidos() {
+        try {
+            $database = new \App\Config\Database();
+            $db = $database->getConnection();
+            
+            // Consulta para obtener los platos más vendidos por categoría
+            $sql = "
+                SELECT 
+                    c.id_item,
+                    c.nombre,
+                    c.categoria,
+                    SUM(dp.cantidad) as total_vendido
+                FROM carta c
+                INNER JOIN detalle_pedido dp ON c.id_item = dp.id_item
+                INNER JOIN pedidos p ON dp.id_pedido = p.id_pedido
+                WHERE p.estado = 'cerrado'
+                GROUP BY c.id_item, c.nombre, c.categoria
+                ORDER BY c.categoria, total_vendido DESC
+            ";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute();
+            $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            // Organizar por categoría y tomar el más vendido de cada una
+            $masVendidosPorCategoria = [];
+            foreach ($resultados as $item) {
+                $categoria = $item['categoria'] ?? 'Otros';
+                if (!isset($masVendidosPorCategoria[$categoria])) {
+                    $masVendidosPorCategoria[$categoria] = $item['id_item'];
+                }
+            }
+            
+            return $masVendidosPorCategoria;
+            
+        } catch (Exception $e) {
+            error_log("Error obteniendo platos más vendidos: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
      * Muestra la vista de proceso de pago con opción de propinas
      */
     public static function pago() {
@@ -85,7 +129,8 @@ class ClienteController {
                 ]);
             }
             
-            // El pedido se mantiene como "pendiente" hasta que el mozo lo gestione
+            // Actualizar estado del pedido a "cuenta"
+            Pedido::updateEstado($pedidoId, 'cuenta');
             
             // Guardar información en sesión para confirmación
             $_SESSION['ultimo_pago'] = [

@@ -4,12 +4,16 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\CartaItem;
+use App\Controllers\ClienteController;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $items = CartaItem::all();
+
+// Obtener platos más vendidos por categoría
+$platosMasVendidos = ClienteController::getPlatosMasVendidos();
 
 // Organizar items por categoría
 $itemsPorCategoria = [];
@@ -22,7 +26,7 @@ foreach ($items as $item) {
 }
 
 // Orden preferido de categorías
-$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Aves', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Ensaladas', 'Postres', 'Bebidas'];
+$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Ensaladas', 'Postres', 'Bebidas'];
 $categoriasOrdenadas = [];
 
 // Primero agregar las categorías en el orden preferido
@@ -336,6 +340,26 @@ $iconosCategorias = [
         display: flex;
         gap: 0.5rem;
         margin-bottom: 0.75rem;
+    }
+    
+    /* Estrella de más vendido */
+    .badge-mas-vendido {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #8b4513;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+        animation: brillo 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes brillo {
+        0% { box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3); }
+        100% { box-shadow: 0 2px 8px rgba(255, 215, 0, 0.6), 0 0 12px rgba(255, 215, 0, 0.4); }
     }
     
     /* Estilos para imagen del producto */
@@ -2495,6 +2519,15 @@ $iconosCategorias = [
                             <div class="producto-header">
                                 <h3 class="producto-nombre"><?= htmlspecialchars($item['nombre']) ?></h3>
                                 <div class="producto-badges">
+                                    <?php 
+                                    $categoria = $item['categoria'] ?? 'Otros';
+                                    $esMasVendido = isset($platosMasVendidos[$categoria]) && $platosMasVendidos[$categoria] == $item['id_item'];
+                                    ?>
+                                    
+                                    <?php if ($esMasVendido): ?>
+                                        <span class="badge-mas-vendido">⭐ Más Vendido</span>
+                                    <?php endif; ?>
+                                    
                                     <?php if (!empty($item['disponibilidad'])): ?>
                                         <span class="badge badge-disponible">✓ Disponible</span>
                                     <?php else: ?>
