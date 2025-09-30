@@ -257,6 +257,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   box-shadow: 0 0 3px rgba(222, 184, 135, 0.5);
 }
 
+/* Estilo específico para el campo de observaciones con Arial */
+#observaciones {
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .modo-consumo-container {
   display: flex;
   gap: 12px;
