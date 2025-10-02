@@ -14,7 +14,7 @@ CREATE TRIGGER tr_pedido_insert_update_mesa
     FOR EACH ROW
 BEGIN
     -- Solo actualizar si el pedido es tipo "stay" (para mesa)
-    IF NEW.modalidad = 'stay' AND NEW.id_mesa IS NOT NULL THEN
+    IF NEW.modo_consumo = 'stay' AND NEW.id_mesa IS NOT NULL THEN
         -- Actualizar mesa a ocupada cuando se crea un pedido
         UPDATE mesas 
         SET estado = 'ocupada' 
@@ -32,7 +32,7 @@ CREATE TRIGGER tr_pedido_update_mesa_estado
     FOR EACH ROW
 BEGIN
     -- Solo procesar cambios de estado para pedidos tipo "stay"
-    IF NEW.modalidad = 'stay' AND NEW.id_mesa IS NOT NULL THEN
+    IF NEW.modo_consumo = 'stay' AND NEW.id_mesa IS NOT NULL THEN
         -- Si el pedido se cierra, verificar si quedan pedidos activos en la mesa
         IF NEW.estado = 'cerrado' AND OLD.estado != 'cerrado' THEN
             -- Contar pedidos activos en la mesa (no cerrados)
@@ -41,7 +41,7 @@ BEGIN
                 FROM pedidos
                 WHERE id_mesa = NEW.id_mesa 
                 AND estado != 'cerrado'
-                AND modalidad = 'stay'
+                AND modo_consumo = 'stay'
             );
             
             -- Si no hay pedidos activos, liberar la mesa
@@ -76,7 +76,7 @@ BEGIN
         FROM pedidos
         WHERE id_mesa = OLD.id_mesa 
         AND estado != 'cerrado'
-        AND modalidad = 'stay'
+        AND modo_consumo = 'stay'
     );
     
     -- Si hay pedidos activos, prevenir eliminación
@@ -104,7 +104,7 @@ BEGIN
             JOIN pedidos p ON m.id_mesa = p.id_mesa
             WHERE m.id_mozo = OLD.id_usuario 
             AND p.estado != 'cerrado'
-            AND p.modalidad = 'stay'
+            AND p.modo_consumo = 'stay'
         );
         
         -- Si tiene mesas ocupadas, prevenir inactivación

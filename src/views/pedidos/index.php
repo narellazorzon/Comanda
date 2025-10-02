@@ -53,6 +53,9 @@ function obtenerNombreEstado($estado) {
         'cerrado' => 'Cerrado'
     ];
     
+    // Debug: mostrar el estado recibido
+    error_log("Estado recibido en obtenerNombreEstado: '" . $estado . "' (longitud: " . strlen($estado) . ")");
+    
     return $nombres[$estado] ?? $estado;
 }
 
@@ -76,6 +79,9 @@ function obtenerIconoEstado($estado) {
         'servido' => '✅',
         'cerrado' => '🔒'
     ];
+    
+    // Debug: mostrar el estado recibido
+    error_log("Estado recibido en obtenerIconoEstado: '" . $estado . "' (longitud: " . strlen($estado) . ")");
     
     return $iconos[$estado] ?? '❓';
 }
