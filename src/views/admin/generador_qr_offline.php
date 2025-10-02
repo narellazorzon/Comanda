@@ -41,9 +41,6 @@ $takeawayPresets = [
     <button type="button" class="header-btn" onclick="regenerarQRs()">
       🔄 Actualizar QRs
     </button>
-    <button type="button" class="header-btn secondary" onclick="descargarSeleccionados()">
-      ⬇️ Descargar seleccionados
-    </button>
     <button type="button" class="header-btn secondary" onclick="imprimirSeleccionados()">
       🖨️ Imprimir seleccionados
     </button>
@@ -180,9 +177,6 @@ $takeawayPresets = [
         </td>
         <td>
           <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
-            <button type="button" class="btn-action" onclick="descargarQR(<?php echo $idMesa; ?>, '<?php echo htmlspecialchars((string) $mesaNumero); ?>')" title="Descargar QR">
-              ⬇️
-            </button>
             <button type="button" class="btn-action" onclick="imprimirQR(<?php echo $idMesa; ?>, '<?php echo htmlspecialchars((string) $mesaNumero); ?>')" title="Imprimir QR">
               🖨️
             </button>
@@ -267,9 +261,6 @@ $takeawayPresets = [
       </div>
 
       <div class="card-actions">
-        <button type="button" class="btn-modern btn-edit" onclick="descargarQR(<?php echo $idMesa; ?>, '<?php echo htmlspecialchars((string) $mesaNumero); ?>')">
-          ⬇️ Descargar
-        </button>
         <button type="button" class="btn-modern btn-delete" onclick="imprimirQR(<?php echo $idMesa; ?>, '<?php echo htmlspecialchars((string) $mesaNumero); ?>')">
           🖨️ Imprimir
         </button>
@@ -1496,23 +1487,6 @@ function regenerarQRs() {
   });
 }
 
-function descargarQR(idMesa, mesaNumero) {
-  const container = document.getElementById('qr-mesa-' + idMesa);
-  if (!container) return;
-
-  const img = container.querySelector('.qr-image');
-  if (!img) {
-    showNotification('❌ QR no generado aún', 'error', 3000);
-    return;
-  }
-
-  const link = document.createElement('a');
-  link.download = 'qr-mesa-' + mesaNumero + '.png';
-  link.href = img.src;
-  link.click();
-
-  showNotification('⬇️ QR de Mesa ' + mesaNumero + ' descargado', 'success', 2000);
-}
 
 function imprimirQR(idMesa, mesaNumero) {
   const container = document.getElementById('qr-mesa-' + idMesa);
@@ -1582,23 +1556,6 @@ function generarQRTakeaway(force) {
   img.src = qrImageUrl;
 }
 
-function descargarQRTakeaway() {
-  const takeawayContent = document.getElementById('qr-takeaway-content');
-  if (!takeawayContent) return;
-
-  const img = takeawayContent.querySelector('.qr-image');
-  if (!img) {
-    showNotification('❌ QR Takeaway no generado aún', 'error', 3000);
-    return;
-  }
-
-  const link = document.createElement('a');
-  link.download = 'qr-takeaway.png';
-  link.href = img.src;
-  link.click();
-
-  showNotification('⬇️ QR Takeaway descargado', 'success', 2000);
-}
 
 function imprimirQRTakeaway() {
   const takeawayContent = document.getElementById('qr-takeaway-content');
@@ -1683,31 +1640,6 @@ function updateSelectedCounter() {
   }
 }
 
-function descargarSeleccionados() {
-  const selectedCheckboxes = document.querySelectorAll('.qr-checkbox:checked');
-  const takeawayCheckbox = document.querySelector('.qr-checkbox-takeaway:checked');
-
-  if (selectedCheckboxes.length === 0 && !takeawayCheckbox) {
-    showNotification('❌ No hay QR seleccionados', 'error', 3000);
-    return;
-  }
-
-  let downloadCount = 0;
-
-  selectedCheckboxes.forEach(function(checkbox) {
-    const idMesa = checkbox.dataset.mesaId;
-    const mesaNumero = checkbox.dataset.mesaNumero;
-    descargarQR(idMesa, mesaNumero);
-    downloadCount++;
-  });
-
-  if (takeawayCheckbox) {
-    descargarQRTakeaway();
-    downloadCount++;
-  }
-
-  showNotification('⬇️ Descargando ' + downloadCount + ' QR' + (downloadCount > 1 ? 'es' : ''), 'success', 3000);
-}
 
 function imprimirSeleccionados() {
   const selectedCheckboxes = document.querySelectorAll('.qr-checkbox:checked');

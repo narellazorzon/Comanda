@@ -10,69 +10,100 @@ class ReporteController {
      * Muestra el reporte de rendimiento de mozos
      */
     public static function rendimientoMozos() {
-        // Obtener parámetros del formulario
-        $desde = self::convertirFecha($_GET['desde'] ?? date('Y-m-01'));
-        $hasta = self::convertirFecha($_GET['hasta'] ?? date('Y-m-d'));
-        $agrupar = $_GET['agrupar'] ?? 'ninguno';
+        try {
+            // Log de depuración
+            error_log("ReporteController::rendimientoMozos - GET params: " . print_r($_GET, true));
+            
+            // Obtener parámetros del formulario
+            $desde = self::convertirFecha($_GET['desde'] ?? date('Y-m-01'));
+            $hasta = self::convertirFecha($_GET['hasta'] ?? date('Y-m-d'));
+            $agrupar = $_GET['agrupar'] ?? 'ninguno';
+            
+            error_log("ReporteController::rendimientoMozos - Fechas procesadas: desde=$desde, hasta=$hasta, agrupar=$agrupar");
 
-        // Validar fechas
-        if ($desde > $hasta) {
-            $temp = $desde;
-            $desde = $hasta;
-            $hasta = $temp;
-        }
-
-        $kpis = [];
-
-        if ($agrupar === 'ninguno') {
-            // Vista de ranking - obtener datos directamente con propinas
-            $db = (new Database())->getConnection();
-            $stmt = $db->prepare("
-                SELECT
-                    u.nombre,
-                    u.apellido,
-                    COUNT(DISTINCT p.id_pedido) as pedidos,
-                    SUM(p.total) as total_vendido,
-                    COALESCE(SUM(pr.monto), 0) as propina_total
-                FROM pedidos p
-                JOIN usuarios u ON p.id_mozo = u.id_usuario
-                LEFT JOIN propinas pr ON p.id_pedido = pr.id_pedido
-                WHERE p.estado IN ('servido', 'cerrado')
-                AND p.fecha_hora BETWEEN ? AND ?
-                GROUP BY u.id_usuario, u.nombre, u.apellido
-                ORDER BY total_vendido DESC
-            ");
-            $stmt->execute([$desde . ' 00:00:00', $hasta . ' 23:59:59']);
-
-            $ranking = 1;
-            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                $kpis[] = [
-                    'mozo' => $row['nombre'] . ' ' . $row['apellido'],
-                    'pedidos' => $row['pedidos'],
-                    'total_vendido' => $row['total_vendido'],
-                    'propina_total' => $row['propina_total'],
-                    'propina_promedio_por_pedido' => $row['pedidos'] > 0 ? $row['propina_total'] / $row['pedidos'] : 0,
-                    'tasa_propina' => $row['total_vendido'] > 0 ? $row['propina_total'] / $row['total_vendido'] : 0,
-                    'ranking' => $ranking++
-                ];
+            // Validar fechas
+            if ($desde > $hasta) {
+                $temp = $desde;
+                $desde = $hasta;
+                $hasta = $temp;
             }
-        } else {
-            // Vista agrupada - implementar lógica para agrupar por día o mes
-            $kpis = self::obtenerDatosAgrupados($desde, $hasta, $agrupar);
+
+            $kpis = [];
+
+            if ($agrupar === 'ninguno') {
+                // Vista de ranking - obtener datos directamente con propinas
+                $db = (new Database())->getConnection();
+                
+                // Primero verificar si hay pedidos
+                $checkStmt = $db->prepare("
+                    SELECT COUNT(*) as total FROM pedidos 
+                    WHERE estado IN ('servido', 'cerrado')
+                    AND fecha_hora BETWEEN ? AND ?
+                ");
+                $checkStmt->execute([$desde . ' 00:00:00', $hasta . ' 23:59:59']);
+                $totalPedidos = $checkStmt->fetch()['total'];
+                
+                if ($totalPedidos > 0) {
+                    $stmt = $db->prepare("
+                        SELECT
+                            u.nombre,
+                            u.apellido,
+                            COUNT(DISTINCT p.id_pedido) as pedidos,
+                            SUM(p.total) as total_vendido,
+                            COALESCE(SUM(pr.monto), 0) as propina_total
+                        FROM pedidos p
+                        JOIN usuarios u ON p.id_mozo = u.id_usuario
+                        LEFT JOIN propinas pr ON p.id_pedido = pr.id_pedido
+                        WHERE p.estado IN ('servido', 'cerrado')
+                        AND p.fecha_hora BETWEEN ? AND ?
+                        GROUP BY u.id_usuario, u.nombre, u.apellido
+                        ORDER BY total_vendido DESC
+                    ");
+                    $stmt->execute([$desde . ' 00:00:00', $hasta . ' 23:59:59']);
+
+                    $ranking = 1;
+                    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                        $kpis[] = [
+                            'mozo' => $row['nombre'] . ' ' . $row['apellido'],
+                            'pedidos' => (int)$row['pedidos'],
+                            'total_vendido' => (float)$row['total_vendido'],
+                            'propina_total' => (float)$row['propina_total'],
+                            'propina_promedio_por_pedido' => $row['pedidos'] > 0 ? (float)$row['propina_total'] / (int)$row['pedidos'] : 0,
+                            'tasa_propina' => $row['total_vendido'] > 0 ? (float)$row['propina_total'] / (float)$row['total_vendido'] : 0,
+                            'ranking' => $ranking++
+                        ];
+                    }
+                }
+            } else {
+                // Vista agrupada - implementar lógica para agrupar por día o mes
+                $kpis = self::obtenerDatosAgrupados($desde, $hasta, $agrupar);
+            }
+
+            // Preparar resultado para la vista
+            $resultado = [
+                'params' => [
+                    'desde' => $desde,
+                    'hasta' => $hasta,
+                    'agrupar' => $agrupar
+                ],
+                'kpis' => $kpis
+            ];
+            
+            error_log("ReporteController::rendimientoMozos - Resultado: " . count($kpis) . " registros encontrados");
+
+            return $resultado;
+            
+        } catch (Exception $e) {
+            error_log("Error en ReporteController::rendimientoMozos: " . $e->getMessage());
+            return [
+                'params' => [
+                    'desde' => $desde ?? date('Y-m-01'),
+                    'hasta' => $hasta ?? date('Y-m-d'),
+                    'agrupar' => $agrupar ?? 'ninguno'
+                ],
+                'kpis' => []
+            ];
         }
-
-        // Preparar resultado para la vista
-        $resultado = [
-            'params' => [
-                'desde' => $desde,
-                'hasta' => $hasta,
-                'agrupar' => $agrupar
-            ],
-            'kpis' => $kpis
-        ];
-
-        // Pasar los datos a la vista
-        return $resultado;
     }
 
     /**

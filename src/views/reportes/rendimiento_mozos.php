@@ -151,11 +151,12 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .mozos-table th {
-    background: #495057;
+    background: linear-gradient(135deg,rgb(83, 52, 31) 0%,rgb(118, 95, 85) 100%);
     color: white;
-    padding: 15px;
+    padding: 10px;
     text-align: left;
     font-weight: 600;
+    box-shadow: 0 2px 4px rgba(139, 69, 19, 0.3);
 }
 
 .mozos-table td {
@@ -485,11 +486,11 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
             <div class="card mb-4">
                 <div class="card-body">
                     <form method="GET" action="" class="row g-3">
-                        <input type="hidden" name="route" value="reportes/rendimiento-mozos">
+                        <input type="hidden" name="route" value="reportes/rendimiento-personal">
                         
                         <div class="col-md-3">
                             <label for="desde" class="form-label">Desde</label>
-                            <input type="text" class="form-control" id="desde" name="desde"
+                            <input type="text" class="form-control" id="desde" name="desde_display"
                                    value="<?= date('d/m/Y', strtotime($desde)) ?>"
                                    placeholder="DD/MM/YYYY"
                                    pattern="\d{2}/\d{2}/\d{4}">
@@ -499,7 +500,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
                         <div class="col-md-3">
                             <label for="hasta" class="form-label">Hasta</label>
-                            <input type="text" class="form-control" id="hasta" name="hasta"
+                            <input type="text" class="form-control" id="hasta" name="hasta_display"
                                    value="<?= date('d/m/Y', strtotime($hasta)) ?>"
                                    placeholder="DD/MM/YYYY"
                                    pattern="\d{2}/\d{2}/\d{4}">
@@ -526,7 +527,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                             <button type="submit" class="apply-btn me-2">
                                 🔍 Filtrar
                             </button>
-                            <a href="?route=reportes/rendimiento-mozos" class="clear-btn">
+                            <a href="?route=reportes/rendimiento-personal" class="clear-btn">
                                 🔄 Limpiar
                             </a>
                         </div>
