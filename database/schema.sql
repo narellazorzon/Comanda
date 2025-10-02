@@ -124,20 +124,6 @@ CREATE TABLE propinas (
       ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- -------------------------------------------------
--- 9. Tabla pagos
--- -------------------------------------------------
-CREATE TABLE pagos (
-  id_pago         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  id_pedido       INT UNSIGNED NOT NULL,
-  monto           DECIMAL(10,2) NOT NULL,
-  fecha_hora      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  medio_pago      VARCHAR(50) NOT NULL,
-  estado_transaccion ENUM('pendiente','aprobado','rechazado') NOT NULL DEFAULT 'pendiente',
-  FOREIGN KEY (id_pedido) 
-    REFERENCES pedidos(id_pedido)
-      ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB;
 
 -- -------------------------------------------------
 -- 10. Índices para optimización
@@ -154,7 +140,6 @@ CREATE INDEX idx_carta_categoria ON carta(categoria);
 CREATE INDEX idx_usuarios_rol ON usuarios(rol);
 CREATE INDEX idx_usuarios_estado ON usuarios(estado);
 CREATE INDEX idx_propinas_fecha ON propinas(fecha_hora);
-CREATE INDEX idx_pagos_estado ON pagos(estado_transaccion);
 CREATE INDEX idx_llamados_estado ON llamados_mesa(estado);
 CREATE INDEX idx_llamados_fecha ON llamados_mesa(hora_solicitud);
 
@@ -335,14 +320,6 @@ INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES
 (7, 3, 8.95, '2024-01-08 20:30:00'),
 (8, 4, 3.45, '2024-01-07 20:00:00');
 
--- -------------------------------------------------
--- 18. Pagos de prueba
--- -------------------------------------------------
-INSERT INTO pagos (id_pedido, monto, medio_pago, estado_transaccion, fecha_hora) VALUES
-(5, 12.00, 'Efectivo', 'aprobado', '2024-01-09 19:05:00'),
-(6, 67.00, 'Tarjeta de Crédito', 'aprobado', '2024-01-08 21:35:00'),
-(7, 89.50, 'Tarjeta de Débito', 'aprobado', '2024-01-08 20:20:00'),
-(8, 34.50, 'Efectivo', 'aprobado', '2024-01-07 19:50:00');
 
 -- =====================================================
 -- COMENTARIOS SOBRE EL ESQUEMA FINAL
@@ -370,14 +347,14 @@ MEJORAS IMPLEMENTADAS:
    - 8 Pedidos de prueba en diferentes estados
    - Detalles de pedidos con items reales
    - Llamados de mesa activos y completados
-   - Propinas y pagos históricos
+   - Propinas históricas
 
 4. FUNCIONALIDADES SOPORTADAS:
    - Gestión completa de mozos con inactivación inteligente
    - Asignación y reasignación de mesas
    - Llamados de mesa con información de mozo asignado
    - Seguimiento completo de pedidos con estados descriptivos
-   - Sistema de propinas y pagos
+   - Sistema de propinas
    - Reportes con datos reales para pruebas
 
 CREDENCIALES DE PRUEBA:

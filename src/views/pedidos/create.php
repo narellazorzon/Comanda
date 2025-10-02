@@ -659,7 +659,7 @@ textarea {
 }
 
 .total-section {
-  background: #2F1B14;
+  background:rgb(68, 40, 12);
   color: white;
   padding: 12px;
   border-radius: 6px;
@@ -713,7 +713,7 @@ textarea {
 }
 
 .btn-secondary:hover {
-  background:rgb(93, 72, 62);
+  background:rgb(84, 55, 42);
   transform: translateY(-2px);
   text-decoration: none;
   color: white;
@@ -1111,7 +1111,7 @@ textarea {
       <div class="form-group" id="mesa-group">
         <label for="id_mesa">🍽️ Seleccionar Mesa *</label>
         <select name="id_mesa" id="id_mesa" required onchange="showMozoInfo()">
-          <option value="">🔍 Elige una mesa disponible...</option>
+          <option value="">Elige una mesa disponible...</option>
           <?php foreach ($mesas as $mesa): ?>
             <option value="<?= $mesa['id_mesa'] ?>" 
                     data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
@@ -1130,7 +1130,7 @@ textarea {
           <?php endforeach; ?>
         </select>
         <div id="mozo-info" style="display: none;">
-          <h4>👨‍💼 Mozo Asignado</h4>
+          <h4> Mozo Asignado</h4>
           <p id="mozo-nombre"></p>
           <span class="mozo-status">Asignado</span>
         </div>
@@ -1222,7 +1222,7 @@ textarea {
 
     <!-- Total -->
     <div class="total-section">
-      <h3>💰 Total del Pedido</h3>
+      <h3>Total del Pedido</h3>
       <div class="total-amount" id="total-amount">$0.00</div>
     </div>
 
@@ -1365,7 +1365,7 @@ function addItem() {
   `;
   
   modalContent.innerHTML = `
-    <div style="background: linear-gradient(135deg, #CD853F 0%, #A0522D 100%); padding: 20px; color: white; position: relative; overflow: hidden;">
+    <div style="background: linear-gradient(135deg,rgb(103, 81, 59) 0%,rgb(83, 52, 31)100%); padding: 20px; color: white; position: relative; overflow: hidden;">
       <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
       <div style="position: absolute; bottom: -30px; left: -30px; width: 60px; height: 60px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
       <div style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1;">
@@ -1437,11 +1437,11 @@ function addItem() {
         border-radius: 3px;
       }
       #items-list::-webkit-scrollbar-thumb {
-        background: #CD853F;
+        background:rgb(113, 88, 64);
         border-radius: 3px;
       }
       #items-list::-webkit-scrollbar-thumb:hover {
-        background: #A0522D;
+        background:rgb(86, 69, 51);
       }
     </style>
   `;
@@ -1485,7 +1485,7 @@ function generateItemsList(searchTerm = '') {
   Object.keys(groupedItems).sort().forEach(categoria => {
     html += `<div style="margin-bottom: 25px;">
       <div style="
-        background: linear-gradient(135deg,rgb(140, 106, 72) 0%,rgb(124, 75, 52) 100%);
+        background: linear-gradient(135deg,rgb(140, 106, 72) 0%,rgb(103, 83, 52) 100%);
         color: white;
         padding: 12px 20px;
         border-radius: 12px;
