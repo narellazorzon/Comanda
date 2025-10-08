@@ -8,7 +8,7 @@ This repository contains **Comanda**, a full restaurant management platform writ
 - **Personas**: Administradores (back-office), Mozos (floor staff), Clientes (self-service portal).
 - **Key Operations**: Table assignment, waiter routing, order lifecycle, waiter calls, tipping, performance dashboards, inventory and revenue reporting.
 - **Execution model**: Traditional PHP request/response. `public/index.php` boots the app, inspects `$_GET['route']` and dispatches to a controller or view.
-- **Data store**: MySQL 8+ with foreign keys, triggers and summary views.
+- **Data store**: MySQL 8+ with foreign keys.
 
 ---
 
@@ -36,7 +36,7 @@ Comanda/
     controllers/          Auth, Mesa, Mozo, Carta, Cliente, Pedido, Reporte (admin endpoints)
     models/               Data access objects (Usuario, Mesa, Pedido, etc.)
     views/                PHP templates grouped by module (mesas/, mozos/, pedidos/, cliente/, reportes/?)
-  database/               schema.sql, add_status_to_mesas.sql, simple_test_data.sql (seed)
+  database/               schema_completo.sql (esquema + seeds)
   vendor/                 Composer autoloader (no third-party deps bundled)
   .vscode/                Launch configuration for local debugging
   README.md               (this file)
@@ -101,14 +101,14 @@ Core tables (partial list relevant to code):
 - `usuarios`: Stores administrators and waiters; fields include `rol`, `estado`, hashed `contrasenia`.
 - `mesas`: Unique table number, `estado`, `status` (soft-delete switch), `id_mozo`, location metadata.
 - `pedidos`: References `mesas` and `usuarios`, tracks `estado`, `modo_consumo`, totals, customer data.
-- `detalle_pedido`: Individual line items (`cantidad`, `precio_unitario`, `detalle` note). Triggers deduct inventory in `schema.sql`.
+- `detalle_pedido`: Individual line items (`cantidad`, `precio_unitario`, `detalle`).
 - `carta`: Menu catalogue with `categoria`, availability flag, optional image URL and discount.
-- `inventario` + `inventario_movimientos`: Stock tracking with stored procedures for adjustments.
 - `llamados_mesa`: Waiter calls with state machine and FK back to `mesas`.
 - `propinas`: Optional tip entries linked to `pedidos` and `usuarios`.
-- Reporting views/triggers: e.g. `vista_stock_bajo`, `vista_inventario_categoria`, triggers for automatic updates.
 
-Refer to `database/schema.sql` for the definitive definition, plus `simple_test_data.sql` for seeds.
+Nota V1: No hay módulo de inventario ni triggers/ vistas de inventario. La disponibilidad de productos la gestiona el administrador.
+
+Refer to `database/schema_completo.sql` para el esquema definitivo (incluye seeds).
 
 ---
 
@@ -157,8 +157,7 @@ Refer to `database/schema.sql` for the definitive definition, plus `simple_test_
 2. **Install**: `composer dump-autoload` (no external packages required, but regenerates autoloader).
 3. **Database**:
    - Create a schema (default credentials in `Database.php` assume `comanda`, user `root`, empty password).
-   - Run `database/schema.sql`.
-   - Optionally run `database/simple_test_data.sql` for sample users (administrador/mozo) and seed data.
+   - Run `database/schema_completo.sql` (incluye datos de prueba; no requiere scripts adicionales).
 4. **Serve**: Point your server to `public/`. Example: `php -S 127.0.0.1:8000 -t public`.
 5. **Credentials**: Use seeded admin/mozo records or insert manually.
 

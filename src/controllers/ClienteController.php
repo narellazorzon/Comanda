@@ -87,11 +87,36 @@ class ClienteController {
         header('Content-Type: application/json');
         
         try {
-            $pedidoId = $_POST['pedido_id'] ?? null;
-            $propinaMonto = floatval($_POST['propina_monto'] ?? 0);
-            $mozoId = $_POST['mozo_id'] ?? null;
-            $metodoPago = $_POST['metodo_pago'] ?? null;
-            $mesa = $_POST['mesa'] ?? null;
+            // Aceptar tanto FormData (application/x-www-form-urlencoded | multipart/form-data)
+            // como JSON (application/json) y claves camelCase o snake_case
+            $inputData = [];
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (stripos($contentType, 'application/json') !== false) {
+                $raw = file_get_contents('php://input');
+                $json = json_decode($raw, true);
+                if (is_array($json)) {
+                    $inputData = $json;
+                }
+            }
+
+            $pedidoId = $_POST['pedido_id']
+                ?? ($inputData['pedido_id'] ?? ($inputData['pedidoId'] ?? null));
+            $propinaMonto = floatval(
+                $_POST['propina_monto']
+                ?? ($inputData['propina_monto'] ?? ($inputData['propinaMonto'] ?? 0))
+            );
+            $mozoId = $_POST['mozo_id'] ?? ($inputData['mozo_id'] ?? ($inputData['mozoId'] ?? null));
+            $metodoPago = $_POST['metodo_pago'] ?? ($inputData['metodo_pago'] ?? ($inputData['metodoPago'] ?? null));
+            $mesa = $_POST['mesa'] ?? ($inputData['mesa'] ?? ($inputData['mesaNumero'] ?? null));
+
+            // Normalizar forma de pago
+            if ($metodoPago) {
+                $metodoPago = strtolower(trim($metodoPago));
+                $validos = ['efectivo','tarjeta','transferencia'];
+                if (!in_array($metodoPago, $validos, true)) {
+                    $metodoPago = null; // ignorar valores no válidos
+                }
+            }
 
             // Debug log
             error_log("Payment processing data: " . json_encode([
@@ -120,17 +145,36 @@ class ClienteController {
                 }
             }
             
-            // Registrar la propina si hay monto
+            // Registrar la propina si hay monto (tolerante si tabla no existe)
             if ($propinaMonto > 0 && $mozoId) {
-                Propina::create([
-                    'id_pedido' => $pedidoId,
-                    'id_mozo' => $mozoId,
-                    'monto' => $propinaMonto
-                ]);
+                try {
+                    Propina::create([
+                        'id_pedido' => $pedidoId,
+                        'id_mozo' => $mozoId,
+                        'monto' => $propinaMonto
+                    ]);
+                } catch (\Exception $pe) {
+                    $msg = $pe->getMessage();
+                    // Si la tabla de propinas no existe en el esquema, continuar sin fallar
+                    if (
+                        stripos($msg, 'Base table or view not found') !== false ||
+                        stripos($msg, "42S02") !== false ||
+                        stripos($msg, "propina") !== false && stripos($msg, "exist") !== false
+                    ) {
+                        error_log('[WARN] Propina no registrada: ' . $msg);
+                    } else {
+                        throw $pe; // otros errores de BD deben propagarse
+                    }
+                }
             }
             
-            // Actualizar estado del pedido a "cuenta"
-            Pedido::updateEstado($pedidoId, 'cuenta');
+            // Persistir forma de pago en el pedido si se informó
+            if ($metodoPago) {
+                \App\Models\Pedido::setFormaPago((int)$pedidoId, $metodoPago);
+            }
+            
+            // No cambiamos el estado aquí.
+            // El pedido se crea como 'pendiente' y el mozo lo moverá a 'en_preparacion' al confirmar el pago.
             
             // Guardar información en sesión para confirmación
             $_SESSION['ultimo_pago'] = [

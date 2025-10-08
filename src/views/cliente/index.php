@@ -2694,14 +2694,7 @@ $iconosCategorias = [
                     <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
                 </div>
                 
-                <div class="form-group">
-                    <label>Forma de pago:</label>
-                    <select id="forma-pago" name="forma_pago" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="tarjeta">💳 Tarjeta crédito/débito</option>
-                    </select>
-                </div>
+                <!-- Forma de pago se elige en el modal de pago; campo duplicado eliminado -->
                 
                 <button type="submit" id="btn-confirmar" class="btn-confirmar" disabled>
                     Confirmar Pedido
@@ -3097,12 +3090,11 @@ $iconosCategorias = [
         const modoConsumo = document.getElementById('modo-consumo').value;
         const nombreCompleto = document.getElementById('nombre-completo').value.trim();
         const email = document.getElementById('email').value.trim();
-        const formaPago = document.getElementById('forma-pago').value;
         
         
         let isValid = true;
         
-        if (!modoConsumo || !nombreCompleto || !email || !formaPago) {
+        if (!modoConsumo || !nombreCompleto || !email) {
             isValid = false;
         }
         
@@ -3272,7 +3264,7 @@ $iconosCategorias = [
         });
         
         // Validación en tiempo real
-        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email', 'forma-pago'];
+        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email'];
         formFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
@@ -3307,7 +3299,6 @@ $iconosCategorias = [
                 cliente_nombre: document.getElementById('nombre-completo').value,
                 cliente_email: document.getElementById('email').value,
                 modo_consumo: modoConsumo,
-                forma_pago: document.getElementById('forma-pago').value,
                 observaciones: '', // No hay campo de observaciones en el formulario del cliente
                 items: cart.map(item => ({
                     id_item: item.id,
@@ -3511,9 +3502,18 @@ $iconosCategorias = [
 
             if (result.success && result.data.mozo) {
                 mozoActual = result.data.mozo;
-                document.getElementById('pago-mozo-info').style.display = 'block';
-                document.getElementById('pago-mozo-nombre').textContent =
-                    `${mozoActual.nombre} ${mozoActual.apellido}`;
+                const infoEl = document.getElementById('pago-mozo-info');
+                if (infoEl) {
+                    infoEl.style.display = 'block';
+                    // Rellenar si existe placeholder dedicado o reemplazar contenido
+                    const nombreEl = document.getElementById('pago-mozo-nombre');
+                    const texto = `${mozoActual.nombre} ${mozoActual.apellido}`;
+                    if (nombreEl) {
+                        nombreEl.textContent = texto;
+                    } else {
+                        infoEl.innerHTML = `<p><strong>${texto}</strong></p><p>Mozo asignado a tu mesa</p>`;
+                    }
+                }
             }
         } catch (error) {
             console.error('Error al obtener mozo:', error);
@@ -3522,9 +3522,11 @@ $iconosCategorias = [
 
     // Función para actualizar el total del pago
     function actualizarTotalPago() {
-        const totalFinal = subtotalPedido + propinaSeleccionada;
-        document.getElementById('pago-propina').textContent = `$${propinaSeleccionada.toFixed(2)}`;
-        document.getElementById('pago-total-final').textContent = `$${totalFinal.toFixed(2)}`;
+        const total = subtotalPedido + (typeof propinaSeleccionada === 'number' ? propinaSeleccionada : 0);
+        const elProp = document.getElementById('total-propina') || document.getElementById('pago-propina');
+        if (elProp) elProp.textContent = `$${(typeof propinaSeleccionada === 'number' ? propinaSeleccionada : 0).toFixed(2)}`;
+        const elTotal = document.getElementById('pago-total-final');
+        if (elTotal) elTotal.textContent = `$${total.toFixed(2)}`;
     }
 
     // Event listeners para el modal de pago
@@ -3556,9 +3558,10 @@ $iconosCategorias = [
             });
         });
 
-        // Botón aceptar propina personalizada
-        document.getElementById('btn-aceptar-propina').addEventListener('click', function() {
-            const monto = parseFloat(document.getElementById('propina-otro').value) || 0;
+        // Botón aceptar propina personalizada (ID o clase fallback)
+        (document.getElementById('btn-aceptar-propina') || document.querySelector('.btn-propina-custom'))?.addEventListener('click', function() {
+            const inputOtro = document.getElementById('propina-monto') || document.getElementById('propina-otro');
+            const monto = parseFloat(inputOtro ? inputOtro.value : '0') || 0;
             if (monto >= 0) {
                 propinaSeleccionada = monto;
                 propinaPorcentaje = 0;
@@ -3566,8 +3569,9 @@ $iconosCategorias = [
             }
         });
 
-        // Botón confirmar pago
-        document.getElementById('btn-confirmar-pago').addEventListener('click', async function() {
+        // Botón confirmar pago (solo si existe este ID en el DOM)
+        const btnConfirmarPagoEl = document.getElementById('btn-confirmar-pago');
+        if (btnConfirmarPagoEl) btnConfirmarPagoEl.addEventListener('click', async function() {
             const metodoPago = document.querySelector('input[name="metodo-pago"]:checked').value;
 
             // Deshabilitar botón
@@ -3592,7 +3596,8 @@ $iconosCategorias = [
 
                 if (result.success) {
                     // Cerrar modal de pago
-                    document.getElementById('pago-modal').style.display = 'none';
+                    const pm = document.getElementById('pago-modal');
+                    if (pm) pm.style.display = 'none';
 
                     // Mostrar modal de confirmación
                     mostrarConfirmacionPago();
@@ -3609,14 +3614,12 @@ $iconosCategorias = [
             }
         });
 
-        // Botones de cerrar
-        document.getElementById('btn-close-pago').addEventListener('click', function() {
-            document.getElementById('pago-modal').style.display = 'none';
-        });
-
-        document.getElementById('btn-cancelar-pago').addEventListener('click', function() {
-            document.getElementById('pago-modal').style.display = 'none';
-        });
+        // Botones de cerrar (si existen en el DOM)
+        const modalPagoEl = document.getElementById('pago-modal') || document.getElementById('modalProcesoPago');
+        const closeBtn = document.getElementById('btn-close-pago');
+        const cancelBtn = document.getElementById('btn-cancelar-pago');
+        if (closeBtn) closeBtn.addEventListener('click', function() { if (modalPagoEl) modalPagoEl.style.display = 'none'; });
+        if (cancelBtn) cancelBtn.addEventListener('click', function() { if (modalPagoEl) modalPagoEl.style.display = 'none'; });
 
   
         // Handle payment method selection
@@ -3852,22 +3855,24 @@ $iconosCategorias = [
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => {
+        .then(async response => {
             console.log('Response status:', response.status);
             console.log('Response content-type:', response.headers.get('content-type'));
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('Non-JSON response:', text);
+                throw new Error('La respuesta del servidor no es válida');
             }
 
-            return response.text().then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('Non-JSON response:', text);
-                    throw new Error('La respuesta del servidor no es válida');
-                }
-            });
+            if (!response.ok) {
+                const msg = data.message || data.error || `HTTP ${response.status}`;
+                throw new Error(msg);
+            }
+            return data;
         })
         .then(result => {
             console.log('Payment result:', result);

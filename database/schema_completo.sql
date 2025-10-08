@@ -1,11 +1,10 @@
 -- =====================================================
--- ESQUEMA COMPLETO UNIFICADO - SISTEMA COMANDA
--- Incluye todas las mejoras y datos de prueba
--- Versión: Actualizada con todas las funcionalidades
+-- ESQUEMA COMPLETO UNIFICADO - SISTEMA COMANDA (V1 LIMPIA)
+-- Sin módulo de inventario. Incluye datos de prueba básicos y recientes.
 -- =====================================================
 
 -- -------------------------------------------------
--- 1. Borramos la base si existiera y la creamos
+-- 1. Crear base de datos
 -- -------------------------------------------------
 DROP DATABASE IF EXISTS comanda;
 CREATE DATABASE comanda
@@ -37,7 +36,7 @@ CREATE TABLE mesas (
   estado         ENUM('libre','ocupada','reservada') NOT NULL DEFAULT 'libre',
   ubicacion      VARCHAR(100) NULL,
   id_mozo        INT UNSIGNED NULL,
-  status         TINYINT(1) NOT NULL DEFAULT 1, -- 1=activa, 0=inactiva
+  status         TINYINT(1) NOT NULL DEFAULT 1,
   fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_mesas_mozo
     FOREIGN KEY (id_mozo) REFERENCES usuarios(id_usuario)
@@ -60,20 +59,20 @@ CREATE TABLE carta (
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------
--- 5. Tabla pedidos (ESTADOS ACTUALIZADOS)
+-- 5. Tabla pedidos
 -- -------------------------------------------------
 CREATE TABLE pedidos (
   id_pedido    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   id_mesa      INT UNSIGNED NULL,
   modo_consumo ENUM('stay','takeaway') NOT NULL,
   total        DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  estado       ENUM('pendiente','en_preparacion','servido','cerrado','cancelado') NOT NULL DEFAULT 'pendiente',
+  estado       ENUM('pendiente','en_preparacion','servido','cuenta','cerrado','cancelado') NOT NULL DEFAULT 'pendiente',
   fecha_hora   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   id_mozo      INT UNSIGNED NULL,
   forma_pago   ENUM('efectivo','tarjeta','transferencia') NULL,
   observaciones TEXT NULL,
   cliente_nombre VARCHAR(100) NULL,
-  cliente_email VARCHAR(100) NULL,
+  cliente_email  VARCHAR(100) NULL,
   FOREIGN KEY (id_mesa)
     REFERENCES mesas(id_mesa)
       ON UPDATE CASCADE ON DELETE SET NULL,
@@ -86,12 +85,12 @@ CREATE TABLE pedidos (
 -- 6. Tabla detalle_pedido
 -- -------------------------------------------------
 CREATE TABLE detalle_pedido (
-  id_detalle     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  id_pedido      INT UNSIGNED NOT NULL,
-  id_item        INT UNSIGNED NOT NULL,
-  cantidad       INT UNSIGNED NOT NULL DEFAULT 1,
+  id_detalle      INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  id_pedido       INT UNSIGNED NOT NULL,
+  id_item         INT UNSIGNED NOT NULL,
+  cantidad        INT UNSIGNED NOT NULL DEFAULT 1,
   precio_unitario DECIMAL(10,2) NOT NULL,
-  detalle        TEXT NULL,
+  detalle         TEXT NULL,
   FOREIGN KEY (id_pedido)
     REFERENCES pedidos(id_pedido)
       ON UPDATE CASCADE ON DELETE CASCADE,
@@ -101,232 +100,86 @@ CREATE TABLE detalle_pedido (
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------
--- 7. Tabla llamado_mesa
+-- 7. Tabla propinas (opcional; usada por flujo de pago)
 -- -------------------------------------------------
-CREATE TABLE llamado_mesa (
-  id_llamado    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  id_mesa       INT UNSIGNED NOT NULL,
-  timestamp     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  atendido      TINYINT(1) NOT NULL DEFAULT 0,
-  id_mozo       INT UNSIGNED NULL,
+CREATE TABLE propinas (
+  id_propina     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  id_pedido      INT UNSIGNED NOT NULL,
+  id_mozo        INT UNSIGNED NULL,
+  monto          DECIMAL(10,2) NOT NULL,
+  fecha_hora     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_propinas_pedido
+    FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_propinas_mozo
+    FOREIGN KEY (id_mozo) REFERENCES usuarios(id_usuario)
+    ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- -------------------------------------------------
+-- 8. Tabla llamados_mesa (para llamar mozo)
+-- -------------------------------------------------
+CREATE TABLE llamados_mesa (
+  id_llamado     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  id_mesa        INT UNSIGNED NOT NULL,
+  estado         ENUM('pendiente','en_atencion','completado') NOT NULL DEFAULT 'pendiente',
+  hora_solicitud DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (id_mesa)
     REFERENCES mesas(id_mesa)
-      ON UPDATE CASCADE ON DELETE CASCADE,
-  FOREIGN KEY (id_mozo)
-    REFERENCES usuarios(id_usuario)
-      ON UPDATE CASCADE ON DELETE SET NULL
+      ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------
--- 8. Tabla inventario (versión simplificada)
--- -------------------------------------------------
-CREATE TABLE inventario (
-    id_inventario INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    id_item INT UNSIGNED NOT NULL,
-    cantidad_disponible INT NOT NULL DEFAULT 0,
-    cantidad_minima INT NOT NULL DEFAULT 5,
-    estado ENUM('disponible','agotado','discontinuado') NOT NULL DEFAULT 'disponible',
-
-    CONSTRAINT fk_inventario_item
-        FOREIGN KEY (id_item) REFERENCES carta(id_item)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-
-    INDEX idx_inventario_item (id_item),
-    INDEX idx_inventario_estado (estado)
-) ENGINE=InnoDB;
-
--- -------------------------------------------------
--- 9. Tabla inventario_movimientos
--- -------------------------------------------------
-CREATE TABLE inventario_movimientos (
-    id_movimiento INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    id_item INT UNSIGNED NOT NULL,
-    tipo_movimiento ENUM('entrada','salida','ajuste','venta') NOT NULL,
-    cantidad INT NOT NULL,
-    cantidad_anterior INT NOT NULL,
-    cantidad_nueva INT NOT NULL,
-    motivo VARCHAR(200) NULL,
-    id_pedido INT UNSIGNED NULL,
-    id_usuario INT UNSIGNED NULL,
-    fecha_movimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_inv_mov_item
-        FOREIGN KEY (id_item) REFERENCES carta(id_item)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_inv_mov_pedido
-        FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido)
-        ON UPDATE CASCADE ON DELETE SET NULL,
-    CONSTRAINT fk_inv_mov_usuario
-        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
-        ON UPDATE CASCADE ON DELETE SET NULL
-) ENGINE=InnoDB;
-
--- -------------------------------------------------
--- ÍNDICES ADICIONALES
+-- 9. Índices útiles
 -- -------------------------------------------------
 CREATE INDEX idx_pedidos_estado ON pedidos(estado);
 CREATE INDEX idx_pedidos_fecha ON pedidos(fecha_hora);
 CREATE INDEX idx_pedidos_mesa ON pedidos(id_mesa);
 CREATE INDEX idx_pedidos_mozo ON pedidos(id_mozo);
 CREATE INDEX idx_detalle_pedido_pedido ON detalle_pedido(id_pedido);
-CREATE INDEX idx_llamado_mesa_mesa ON llamado_mesa(id_mesa);
-CREATE INDEX idx_llamado_mesa_atendido ON llamado_mesa(atendido);
+CREATE INDEX idx_propinas_fecha ON propinas(fecha_hora);
+CREATE INDEX idx_mesas_estado ON mesas(estado);
+CREATE INDEX idx_mesas_numero ON mesas(numero);
+CREATE INDEX idx_mesas_mozo ON mesas(id_mozo);
+CREATE INDEX idx_carta_disponibilidad ON carta(disponibilidad);
+CREATE INDEX idx_carta_categoria ON carta(categoria);
+CREATE INDEX idx_usuarios_rol ON usuarios(rol);
+CREATE INDEX idx_usuarios_estado ON usuarios(estado);
+CREATE INDEX idx_llamados_estado ON llamados_mesa(estado);
+CREATE INDEX idx_llamados_fecha ON llamados_mesa(hora_solicitud);
 
--- -------------------------------------------------
--- VIEWS ÚTILES
--- -------------------------------------------------
+-- =====================================================
+-- DATOS DE PRUEBA BÁSICOS
+-- =====================================================
 
--- Vista para ver mesas con estado de mozo
-CREATE VIEW vista_mesas_con_mozo AS
-SELECT
-    m.*,
-    u.nombre as mozo_nombre,
-    u.apellido as mozo_apellido,
-    CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo,
-    (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos
-FROM mesas m
-LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
-WHERE m.status = 1;
-
--- Vista para stock bajo
-CREATE VIEW vista_stock_bajo AS
-SELECT
-    i.*,
-    c.nombre as item_nombre,
-    c.categoria as item_categoria,
-    c.precio as item_precio
-FROM inventario i
-JOIN carta c ON i.id_item = c.id_item
-WHERE i.cantidad_disponible <= i.cantidad_minima OR i.estado = 'agotado'
-ORDER BY i.cantidad_disponible ASC;
-
--- Vista para resumen por categorías
-CREATE VIEW vista_inventario_categoria AS
-SELECT
-    c.categoria,
-    COUNT(DISTINCT i.id_item) as total_items,
-    SUM(i.cantidad_disponible) as total_stock,
-    COUNT(CASE WHEN i.estado = 'disponible' THEN 1 END) as items_disponibles,
-    COUNT(CASE WHEN i.estado = 'agotado' THEN 1 END) as items_agotados,
-    AVG(i.cantidad_disponible) as promedio_stock
-FROM inventario i
-JOIN carta c ON i.id_item = c.id_item
-GROUP BY c.categoria
-ORDER BY c.categoria;
-
--- -------------------------------------------------
--- TRIGGERS
--- -------------------------------------------------
-
--- Trigger para actualizar stock automáticamente al vender
-DELIMITER //
-CREATE TRIGGER tr_detalle_pedido_descontar_stock
-AFTER INSERT ON detalle_pedido
-FOR EACH ROW
-BEGIN
-    DECLARE stock_actual INT;
-    DECLARE nuevo_stock INT;
-
-    -- Obtener stock actual
-    SELECT cantidad_disponible INTO stock_actual
-    FROM inventario
-    WHERE id_item = NEW.id_item;
-
-    -- Calcular nuevo stock
-    SET nuevo_stock = stock_actual - NEW.cantidad;
-
-    -- Actualizar inventario
-    UPDATE inventario
-    SET cantidad_disponible = nuevo_stock,
-        estado = IF(nuevo_stock <= 0, 'agotado', 'disponible')
-    WHERE id_item = NEW.id_item;
-
-    -- Registrar movimiento
-    INSERT INTO inventario_movimientos (
-        id_item, tipo_movimiento, cantidad,
-        cantidad_anterior, cantidad_nueva,
-        motivo, id_pedido
-    ) VALUES (
-        NEW.id_item, 'venta', NEW.cantidad,
-        stock_actual, nuevo_stock,
-        'Venta automatica', NEW.id_pedido
-    );
-END//
-DELIMITER ;
-
--- -------------------------------------------------
--- STORED PROCEDURES
--- -------------------------------------------------
-
--- Procedimiento para actualizar stock manualmente
-DELIMITER //
-CREATE PROCEDURE sp_actualizar_stock(
-    IN p_id_item INT,
-    IN p_cantidad INT,
-    IN p_tipo_movimiento ENUM('entrada','salida','ajuste'),
-    IN p_motivo VARCHAR(200),
-    IN p_id_usuario INT
-)
-BEGIN
-    DECLARE stock_actual INT;
-    DECLARE nuevo_stock INT;
-
-    -- Obtener stock actual
-    SELECT cantidad_disponible INTO stock_actual
-    FROM inventario
-    WHERE id_item = p_id_item;
-
-    -- Calcular nuevo stock según tipo
-    IF p_tipo_movimiento = 'entrada' THEN
-        SET nuevo_stock = stock_actual + p_cantidad;
-    ELSEIF p_tipo_movimiento = 'salida' THEN
-        SET nuevo_stock = stock_actual - p_cantidad;
-    ELSE -- ajuste
-        SET nuevo_stock = p_cantidad;
-    END IF;
-
-    -- Actualizar inventario
-    UPDATE inventario
-    SET cantidad_disponible = nuevo_stock,
-        estado = IF(nuevo_stock <= 0, 'agotado', 'disponible')
-    WHERE id_item = p_id_item;
-
-    -- Registrar movimiento
-    INSERT INTO inventario_movimientos (
-        id_item, tipo_movimiento, cantidad,
-        cantidad_anterior, cantidad_nueva,
-        motivo, id_usuario
-    ) VALUES (
-        p_id_item, p_tipo_movimiento, p_cantidad,
-        stock_actual, nuevo_stock,
-        p_motivo, p_id_usuario
-    );
-
-    SELECT 'Stock actualizado correctamente' as mensaje;
-END//
-DELIMITER ;
-
--- -------------------------------------------------
--- DATOS DE PRUEBA
--- -------------------------------------------------
-
--- Usuarios de prueba
-INSERT INTO usuarios (nombre, apellido, email, contrasenia, rol) VALUES
-('Admin', 'Sistema', 'admin@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'administrador'),
-('Juan', 'Pérez', 'juan@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'mozo'),
-('María', 'García', 'maria@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'mozo'),
-('Carlos', 'López', 'carlos@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'mozo');
+-- Usuarios (admin + mozos). Contraseñas: placeholder hash
+INSERT INTO usuarios (nombre, apellido, email, contrasenia, rol, estado) VALUES
+('Admin',  'Sistema',  'admin@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'administrador', 'activo'),
+('Juan',   'Pérez',    'juan@comanda.com',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'mozo',         'activo'),
+('María',  'García',   'maria@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'mozo',         'activo'),
+('Carlos', 'López',    'carlos@comanda.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'mozo',         'activo'),
+('Ana',    'Martínez', 'ana@comanda.com',   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'mozo',         'activo'),
+('Diego',  'Rodríguez','diego@comanda.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'mozo',         'activo');
 
 -- Mesas de prueba con mozos asignados
-INSERT INTO mesas (numero, ubicacion, id_mozo, estado) VALUES
-(1, 'Zona Principal', 2, 'libre'),
-(2, 'Zona Principal', 2, 'ocupada'),
-(3, 'Terraza', 3, 'libre'),
-(4, 'Terraza', 3, 'libre'),
-(5, 'VIP', 4, 'reservada'),
-(6, 'VIP', 4, 'libre');
+INSERT INTO mesas (numero, ubicacion, estado, id_mozo) VALUES
+(1,  'Zona Principal', 'libre',    2),
+(2,  'Zona Principal', 'ocupada',  2),
+(3,  'Terraza',        'libre',    3),
+(4,  'Terraza',        'libre',    3),
+(5,  'VIP',            'reservada',4),
+(6,  'VIP',            'libre',    4),
+(7,  'Barra',          'libre',    4),
+(8,  'Barra',          'libre',    4),
+(9,  'Jardín',         'libre',    5),
+(10, 'Jardín',         'ocupada',  5),
+(11, 'Salón VIP',      'libre',    6),
+(12, 'Salón VIP',      'libre',    6),
+(13, 'Auxiliar',       'libre',    NULL),
+(14, 'Auxiliar',       'libre',    NULL),
+(15, 'Auxiliar',       'libre',    NULL);
 
--- Items del menú de prueba
+-- Carta de prueba
 INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad) VALUES
 ('Hamburguesa Clásica', 'Carne 200g con lechuga, tomate y queso', 15.50, 'Hamburguesas', 1),
 ('Hamburguesa BBQ', 'Carne 200g con salsa BBQ y cebolla caramelizada', 17.00, 'Hamburguesas', 1),
@@ -339,62 +192,118 @@ INSERT INTO carta (nombre, descripcion, precio, categoria, disponibilidad) VALUE
 ('Pizza Margarita', 'Pizza mediana con tomate y mozzarella', 18.00, 'Pizzas', 1),
 ('Pizza Napolitana', 'Pizza mediana con tomate, mozzarella y albahaca', 20.00, 'Pizzas', 1);
 
--- Inventario inicial
-INSERT INTO inventario (id_item, cantidad_disponible, cantidad_minima) VALUES
-(1, 50, 20), -- Hamburguesa Clásica
-(2, 30, 15), -- Hamburguesa BBQ
-(3, 100, 50), -- Papas Fritas
-(4, 80, 40), -- Aros de Cebolla
-(5, 60, 30), -- Coca Cola
-(6, 50, 25), -- Agua Mineral
-(7, 40, 20), -- Heineken
-(8, 25, 10), -- Ensalada César
-(9, 20, 10), -- Pizza Margarita
-(10, 15, 10); -- Pizza Napolitana
-
--- Pedidos de prueba
+-- Pedidos y detalles de ejemplo
 INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, id_mozo, forma_pago, cliente_nombre) VALUES
 (2, 'stay', 36.50, 'en_preparacion', 2, 'efectivo', 'Cliente 1'),
-(5, 'stay', 54.00, 'pendiente', 4, 'tarjeta', 'Cliente 2'),
+(5, 'stay', 54.00, 'pendiente',      4, 'tarjeta',  'Cliente 2'),
 (NULL, 'takeaway', 21.00, 'servido', 3, 'efectivo', 'Cliente Takeaway 1');
 
--- Detalles de pedidos
 INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario) VALUES
--- Pedido 1 (Mesa 2)
 (1, 1, 2, 15.50),
 (1, 3, 1, 5.50),
--- Pedido 2 (Mesa 5)
 (2, 2, 2, 17.00),
 (2, 9, 1, 20.00),
--- Pedido 3 (Takeaway)
 (3, 4, 2, 6.00),
 (3, 6, 2, 2.50);
 
--- Llamados de mesa de prueba
-INSERT INTO llamado_mesa (id_mesa, atendido, id_mozo) VALUES
-(2, 1, 2),
-(5, 0, NULL),
-(1, 0, NULL);
+-- Llamados de mesa de ejemplo
+INSERT INTO llamados_mesa (id_mesa, estado) VALUES
+(2, 'completado'),
+(5, 'pendiente'),
+(1, 'pendiente');
 
--- Movimientos de inventario de prueba
-INSERT INTO inventario_movimientos (id_item, tipo_movimiento, cantidad, cantidad_anterior, cantidad_nueva, motivo, id_pedido) VALUES
-(1, 'venta', 2, 52, 50, 'Venta automatica', 1),
-(2, 'venta', 2, 32, 30, 'Venta automatica', 2),
-(3, 'venta', 1, 101, 100, 'Venta automatica', 1),
-(4, 'venta', 2, 82, 80, 'Venta automatica', 3),
-(6, 'venta', 2, 52, 50, 'Venta automatica', 3),
-(9, 'venta', 1, 21, 20, 'Venta automatica', 2);
-
--- Actualizar estado de algunas mesas según los pedidos
+-- Ajustar estado mesas según pedidos
 UPDATE mesas SET estado = 'ocupada' WHERE id_mesa = 2;
 UPDATE mesas SET estado = 'reservada' WHERE id_mesa = 5;
 
--- -------------------------------------------------
--- FIN DEL SCRIPT
--- -------------------------------------------------
+-- =====================================================
+-- DATOS DE PRUEBA SIMPLES (ÚLTIMOS 7 DÍAS)
+-- Tomado de simple_test_data.sql e integrado al esquema
+-- =====================================================
 
--- Nota: Las contraseñas están hasheadas con "secret"
--- admin@comanda.com / secret
--- juan@comanda.com / secret
--- maria@comanda.com / secret
--- carlos@comanda.com / secret
+-- Limpiar datos recientes (por seguridad de import repetida)
+DELETE FROM propinas WHERE fecha_hora >= CURDATE() - INTERVAL 7 DAY;
+DELETE FROM detalle_pedido WHERE id_pedido IN (
+    SELECT id_pedido FROM pedidos WHERE fecha_hora >= CURDATE() - INTERVAL 7 DAY
+);
+DELETE FROM pedidos WHERE fecha_hora >= CURDATE() - INTERVAL 7 DAY;
+
+-- Pedidos recientes con propinas
+-- Juan Pérez (ID: 2)
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(1, 'stay', 1500.00, 'cerrado', NOW() - INTERVAL 2 HOUR, 2);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 2, 150.00, NOW() - INTERVAL 2 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(2, 'stay', 800.00,  'cerrado', NOW() - INTERVAL 5 HOUR, 2);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 2, 80.00, NOW() - INTERVAL 5 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(1, 'stay', 1200.00, 'cerrado', NOW() - INTERVAL 1 DAY, 2);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 2, 180.00, NOW() - INTERVAL 1 DAY + INTERVAL 5 MINUTE);
+
+-- María García (ID: 3)
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(4, 'stay', 2000.00, 'cerrado', NOW() - INTERVAL 1 HOUR, 3);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 3, 400.00, NOW() - INTERVAL 1 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(5, 'stay', 1800.00, 'cerrado', NOW() - INTERVAL 3 HOUR, 3);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 3, 360.00, NOW() - INTERVAL 3 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(6, 'stay', 1500.00, 'cerrado', NOW() - INTERVAL 1 DAY - INTERVAL 2 HOUR, 3);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 3, 300.00, NOW() - INTERVAL 1 DAY - INTERVAL 2 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(4, 'stay', 900.00,  'cerrado', NOW() - INTERVAL 1 DAY - INTERVAL 5 HOUR, 3);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 3, 180.00, NOW() - INTERVAL 1 DAY - INTERVAL 5 HOUR + INTERVAL 5 MINUTE);
+
+-- Carlos López (ID: 4)
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(7, 'stay', 600.00,  'cerrado', NOW() - INTERVAL 4 HOUR, 4);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 4, 30.00, NOW() - INTERVAL 4 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(8, 'stay', 800.00,  'cerrado', NOW() - INTERVAL 1 DAY - INTERVAL 3 HOUR, 4);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 4, 40.00, NOW() - INTERVAL 1 DAY - INTERVAL 3 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(7, 'stay', 1000.00, 'cerrado', NOW() - INTERVAL 2 DAY, 4);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 4, 50.00, NOW() - INTERVAL 2 DAY + INTERVAL 5 MINUTE);
+
+-- Ana Martínez (ID: 5)
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(1, 'stay', 1000.00, 'cerrado', NOW() - INTERVAL 6 HOUR, 5);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 5, 150.00, NOW() - INTERVAL 6 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(2, 'stay', 1200.00, 'cerrado', NOW() - INTERVAL 1 DAY - INTERVAL 1 HOUR, 5);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 5, 180.00, NOW() - INTERVAL 1 DAY - INTERVAL 1 HOUR + INTERVAL 5 MINUTE);
+
+-- Diego Rodríguez (ID: 6)
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(4, 'stay', 2500.00, 'cerrado', NOW() - INTERVAL 7 HOUR, 6);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 6, 625.00, NOW() - INTERVAL 7 HOUR + INTERVAL 5 MINUTE);
+
+INSERT INTO pedidos (id_mesa, modo_consumo, total, estado, fecha_hora, id_mozo) VALUES
+(5, 'stay', 3000.00, 'cerrado', NOW() - INTERVAL 2 DAY - INTERVAL 2 HOUR, 6);
+SET @pedido_id = LAST_INSERT_ID();
+INSERT INTO propinas (id_pedido, id_mozo, monto, fecha_hora) VALUES (@pedido_id, 6, 750.00, NOW() - INTERVAL 2 DAY - INTERVAL 2 HOUR + INTERVAL 5 MINUTE);
+
+-- -------------------------------------------------
+-- FIN DEL SCRIPT (V1 sin inventario)
+-- -------------------------------------------------

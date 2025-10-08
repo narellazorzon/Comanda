@@ -275,6 +275,15 @@ class Pedido {
     }
 
     /**
+     * Actualiza solo la forma de pago de un pedido sin tocar otros campos.
+     */
+    public static function setFormaPago(int $id, ?string $formaPago): bool {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("UPDATE pedidos SET forma_pago = ? WHERE id_pedido = ?");
+        return $stmt->execute([$formaPago, $id]);
+    }
+
+    /**
      * Obtiene un pedido por su ID con información completa.
      */
     public static function find(int $id): ?array {
