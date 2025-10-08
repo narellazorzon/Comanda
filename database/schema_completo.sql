@@ -124,9 +124,14 @@ CREATE TABLE llamados_mesa (
   id_mesa        INT UNSIGNED NOT NULL,
   estado         ENUM('pendiente','en_atencion','completado') NOT NULL DEFAULT 'pendiente',
   hora_solicitud DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  hora_atencion  DATETIME NULL,
+  atendido_por   INT UNSIGNED NULL,
   FOREIGN KEY (id_mesa)
     REFERENCES mesas(id_mesa)
-      ON UPDATE CASCADE ON DELETE CASCADE
+      ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (atendido_por)
+    REFERENCES usuarios(id_usuario)
+      ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------

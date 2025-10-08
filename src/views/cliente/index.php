@@ -2666,6 +2666,7 @@ $iconosCategorias = [
                         <label>Mesa asignada:</label>
                         <div id="mesa-qr-info" style="background:#e8f5e8;border:2px solid #c8e6c9;padding:1rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
                             <span id="mesa-qr-text">✅ Mesa X (desde QR)</span>
+                            <button type="button" id="btn-llamar-mozo-inline" style="background:none;border:1px solid #8b5e34;color:#8b5e34;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;margin-right:0.5rem;">Llamar mozo</button>
                             <button type="button" id="btn-cambiar-mesa" style="background:none;border:1px solid #28a745;color:#28a745;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;">
                                 Cambiar
                             </button>
@@ -2856,7 +2857,7 @@ $iconosCategorias = [
     }
 
     // Función para llamar al mozo
-    async function llamarMozo(numeroMesa = null) {
+    async function llamarMozo(numeroMesa = null, buttonEl = null) {
         let mesaParaLlamar = numeroMesa || mesaFromQR;
         
         
@@ -3198,7 +3199,11 @@ $iconosCategorias = [
         // Botón llamar mozo en el nav
         const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
         if (btnLlamarMozo) {
-            btnLlamarMozo.addEventListener('click', () => llamarMozo());
+            btnLlamarMozo.addEventListener('click', () => llamarMozo(null, btnLlamarMozo));
+        }
+        const btnLlamarMozoInline = document.getElementById('btn-llamar-mozo-inline');
+        if (btnLlamarMozoInline) {
+            btnLlamarMozoInline.addEventListener('click', () => llamarMozo(null, btnLlamarMozoInline));
         }
         
         // Modal de selección de mesa

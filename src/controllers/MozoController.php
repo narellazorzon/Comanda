@@ -406,9 +406,9 @@ class MozoController {
             
             // Si hay un llamado anterior (más de 3 minutos), eliminarlo
             if ($llamado_reciente && $llamado_reciente['minutos_transcurridos'] >= 3) {
-                $stmt_eliminar = $db->prepare("DELETE FROM llamados_mesa WHERE id_llamado = ?");
+                $stmt_eliminar = $db->prepare("UPDATE llamados_mesa SET estado = 'completado', hora_atencion = NOW(), atendido_por = NULL WHERE id_llamado = ?");
                 $stmt_eliminar->execute([$llamado_reciente['id_llamado']]);
-                error_log("LlamarMozo - Llamado anterior eliminado: " . $llamado_reciente['id_llamado']);
+                error_log("LlamarMozo - Llamado anterior marcado como completado: " . $llamado_reciente['id_llamado']);
             }
             
             // Crear el nuevo llamado
@@ -439,3 +439,5 @@ class MozoController {
         exit;
     }
 }
+
+
