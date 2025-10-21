@@ -764,7 +764,7 @@ $opcionesPropina = [
             data.append('metodo_pago', selectedPaymentMethod);
             
             // Enviar solicitud
-            const response = await fetch('<?= url('cliente/procesar-pago') ?>', {
+            const response = await fetch('<?= url('pago-procesar') ?>', {
                 method: 'POST',
                 body: data
             });

@@ -4,12 +4,16 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\CartaItem;
+use App\Controllers\ClienteController;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $items = CartaItem::all();
+
+// Obtener platos más vendidos por categoría
+$platosMasVendidos = ClienteController::getPlatosMasVendidos();
 
 // Organizar items por categoría
 $itemsPorCategoria = [];
@@ -22,7 +26,7 @@ foreach ($items as $item) {
 }
 
 // Orden preferido de categorías
-$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Aves', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Ensaladas', 'Postres', 'Bebidas'];
+$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Ensaladas', 'Postres', 'Bebidas'];
 $categoriasOrdenadas = [];
 
 // Primero agregar las categorías en el orden preferido
@@ -336,6 +340,26 @@ $iconosCategorias = [
         display: flex;
         gap: 0.5rem;
         margin-bottom: 0.75rem;
+    }
+    
+    /* Estrella de más vendido */
+    .badge-mas-vendido {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #8b4513;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+        animation: brillo 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes brillo {
+        0% { box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3); }
+        100% { box-shadow: 0 2px 8px rgba(255, 215, 0, 0.6), 0 0 12px rgba(255, 215, 0, 0.4); }
     }
     
     /* Estilos para imagen del producto */
@@ -2495,6 +2519,15 @@ $iconosCategorias = [
                             <div class="producto-header">
                                 <h3 class="producto-nombre"><?= htmlspecialchars($item['nombre']) ?></h3>
                                 <div class="producto-badges">
+                                    <?php 
+                                    $categoria = $item['categoria'] ?? 'Otros';
+                                    $esMasVendido = isset($platosMasVendidos[$categoria]) && $platosMasVendidos[$categoria] == $item['id_item'];
+                                    ?>
+                                    
+                                    <?php if ($esMasVendido): ?>
+                                        <span class="badge-mas-vendido">⭐ Más Vendido</span>
+                                    <?php endif; ?>
+                                    
                                     <?php if (!empty($item['disponibilidad'])): ?>
                                         <span class="badge badge-disponible">✓ Disponible</span>
                                     <?php else: ?>
@@ -2633,6 +2666,7 @@ $iconosCategorias = [
                         <label>Mesa asignada:</label>
                         <div id="mesa-qr-info" style="background:#e8f5e8;border:2px solid #c8e6c9;padding:1rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
                             <span id="mesa-qr-text">✅ Mesa X (desde QR)</span>
+                            <button type="button" id="btn-llamar-mozo-inline" style="background:none;border:1px solid #8b5e34;color:#8b5e34;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;margin-right:0.5rem;">Llamar mozo</button>
                             <button type="button" id="btn-cambiar-mesa" style="background:none;border:1px solid #28a745;color:#28a745;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;">
                                 Cambiar
                             </button>
@@ -2661,14 +2695,7 @@ $iconosCategorias = [
                     <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
                 </div>
                 
-                <div class="form-group">
-                    <label>Forma de pago:</label>
-                    <select id="forma-pago" name="forma_pago" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="tarjeta">💳 Tarjeta crédito/débito</option>
-                    </select>
-                </div>
+                <!-- Forma de pago se elige en el modal de pago; campo duplicado eliminado -->
                 
                 <button type="submit" id="btn-confirmar" class="btn-confirmar" disabled>
                     Confirmar Pedido
@@ -2830,7 +2857,7 @@ $iconosCategorias = [
     }
 
     // Función para llamar al mozo
-    async function llamarMozo(numeroMesa = null) {
+    async function llamarMozo(numeroMesa = null, buttonEl = null) {
         let mesaParaLlamar = numeroMesa || mesaFromQR;
         
         
@@ -3064,12 +3091,11 @@ $iconosCategorias = [
         const modoConsumo = document.getElementById('modo-consumo').value;
         const nombreCompleto = document.getElementById('nombre-completo').value.trim();
         const email = document.getElementById('email').value.trim();
-        const formaPago = document.getElementById('forma-pago').value;
         
         
         let isValid = true;
         
-        if (!modoConsumo || !nombreCompleto || !email || !formaPago) {
+        if (!modoConsumo || !nombreCompleto || !email) {
             isValid = false;
         }
         
@@ -3173,7 +3199,11 @@ $iconosCategorias = [
         // Botón llamar mozo en el nav
         const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
         if (btnLlamarMozo) {
-            btnLlamarMozo.addEventListener('click', () => llamarMozo());
+            btnLlamarMozo.addEventListener('click', () => llamarMozo(null, btnLlamarMozo));
+        }
+        const btnLlamarMozoInline = document.getElementById('btn-llamar-mozo-inline');
+        if (btnLlamarMozoInline) {
+            btnLlamarMozoInline.addEventListener('click', () => llamarMozo(null, btnLlamarMozoInline));
         }
         
         // Modal de selección de mesa
@@ -3239,7 +3269,7 @@ $iconosCategorias = [
         });
         
         // Validación en tiempo real
-        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email', 'forma-pago'];
+        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email'];
         formFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
@@ -3274,7 +3304,6 @@ $iconosCategorias = [
                 cliente_nombre: document.getElementById('nombre-completo').value,
                 cliente_email: document.getElementById('email').value,
                 modo_consumo: modoConsumo,
-                forma_pago: document.getElementById('forma-pago').value,
                 observaciones: '', // No hay campo de observaciones en el formulario del cliente
                 items: cart.map(item => ({
                     id_item: item.id,
@@ -3478,9 +3507,18 @@ $iconosCategorias = [
 
             if (result.success && result.data.mozo) {
                 mozoActual = result.data.mozo;
-                document.getElementById('pago-mozo-info').style.display = 'block';
-                document.getElementById('pago-mozo-nombre').textContent =
-                    `${mozoActual.nombre} ${mozoActual.apellido}`;
+                const infoEl = document.getElementById('pago-mozo-info');
+                if (infoEl) {
+                    infoEl.style.display = 'block';
+                    // Rellenar si existe placeholder dedicado o reemplazar contenido
+                    const nombreEl = document.getElementById('pago-mozo-nombre');
+                    const texto = `${mozoActual.nombre} ${mozoActual.apellido}`;
+                    if (nombreEl) {
+                        nombreEl.textContent = texto;
+                    } else {
+                        infoEl.innerHTML = `<p><strong>${texto}</strong></p><p>Mozo asignado a tu mesa</p>`;
+                    }
+                }
             }
         } catch (error) {
             console.error('Error al obtener mozo:', error);
@@ -3489,9 +3527,11 @@ $iconosCategorias = [
 
     // Función para actualizar el total del pago
     function actualizarTotalPago() {
-        const totalFinal = subtotalPedido + propinaSeleccionada;
-        document.getElementById('pago-propina').textContent = `$${propinaSeleccionada.toFixed(2)}`;
-        document.getElementById('pago-total-final').textContent = `$${totalFinal.toFixed(2)}`;
+        const total = subtotalPedido + (typeof propinaSeleccionada === 'number' ? propinaSeleccionada : 0);
+        const elProp = document.getElementById('total-propina') || document.getElementById('pago-propina');
+        if (elProp) elProp.textContent = `$${(typeof propinaSeleccionada === 'number' ? propinaSeleccionada : 0).toFixed(2)}`;
+        const elTotal = document.getElementById('pago-total-final');
+        if (elTotal) elTotal.textContent = `$${total.toFixed(2)}`;
     }
 
     // Event listeners para el modal de pago
@@ -3523,9 +3563,10 @@ $iconosCategorias = [
             });
         });
 
-        // Botón aceptar propina personalizada
-        document.getElementById('btn-aceptar-propina').addEventListener('click', function() {
-            const monto = parseFloat(document.getElementById('propina-otro').value) || 0;
+        // Botón aceptar propina personalizada (ID o clase fallback)
+        (document.getElementById('btn-aceptar-propina') || document.querySelector('.btn-propina-custom'))?.addEventListener('click', function() {
+            const inputOtro = document.getElementById('propina-monto') || document.getElementById('propina-otro');
+            const monto = parseFloat(inputOtro ? inputOtro.value : '0') || 0;
             if (monto >= 0) {
                 propinaSeleccionada = monto;
                 propinaPorcentaje = 0;
@@ -3533,8 +3574,9 @@ $iconosCategorias = [
             }
         });
 
-        // Botón confirmar pago
-        document.getElementById('btn-confirmar-pago').addEventListener('click', async function() {
+        // Botón confirmar pago (solo si existe este ID en el DOM)
+        const btnConfirmarPagoEl = document.getElementById('btn-confirmar-pago');
+        if (btnConfirmarPagoEl) btnConfirmarPagoEl.addEventListener('click', async function() {
             const metodoPago = document.querySelector('input[name="metodo-pago"]:checked').value;
 
             // Deshabilitar botón
@@ -3559,7 +3601,8 @@ $iconosCategorias = [
 
                 if (result.success) {
                     // Cerrar modal de pago
-                    document.getElementById('pago-modal').style.display = 'none';
+                    const pm = document.getElementById('pago-modal');
+                    if (pm) pm.style.display = 'none';
 
                     // Mostrar modal de confirmación
                     mostrarConfirmacionPago();
@@ -3576,14 +3619,12 @@ $iconosCategorias = [
             }
         });
 
-        // Botones de cerrar
-        document.getElementById('btn-close-pago').addEventListener('click', function() {
-            document.getElementById('pago-modal').style.display = 'none';
-        });
-
-        document.getElementById('btn-cancelar-pago').addEventListener('click', function() {
-            document.getElementById('pago-modal').style.display = 'none';
-        });
+        // Botones de cerrar (si existen en el DOM)
+        const modalPagoEl = document.getElementById('pago-modal') || document.getElementById('modalProcesoPago');
+        const closeBtn = document.getElementById('btn-close-pago');
+        const cancelBtn = document.getElementById('btn-cancelar-pago');
+        if (closeBtn) closeBtn.addEventListener('click', function() { if (modalPagoEl) modalPagoEl.style.display = 'none'; });
+        if (cancelBtn) cancelBtn.addEventListener('click', function() { if (modalPagoEl) modalPagoEl.style.display = 'none'; });
 
   
         // Handle payment method selection
@@ -3819,22 +3860,24 @@ $iconosCategorias = [
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => {
+        .then(async response => {
             console.log('Response status:', response.status);
             console.log('Response content-type:', response.headers.get('content-type'));
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('Non-JSON response:', text);
+                throw new Error('La respuesta del servidor no es válida');
             }
 
-            return response.text().then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('Non-JSON response:', text);
-                    throw new Error('La respuesta del servidor no es válida');
-                }
-            });
+            if (!response.ok) {
+                const msg = data.message || data.error || `HTTP ${response.status}`;
+                throw new Error(msg);
+            }
+            return data;
         })
         .then(result => {
             console.log('Payment result:', result);
