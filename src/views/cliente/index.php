@@ -145,13 +145,13 @@ $iconosCategorias = [
     }
 
     .menu-filters::-webkit-scrollbar-thumb {
-        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(90deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 3px;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .menu-filters::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(90deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
     
     .menu-filters button {
@@ -199,19 +199,19 @@ $iconosCategorias = [
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb {
-        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(90deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(90deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(90deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
 
     .categoria-btn {
@@ -239,7 +239,7 @@ $iconosCategorias = [
     }
 
     .categoria-btn.active {
-        background: rgb(83, 52, 31);
+        background: var(--color-secundario);
         color: white;
     }
 
@@ -847,19 +847,19 @@ $iconosCategorias = [
     }
 
     .cart-panel::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.3);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .cart-panel::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .cart-panel::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(180deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
 
     /* Indicador de scroll para el panel completo */
@@ -1060,7 +1060,7 @@ $iconosCategorias = [
     }
 
     .cart-items::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 5px;
         border: 2px solid rgba(255, 255, 255, 0.3);
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1);
@@ -1068,13 +1068,13 @@ $iconosCategorias = [
     }
 
     .cart-items::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15);
         transform: scaleX(1.1);
     }
 
     .cart-items::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(180deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
     }
 

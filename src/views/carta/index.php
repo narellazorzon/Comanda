@@ -268,12 +268,12 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .categorias-nav::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: var(--color-secundario);
   border-radius: 3px;
 }
 
 .categorias-nav::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background: var(--color-primario);
 }
 
 .categoria-btn {
@@ -292,9 +292,9 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .categoria-btn:hover, .categoria-btn.active {
-  background: #8B4513;
+  background: rgb(144, 104, 76);
   color: white;
-  border-color: #8B4513;
+  border-color: rgb(144, 104, 76);
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 4px 8px rgba(0,0,0,0.25);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -316,17 +316,17 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .menu-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--primary);
   border-radius: 4px;
 }
 
 .menu-grid::-webkit-scrollbar-thumb {
-  background: #8B4513;
+  background:rgb(144, 104, 76);
   border-radius: 4px;
 }
 
 .menu-grid::-webkit-scrollbar-thumb:hover {
-  background: #A0522D;
+  background: var(--secondary);
 }
 
 .menu-item {
@@ -400,7 +400,7 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .item-category {
-  background: #8B4513;
+  background: rgb(144, 104, 76);
   color: white;
   padding: 3px 10px;
   border-radius: 12px;
