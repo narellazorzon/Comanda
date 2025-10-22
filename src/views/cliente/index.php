@@ -2400,14 +2400,14 @@ $iconosCategorias = [
     }
 
     .modal-pago-footer .btn-secundario {
-        background: #6c757d;
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         color: white;
     }
 
     .modal-pago-footer .btn-secundario:hover {
-        background: #5a6268;
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
     }
 
     .confirmacion-acciones {
@@ -2441,14 +2441,14 @@ $iconosCategorias = [
     }
 
     .confirmacion-acciones .btn-secundario {
-        background: #6c757d;
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         color: white;
     }
 
     .confirmacion-acciones .btn-secundario:hover {
-        background: #5a6268;
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
     }
 
     .confirmacion-mesa {
