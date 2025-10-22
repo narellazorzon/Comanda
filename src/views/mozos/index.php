@@ -166,13 +166,13 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
                       $textColor = '#2e7d32';
                       $icono = '🟢';
                   } elseif ($estadoMesa === 'ocupada') {
+                      $bgColor = '#ffebee';
+                      $textColor = '#c62828';
+                      $icono = '🔴';
+                  } else {
                       $bgColor = '#fff3e0';
                       $textColor = '#f57c00';
                       $icono = '🟡';
-                  } else {
-                      $bgColor = '#f3e5f5';
-                      $textColor = '#7b1fa2';
-                      $icono = '🟣';
                   }
                   
                   echo '<span style="background: ' . $bgColor . '; color: ' . $textColor . '; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 500; display: inline-flex; align-items: center; gap: 3px;" title="Mesa ' . $mesa['numero'] . ' - ' . ucfirst($estadoMesa) . '">';
@@ -209,10 +209,10 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
             ✏️
           </a>
           <?php if (!$esAdminActual): ?>
-            <a href="<?= url('mozos/delete', ['delete' => $m['id_usuario']]) ?>" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Eliminar mozo"
-               onclick="return confirm('¿Estás seguro de eliminar a <?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>?')">
+            <button class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; border: none; cursor: pointer;" title="Eliminar mozo"
+               onclick="confirmarEliminacion(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>')">
               ❌
-            </a>
+            </button>
           <?php else: ?>
             <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; background: #6c757d; color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
               🔒
@@ -278,10 +278,10 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
             ✏️
           </a>
           <?php if (!$esAdminActual): ?>
-            <a href="<?= url('mozos/delete', ['delete' => $m['id_usuario']]) ?>" class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;"
-               onclick="return confirm('¿Estás seguro de eliminar a <?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>?')">
+            <button class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; border: none; cursor: pointer;"
+               onclick="confirmarEliminacion(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>')">
               ❌
-            </a>
+            </button>
           <?php else: ?>
             <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; background: #6c757d; color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
               🔒
@@ -605,6 +605,28 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+
+<!-- Modal de confirmación personalizado -->
+<div id="modalEliminacion" class="modal-eliminacion" style="display: none;">
+  <div class="modal-overlay" onclick="cerrarModalEliminacion()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>🗑️ Confirmar Eliminación</h3>
+      <button class="modal-close" onclick="cerrarModalEliminacion()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="warning-icon">⚠️</div>
+      <p class="modal-message">¿Estás seguro de eliminar a <strong id="nombreMozo"></strong>?</p>
+      <div class="modal-info">
+        <p>Esta acción marcará al mozo como eliminado (borrado lógico) y no podrá acceder al sistema.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModalEliminacion()">Cancelar</button>
+      <button class="btn-confirmar" onclick="eliminarMozo()">Eliminar</button>
+    </div>
+  </div>
+</div>
 
 <!-- Incluir CSS y JS del modal de confirmación -->
 <link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
@@ -1267,5 +1289,256 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 1.3rem;
   }
 }
+
+/* Estilos para el modal de eliminación personalizado */
+.modal-eliminacion {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 450px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideInScale 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.modal-body {
+  padding: 24px;
+  text-align: center;
+}
+
+.warning-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  animation: pulse 2s infinite;
+}
+
+.modal-message {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.modal-info {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.modal-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+.modal-footer {
+  padding: 20px 24px;
+  background: #f8f9fa;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancelar,
+.btn-confirmar {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  min-width: 100px;
+}
+
+.btn-cancelar {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-cancelar:hover {
+  background: #5a6268;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.btn-confirmar {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.btn-confirmar:hover {
+  background: linear-gradient(135deg, #c82333, #bd2130);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Responsive para móvil */
+@media (max-width: 480px) {
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .modal-header {
+    padding: 16px 20px;
+  }
+  
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .modal-body {
+    padding: 20px;
+  }
+  
+  .warning-icon {
+    font-size: 2.5rem;
+  }
+  
+  .modal-message {
+    font-size: 1rem;
+  }
+  
+  .modal-footer {
+    padding: 16px 20px;
+    flex-direction: column;
+  }
+  
+  .btn-cancelar,
+  .btn-confirmar {
+    width: 100%;
+    margin: 4px 0;
+  }
+}
 </style>
+
+<script>
+// Variables globales para el modal
+let mozoIdAEliminar = null;
+
+// Función para mostrar el modal de confirmación
+function confirmarEliminacion(id, nombre) {
+  mozoIdAEliminar = id;
+  document.getElementById('nombreMozo').textContent = nombre;
+  document.getElementById('modalEliminacion').style.display = 'flex';
+  document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+}
+
+// Función para cerrar el modal
+function cerrarModalEliminacion() {
+  document.getElementById('modalEliminacion').style.display = 'none';
+  document.body.style.overflow = 'auto'; // Restaurar scroll del body
+  mozoIdAEliminar = null;
+}
+
+// Función para confirmar la eliminación
+function eliminarMozo() {
+  if (mozoIdAEliminar) {
+    // Redirigir a la URL de eliminación
+    window.location.href = `<?= url('mozos/delete') ?>?delete=${mozoIdAEliminar}`;
+  }
+}
+
+// Cerrar modal con tecla Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    cerrarModalEliminacion();
+  }
+});
+
+// Prevenir cierre del modal al hacer clic en el contenido
+document.querySelector('.modal-content').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+</script>
 

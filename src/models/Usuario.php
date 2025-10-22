@@ -14,7 +14,7 @@ class Usuario {
 
     public static function allByRole(string $rol): array {
         $db = (new Database)->getConnection();
-        $stmt = $db->prepare("SELECT * FROM usuarios WHERE rol = ?");
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE rol = ? AND estado != 'eliminado'");
         $stmt->execute([$rol]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -44,7 +44,7 @@ class Usuario {
             SELECT id_usuario, nombre, apellido, email, estado,
                    CONCAT(nombre, ' ', apellido) as nombre_completo
             FROM usuarios 
-            WHERE rol = ?
+            WHERE rol = ? AND estado != 'eliminado'
             ORDER BY nombre, apellido
         ");
         $stmt->execute([$rol]);
@@ -53,7 +53,7 @@ class Usuario {
 
     public static function find(int $id): ?array {
         $db = (new Database)->getConnection();
-        $stmt = $db->prepare("SELECT * FROM usuarios WHERE id_usuario = ?");
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE id_usuario = ? AND estado != 'eliminado'");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -109,13 +109,13 @@ class Usuario {
     }
     public static function delete(int $id): bool {
         $db = (new Database)->getConnection();
-        $stmt = $db->prepare("DELETE FROM usuarios WHERE id_usuario = ?");
+        $stmt = $db->prepare("UPDATE usuarios SET estado = 'eliminado', fecha_eliminacion = NOW() WHERE id_usuario = ?");
         return $stmt->execute([$id]);
     }
 
     public static function emailExists(string $email, int $excludeId = null): bool {
         $db = (new Database)->getConnection();
-        $sql = "SELECT COUNT(*) FROM usuarios WHERE email = ?";
+        $sql = "SELECT COUNT(*) FROM usuarios WHERE email = ? AND estado != 'eliminado'";
         $params = [$email];
         
         if ($excludeId !== null) {
