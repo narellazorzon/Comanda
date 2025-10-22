@@ -14,6 +14,8 @@ use App\Models\Reporte;
 // Parámetros de filtro
 $periodo = $_GET['periodo'] ?? 'todos';
 $limite = (int)($_GET['limite'] ?? 10);
+$fechaDesde = $_GET['fecha_desde'] ?? null;
+$fechaHasta = $_GET['fecha_hasta'] ?? null;
 
 // Validar período
 $periodos_validos = ['semana', 'mes', 'año', 'todos'];
@@ -22,8 +24,8 @@ if (!in_array($periodo, $periodos_validos)) {
 }
 
 // Obtener datos usando el modelo Reporte
-$platos = Reporte::platosMasVendidos($periodo, $limite);
-$stats = Reporte::estadisticasPeriodo($periodo);
+$platos = Reporte::platosMasVendidos($periodo, $limite, $fechaDesde, $fechaHasta);
+$stats = Reporte::estadisticasPeriodo($periodo, $fechaDesde, $fechaHasta);
 ?>
 
 <style>
@@ -283,17 +285,30 @@ main {
     <div class="report-header">
         <h1>🍽️ Reporte de Platos Más Vendidos</h1>
         <p>Análisis de ventas por período de tiempo</p>
+        <?php if ($fechaDesde && $fechaHasta): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: del <?= htmlspecialchars($fechaDesde) ?> al <?= htmlspecialchars($fechaHasta) ?>
+            </p>
+        <?php elseif ($periodo !== 'todos'): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: <?= ucfirst($periodo) ?>
+            </p>
+        <?php endif; ?>
     </div>
 
     <div class="filters-section">
         <div class="filter-group">
-            <label for="periodo">Período:</label>
-            <select name="periodo" id="periodo" onchange="updateFilters()">
-                <option value="todos" <?= $periodo === 'todos' ? 'selected' : '' ?>>Todos los Períodos</option>
-                <option value="semana" <?= $periodo === 'semana' ? 'selected' : '' ?>>Última Semana</option>
-                <option value="mes" <?= $periodo === 'mes' ? 'selected' : '' ?>>Último Mes</option>
-                <option value="año" <?= $periodo === 'año' ? 'selected' : '' ?>>Último Año</option>
-            </select>
+            <label for="fecha_desde">Fecha Desde:</label>
+            <input type="date" name="fecha_desde" id="fecha_desde" 
+                   value="<?= htmlspecialchars($fechaDesde ?? '') ?>" 
+                   onchange="updateFilters()">
+        </div>
+        
+        <div class="filter-group">
+            <label for="fecha_hasta">Fecha Hasta:</label>
+            <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                   value="<?= htmlspecialchars($fechaHasta ?? '') ?>" 
+                   onchange="updateFilters()">
         </div>
         
         <div class="filter-group">
@@ -375,11 +390,28 @@ main {
 
 <script>
 function updateFilters() {
-    const periodo = document.getElementById('periodo').value;
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
     const limite = document.getElementById('limite').value;
     
     const url = new URL(window.location);
-    url.searchParams.set('periodo', periodo);
+    
+    // Limpiar parámetros de período anterior
+    url.searchParams.delete('periodo');
+    
+    // Agregar nuevos parámetros
+    if (fechaDesde) {
+        url.searchParams.set('fecha_desde', fechaDesde);
+    } else {
+        url.searchParams.delete('fecha_desde');
+    }
+    
+    if (fechaHasta) {
+        url.searchParams.set('fecha_hasta', fechaHasta);
+    } else {
+        url.searchParams.delete('fecha_hasta');
+    }
+    
     url.searchParams.set('limite', limite);
     
     window.location.href = url.toString();
