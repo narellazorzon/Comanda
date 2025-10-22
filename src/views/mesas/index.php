@@ -980,10 +980,6 @@ document.getElementById('filtro-ubicacion').addEventListener('change', aplicarFi
 document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltrosMesas);
 </script>
 
-<!-- Incluir CSS y JS del modal de confirmación -->
-<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
-<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
-
 <style>
 /* Efectos bounce y animaciones globales */
 @keyframes bounceIn {
@@ -1135,7 +1131,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .tab-button.active {
-    border-bottom-color: #007bff;
+    border-bottom-color:rgb(255, 166, 0);
     background: #e3f2fd;
   }
   
@@ -1244,7 +1240,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 .search-input-group button:hover {
-    background: #5a6268;
+    background:rgb(137, 122, 100);
 }
 
 .status-filters {
@@ -1790,3 +1786,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 </style>
+
+<!-- Incluir CSS y JS del modal de confirmación -->
+<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
+<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
