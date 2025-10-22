@@ -17,15 +17,27 @@ $limite = (int)($_GET['limite'] ?? 10);
 $fechaDesde = $_GET['fecha_desde'] ?? null;
 $fechaHasta = $_GET['fecha_hasta'] ?? null;
 
+// Validar fechas
+$fechasInvalidas = false;
+if (!empty($fechaDesde) && !empty($fechaHasta)) {
+    if ($fechaHasta < $fechaDesde) {
+        $fechasInvalidas = true;
+    }
+}
+
 // Validar período
 $periodos_validos = ['semana', 'mes', 'año', 'todos'];
 if (!in_array($periodo, $periodos_validos)) {
     $periodo = 'todos';
 }
 
-// Obtener datos usando el modelo Reporte
-$platos = Reporte::platosMasVendidos($periodo, $limite, $fechaDesde, $fechaHasta);
-$stats = Reporte::estadisticasPeriodo($periodo, $fechaDesde, $fechaHasta);
+// Obtener datos usando el modelo Reporte solo si las fechas son válidas
+$platos = [];
+$stats = [];
+if (!$fechasInvalidas) {
+    $platos = Reporte::platosMasVendidos($periodo, $limite, $fechaDesde, $fechaHasta);
+    $stats = Reporte::estadisticasPeriodo($periodo, $fechaDesde, $fechaHasta);
+}
 ?>
 
 <style>
@@ -296,19 +308,31 @@ main {
         <?php endif; ?>
     </div>
 
+    <!-- Contenedor de alerta para fechas inválidas -->
+    <div id="alerta-fechas" 
+         style="display:<?= $fechasInvalidas ? 'block' : 'none' ?>; 
+                background:#f8d7da; 
+                color:#721c24; 
+                border:1px solid #f5c6cb; 
+                border-radius:6px; 
+                padding:10px; 
+                margin-bottom:1rem;">
+        ❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.
+    </div>
+
     <div class="filters-section">
         <div class="filter-group">
             <label for="fecha_desde">Fecha Desde:</label>
             <input type="date" name="fecha_desde" id="fecha_desde" 
                    value="<?= htmlspecialchars($fechaDesde ?? '') ?>" 
-                   onchange="updateFilters()">
+                   onchange="validarFechas()">
         </div>
         
         <div class="filter-group">
             <label for="fecha_hasta">Fecha Hasta:</label>
             <input type="date" name="fecha_hasta" id="fecha_hasta" 
                    value="<?= htmlspecialchars($fechaHasta ?? '') ?>" 
-                   onchange="updateFilters()">
+                   onchange="validarFechas()">
         </div>
         
         <div class="filter-group">
@@ -389,7 +413,27 @@ main {
 </main>
 
 <script>
+function validarFechas() {
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    const alerta = document.getElementById('alerta-fechas');
+    
+    if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+        alerta.style.display = 'block';
+        alerta.innerText = '❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.';
+        return false;
+    } else {
+        alerta.style.display = 'none';
+        return true;
+    }
+}
+
 function updateFilters() {
+    // Validar fechas antes de proceder
+    if (!validarFechas()) {
+        return false;
+    }
+    
     const fechaDesde = document.getElementById('fecha_desde').value;
     const fechaHasta = document.getElementById('fecha_hasta').value;
     const limite = document.getElementById('limite').value;
