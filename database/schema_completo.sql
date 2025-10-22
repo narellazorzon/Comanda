@@ -125,7 +125,7 @@ CREATE TABLE propinas (
 CREATE TABLE llamados_mesa (
   id_llamado     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   id_mesa        INT UNSIGNED NOT NULL,
-  estado         ENUM('pendiente','en_atencion','completado') NOT NULL DEFAULT 'pendiente',
+  estado         ENUM('pendiente','atendido','completado') NOT NULL DEFAULT 'pendiente',
   hora_solicitud DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   hora_atencion  DATETIME NULL,
   atendido_por   INT UNSIGNED NULL,

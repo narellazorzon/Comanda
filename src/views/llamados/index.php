@@ -56,7 +56,7 @@ if ($user_rol === 'mozo') {
 <h2>🔔 Llamados de Mesa</h2>
 
 <!-- Panel de filtros -->
-<div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; border: 1px solid #dee2e6;">
+<div style="margin-bottom: 1.5rem;">
   <form method="GET" action="index.php" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
     <input type="hidden" name="route" value="llamados">
     <label for="estado-filtro" style="font-weight: 600; color: #495057; margin: 0;">Filtrar por estado:</label>
@@ -83,13 +83,10 @@ if ($user_rol === 'mozo') {
 </div>
 <?php endif; ?>
 
-<div class="info-banner" style="background: #d1ecf1; padding: 0.75rem; border-radius: 6px; margin-bottom: 1.5rem; color: #0c5460; font-size: 0.9rem; border-left: 4px solid #17a2b8;">
-  📞 Gestiona las solicitudes de atención de las mesas
-</div>
 
 <!-- Vista de escritorio -->
 <div class="table-responsive" style="overflow-x: auto; margin-bottom: 1rem;">
-  <table class="table" style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  <table class="table" style="width: 100%; border-collapse: collapse; background: #f0e6c7; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     <thead style="background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); color: white;">
       <tr>
         <th style="padding: 0.75rem; text-align: left; font-weight: 600; font-size: 0.9rem;">ID</th>
@@ -108,7 +105,7 @@ if ($user_rol === 'mozo') {
     <tbody>
       <?php if (empty($llamados)): ?>
         <tr>
-          <td colspan="<?= ($estado === 'atendido' || $estado === 'todos') ? '9' : '7' ?>" style="padding: 2rem; text-align: center; color: #6c757d; font-style: italic; background: #f8f9fa;">
+          <td colspan="<?= ($estado === 'atendido' || $estado === 'todos') ? '9' : '7' ?>" style="padding: 2rem; text-align: center; color: #6c757d; font-style: italic; background: #f0e6c7;">
             <?php if ($estado === 'pendiente'): ?>
               No hay llamados pendientes para tus mesas.
             <?php elseif ($estado === 'atendido'): ?>
@@ -120,7 +117,7 @@ if ($user_rol === 'mozo') {
         </tr>
       <?php else: ?>
         <?php foreach ($llamados as $llamado): ?>
-          <tr style="border-bottom: 1px solid #e9ecef; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='white'">
+          <tr style="border-bottom: 1px solid rgb(203, 193, 177); transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='#e8d5b7'" onmouseout="this.style.backgroundColor='#f0e6c7'">
             <td style="padding: 0.75rem; font-weight: 600; color: #8B4513;">#<?= htmlspecialchars($llamado['id_llamado']) ?></td>
             <td style="padding: 0.75rem;">
               <strong style="color: #8B4513; font-size: 1rem;">🪑 Mesa <?= htmlspecialchars($llamado['numero_mesa']) ?></strong>
@@ -186,12 +183,12 @@ if ($user_rol === 'mozo') {
 <!-- Vista móvil -->
 <div class="mobile-view" style="display: none;">
   <?php if (empty($llamados)): ?>
-    <div class="empty-state" style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 8px; color: #6c757d; font-style: italic;">
+    <div class="empty-state" style="text-align: center; padding: 2rem; background: #f0e6c7; border-radius: 8px; color: #6c757d; font-style: italic;">
       No hay llamados pendientes para tus mesas.
     </div>
   <?php else: ?>
     <?php foreach ($llamados as $llamado): ?>
-      <div class="llamado-card" style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; 
+      <div class="llamado-card" style="background: #f0e6c7; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; 
                                        box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid <?= $llamado['estado'] === 'atendido' ? '#28a745' : '#ffc107' ?>;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -273,6 +270,17 @@ if ($user_rol === 'mozo') {
 </div>
 
 <style>
+/* Control de ancho de columnas */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 8%; 
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 15%;
+}
+
 @media (max-width: 768px) {
   .table-responsive { display: none; }
   .mobile-view { display: block !important; }
