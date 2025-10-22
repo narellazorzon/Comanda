@@ -260,6 +260,12 @@ switch ($route) {
         include __DIR__ . '/../src/views/llamados/index.php';
         break;
 
+    case 'llamado_atender':
+        requireMozoOrAdmin();
+        require_once __DIR__ . '/../src/controllers/LlamadoController.php';
+        \App\Controllers\LlamadoController::atender();
+        break;
+
     // Ruta para llamar personal desde cliente
     case 'llamar-mozo':
         require_once __DIR__ . '/../src/controllers/MozoController.php';
