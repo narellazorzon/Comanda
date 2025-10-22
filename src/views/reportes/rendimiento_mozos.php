@@ -73,7 +73,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .apply-btn {
-    background: var(--primary);
+    background:var(--secondary);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -85,7 +85,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .apply-btn:hover {
-    background-color: #d97817;
+    background-color: #8b5e46;
     transform: translateY(-2px);
 }
 
@@ -485,9 +485,9 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
             <div class="card mb-4">
                 <div class="card-body">
                     <form method="GET" action="" class="row g-3">
-                        <input type="hidden" name="route" value="reportes/rendimiento-mozos">
+                        <input type="hidden" name="route" value="reportes/rendimiento-personal">
                         
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="desde" class="form-label">Desde</label>
                             <input type="text" class="form-control" id="desde" name="desde"
                                    value="<?= date('d/m/Y', strtotime($desde)) ?>"
@@ -497,7 +497,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                    value="<?= htmlspecialchars($desde) ?>">
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="hasta" class="form-label">Hasta</label>
                             <input type="text" class="form-control" id="hasta" name="hasta"
                                    value="<?= date('d/m/Y', strtotime($hasta)) ?>"
@@ -507,26 +507,11 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                    value="<?= htmlspecialchars($hasta) ?>">
                         </div>
                         
-                        <div class="col-md-3">
-                            <label for="agrupar" class="form-label">Agrupar por</label>
-                            <select class="form-select" id="agrupar" name="agrupar">
-                                <option value="ninguno" <?= $agrupar === 'ninguno' ? 'selected' : '' ?>>
-                                    Sin agrupar (Ranking)
-                                </option>
-                                <option value="dia" <?= $agrupar === 'dia' ? 'selected' : '' ?>>
-                                    Por día
-                                </option>
-                                <option value="mes" <?= $agrupar === 'mes' ? 'selected' : '' ?>>
-                                    Por mes
-                                </option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-4 d-flex align-items-end">
                             <button type="submit" class="apply-btn me-2">
                                 🔍 Filtrar
                             </button>
-                            <a href="?route=reportes/rendimiento-mozos" class="clear-btn">
+                            <a href="?route=reportes/rendimiento-personal" class="clear-btn">
                                 🔄 Limpiar
                             </a>
                         </div>
