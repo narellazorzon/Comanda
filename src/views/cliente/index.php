@@ -3494,6 +3494,9 @@ $iconosCategorias = [
             // Obtener información del mozo asignado a la mesa
             mozoInfoDiv.innerHTML = '<p>🔄 Buscando información del mozo...</p>';
 
+            console.log('Buscando mozo para mesa:', mesaNumero);
+            console.log('URL de petición:', '<?= $base_url ?>/index.php?route=pedidos/info');
+            
             fetch('<?= $base_url ?>/index.php?route=pedidos/info', {
                 method: 'POST',
                 headers: {
@@ -3501,18 +3504,30 @@ $iconosCategorias = [
                 },
                 body: JSON.stringify({
                     accion: 'obtener_mozo_mesa',
-                    numero_mesa: mesaNumero
+                    numero_mesa: parseInt(mesaNumero)
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Waiter info response:', data);
-                if (data.success && data.mozo) {
+                console.log('Data success:', data.success);
+                console.log('Data mozo:', data.mozo);
+                
+                if (data.success && data.mozo && data.mozo.nombre) {
+                    console.log('Mostrando nombre del mozo:', data.mozo.nombre, data.mozo.apellido);
                     mozoInfoDiv.innerHTML = `
-                        <p><strong>${data.mozo.nombre} ${data.mozo.apellido}</strong></p>
+                        <p><strong>👨‍🍳 ${data.mozo.nombre} ${data.mozo.apellido || ''}</strong></p>
                         <p>Mozo asignado a la Mesa ${mesaNumero}</p>
                     `;
                 } else {
+                    console.log('No se encontró mozo o datos incompletos');
                     mozoInfoDiv.innerHTML = `
                         <p>👨‍🍳 Mozo asignado a la Mesa ${mesaNumero}</p>
                         <p>Te atenderá en breve</p>

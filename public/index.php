@@ -212,7 +212,7 @@ switch ($route) {
         break;
 
     case 'pedidos/info':
-        requireMozoOrAdmin();
+        // Permitir acceso sin autenticación para obtener info del mozo desde cliente
         \App\Controllers\PedidoController::info();
         break;
 
