@@ -47,12 +47,6 @@ class MesaController
             session_start();
         }
 
-        // Verificar que el usuario esté logueado
-        if (empty($_SESSION['user']) || empty($_SESSION['user']['id_usuario'])) {
-            header('Location: ' . url('mesas', ['error' => '4']));
-            exit;
-        }
-
         $id = isset($_POST['id'])
             ? (int) $_POST['id']
             : (int) ($_GET['id'] ?? 0);
@@ -62,8 +56,7 @@ class MesaController
             exit;
         }
 
-        $id_mozo = (int) $_SESSION['user']['id_usuario'];
-        $resultado = Mesa::reactivate($id, $id_mozo);
+        $resultado = Mesa::reactivate($id);
         if ($resultado['success']) {
             header('Location: ' . url('mesas', ['success' => '2']));
         } else {
