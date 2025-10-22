@@ -254,7 +254,7 @@ $precio_max = !empty($precios) ? max($precios) : 0;
   overflow-x: auto;
   padding: 0 1rem;
   scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
+  scrollbar-color: rgba(144, 104, 76, 0.6) transparent;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
@@ -268,12 +268,12 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .categorias-nav::-webkit-scrollbar-thumb {
-  background: var(--color-secundario);
+  background: rgba(144, 104, 76, 0.6);
   border-radius: 3px;
 }
 
 .categorias-nav::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primario);
+  background: rgb(144, 104, 76);
 }
 
 .categoria-btn {
