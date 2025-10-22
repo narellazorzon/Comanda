@@ -2560,16 +2560,16 @@ $iconosCategorias = [
                             <div class="producto-footer">
                                 <?php 
                                 $precioOriginal = $item['precio'];
-                                $descuento = $item['descuento'] ?? 0;
-                                $precioConDescuento = $precioOriginal - $descuento;
-                                $tieneDescuento = $descuento > 0;
+                                $descuentoPorcentaje = $item['descuento'] ?? 0;
+                                $precioConDescuento = $precioOriginal - ($precioOriginal * $descuentoPorcentaje / 100);
+                                $tieneDescuento = $descuentoPorcentaje > 0;
                                 ?>
                                 
                                 <?php if ($tieneDescuento): ?>
                                     <div class="precio-container">
                                         <span class="precio-original">$<?= number_format($precioOriginal, 2) ?></span>
                                         <span class="precio-descuento">$<?= number_format($precioConDescuento, 2) ?></span>
-                                        <span class="descuento-badge">-<?= number_format(($descuento / $precioOriginal) * 100, 0) ?>%</span>
+                                        <span class="descuento-badge">-<?= number_format($descuentoPorcentaje, 0) ?>%</span>
                                     </div>
                                 <?php else: ?>
                                     <span class="producto-precio">$<?= number_format($precioOriginal, 2) ?></span>
