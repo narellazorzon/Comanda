@@ -2824,9 +2824,14 @@ $iconosCategorias = [
         document.getElementById('numero-mesa').value = mesaFromQR;
         
         // Establecer modo de consumo como 'stay' (en el local)
-        const modoConsumo = document.getElementById('modo_consumo');
-        if (modoConsumo) {
-            modoConsumo.value = 'stay';
+        // Buscar tanto el select como el input hidden
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumoSelect.value = 'stay';
+        } else if (modoConsumoHidden) {
+            modoConsumoHidden.value = 'stay';
         }
     }
 
@@ -2863,9 +2868,14 @@ $iconosCategorias = [
         }
         
         // Establecer modo de consumo como takeaway
-        const modoConsumo = document.getElementById('modo_consumo');
-        if (modoConsumo) {
-            modoConsumo.value = 'takeaway';
+        // Buscar tanto el select como el input hidden
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumoSelect.value = 'takeaway';
+        } else if (modoConsumoHidden) {
+            modoConsumoHidden.value = 'takeaway';
         }
         
         // Ocultar botón de llamar mozo (no aplica para takeaway)
