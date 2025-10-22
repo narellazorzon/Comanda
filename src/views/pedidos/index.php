@@ -740,10 +740,10 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- Modal de información del pedido -->
 <div id="modalInfoPedido" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-  <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+  <div style="background:rgb(239, 235, 224); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid #eee; padding-bottom: 1rem;">
       <h3 style="margin: 0; color: var(--secondary); font-size: 1.5rem;">📋 Información del Pedido</h3>
-      <button id="cerrarInfoPedido" style="background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem;">
+      <button id="cerrarInfoPedido" style="background:rgb(83, 68, 47); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem;">
         ✕
       </button>
     </div>
