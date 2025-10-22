@@ -17,6 +17,54 @@ class ClienteController {
      * Muestra la vista principal del cliente (menú)
      */
     public static function index() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $id_mesa = null;
+        $modo_consumo = null;
+
+        // Caso 1: QR de mesa física
+        if (!empty($_GET['qr']) || !empty($_GET['mesa'])) {
+            $valorMesa = (int) ($_GET['qr'] ?? $_GET['mesa']);
+
+            // Intentar buscar por ID
+            $mesa = \App\Models\Mesa::find($valorMesa);
+
+            // Intentar buscar por número si no se encuentra
+            if (!$mesa && method_exists('\App\Models\Mesa', 'findByNumero')) {
+                $mesa = \App\Models\Mesa::findByNumero($valorMesa);
+            }
+
+            // Validar tipo de retorno y asignar correctamente
+            if ($mesa) {
+                if (is_array($mesa)) {
+                    $id_mesa = $mesa['id_mesa'] ?? null;
+                } elseif (is_object($mesa)) {
+                    $id_mesa = $mesa->id_mesa ?? null;
+                }
+
+                if ($id_mesa !== null) {
+                    $modo_consumo = 'stay';
+                    error_log("[QR DETECTADO] Mesa ID: {$id_mesa}, modo_consumo=stay");
+                } else {
+                    error_log("[QR ERROR] Mesa detectada pero sin id válido (valor={$valorMesa})");
+                }
+            } else {
+                error_log("[QR ERROR] Mesa no encontrada (valor={$valorMesa})");
+            }
+        }
+        // Caso 2: QR de Take Away
+        elseif (!empty($_GET['takeaway'])) {
+            $id_mesa = 0;
+            $modo_consumo = 'takeaway';
+            error_log("[TAKEAWAY DETECTADO] modo_consumo=takeaway");
+        }
+
+        // Guardar contexto
+        $_SESSION['mesa_qr'] = $id_mesa;
+        $_SESSION['modo_consumo_qr'] = $modo_consumo;
+
         include __DIR__ . '/../views/cliente/index.php';
     }
     
@@ -242,8 +290,9 @@ class ClienteController {
                 throw new Exception('Datos inválidos');
             }
             
-            $modoConsumo = $data['modo_consumo'] ?? 'stay';
-            $idMesa = $data['id_mesa'] ?? null;
+            // Priorizar el contexto de QR si existe
+            $modoConsumo = $_SESSION['modo_consumo_qr'] ?? ($data['modo_consumo'] ?? 'stay');
+            $idMesa = $_SESSION['mesa_qr'] ?? ($data['id_mesa'] ?? null);
             $nombreCliente = $data['cliente_nombre'] ?? '';
             $emailCliente = $data['cliente_email'] ?? '';
             $formaPago = $data['forma_pago'] ?? '';

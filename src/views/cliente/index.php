@@ -2651,14 +2651,35 @@ $iconosCategorias = [
             
             <!-- Formulario de pedido -->
             <form id="checkout-form" class="checkout-form">
-                <div class="form-group">
-                    <label>Modalidad de consumo:</label>
-                    <select id="modo-consumo" name="modo_consumo" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="stay">🪑 Consumir en el local</option>
-                        <option value="takeaway">📦 Para llevar</option>
+                <?php
+                $modo_qr    = $_SESSION['modo_consumo_qr'] ?? null;
+                $id_mesa_qr = $_SESSION['mesa_qr'] ?? null;
+                ?>
+
+                <?php if ($modo_qr !== null): ?>
+                  <!-- QR detectado: no mostrar selector -->
+                  <input type="hidden" name="modo_consumo" value="<?= htmlspecialchars($modo_qr) ?>">
+                  <?php if ($modo_qr === 'stay' && $id_mesa_qr): ?>
+                    <input type="hidden" name="id_mesa" value="<?= (int)$id_mesa_qr ?>">
+                    <div class="alert alert-success" style="background:#f4f9f4;border:1px solid #7ec77b;color:#2e662b;padding:6px 10px;border-radius:6px;margin-bottom:10px;">
+                      ✅ Pedido en <strong>mesa #<?= (int)$id_mesa_qr ?></strong> (desde QR)
+                    </div>
+                  <?php elseif ($modo_qr === 'takeaway'): ?>
+                    <div class="alert alert-info" style="background:#f0f7ff;border:1px solid #72b5f2;color:#1d5c9c;padding:6px 10px;border-radius:6px;margin-bottom:10px;">
+                      🛍️ Pedido para llevar
+                    </div>
+                  <?php endif; ?>
+                <?php else: ?>
+                  <!-- Solo se muestra cuando NO viene desde QR (por ejemplo el admin o menú sin QR) -->
+                  <div class="form-group">
+                    <label for="modo_consumo">Modo de consumo:</label>
+                    <select name="modo_consumo" id="modo_consumo" required>
+                      <option value="">Seleccionar...</option>
+                      <option value="stay">En el local</option>
+                      <option value="takeaway">Para llevar</option>
                     </select>
-                </div>
+                  </div>
+                <?php endif; ?>
                 
                 <div id="mesa-field-container">
                     <!-- Campo mesa desde QR (visible cuando viene por QR) -->
@@ -2801,6 +2822,12 @@ $iconosCategorias = [
         qrText.textContent = `✅ Mesa ${mesaFromQR} (desde QR)`;
         
         document.getElementById('numero-mesa').value = mesaFromQR;
+        
+        // Establecer modo de consumo como 'stay' (en el local)
+        const modoConsumo = document.getElementById('modo_consumo');
+        if (modoConsumo) {
+            modoConsumo.value = 'stay';
+        }
     }
 
     // Configurar modo manual
@@ -3088,7 +3115,17 @@ $iconosCategorias = [
 
     // Validación del formulario para modo QR
     function validateFormQR() {
-        const modoConsumo = document.getElementById('modo-consumo').value;
+        // Obtener modo de consumo (puede ser del selector visible o del campo oculto)
+        let modoConsumo = '';
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumo = modoConsumoSelect.value;
+        } else if (modoConsumoHidden) {
+            modoConsumo = modoConsumoHidden.value;
+        }
+        
         const nombreCompleto = document.getElementById('nombre-completo').value.trim();
         const email = document.getElementById('email').value.trim();
         
@@ -3252,8 +3289,10 @@ $iconosCategorias = [
             });
         }
         
-        // Lógica de campos de mesa
-        document.getElementById('modo-consumo').addEventListener('change', function() {
+        // Lógica de campos de mesa (solo si existe el selector)
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        if (modoConsumoSelect) {
+            modoConsumoSelect.addEventListener('change', function() {
             if (this.value === 'stay') {
                 if (!isQRMode) {
                     document.getElementById('mesa-manual-field').style.display = 'block';
@@ -3266,10 +3305,11 @@ $iconosCategorias = [
                 document.getElementById('numero-mesa').value = '';
             }
             validateFormQR();
-        });
+            });
+        }
         
         // Validación en tiempo real
-        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email'];
+        const formFields = ['numero-mesa', 'nombre-completo', 'email'];
         formFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
@@ -3277,6 +3317,12 @@ $iconosCategorias = [
                 field.addEventListener('change', validateFormQR);
             }
         });
+        
+        // Agregar validación para el selector de modo de consumo si existe
+        if (modoConsumoSelect) {
+            modoConsumoSelect.addEventListener('input', validateFormQR);
+            modoConsumoSelect.addEventListener('change', validateFormQR);
+        }
         
         // Envío del formulario
         document.getElementById('checkout-form').addEventListener('submit', async function(e) {
@@ -3288,7 +3334,17 @@ $iconosCategorias = [
             }
             
             let mesaFinal = null;
-            const modoConsumo = document.getElementById('modo-consumo').value;
+            
+            // Obtener modo de consumo (puede ser del selector visible o del campo oculto)
+            let modoConsumo = '';
+            const modoConsumoSelect = document.getElementById('modo_consumo');
+            const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+            
+            if (modoConsumoSelect) {
+                modoConsumo = modoConsumoSelect.value;
+            } else if (modoConsumoHidden) {
+                modoConsumo = modoConsumoHidden.value;
+            }
             
             if (modoConsumo === 'stay') {
                 if (isQRMode && mesaFromQR) {
