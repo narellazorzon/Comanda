@@ -136,9 +136,9 @@ require_once __DIR__ . '/../includes/header.php';
 }
 
 .management-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
+  margin: 0 !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
   color: white !important;
   flex: 1;
   min-width: 200px;
@@ -191,6 +191,8 @@ require_once __DIR__ . '/../includes/header.php';
   }
   
   .management-header h1 {
+    font-size: 0.9rem !important;
+    text-align: center;
     margin-bottom: 0.5rem;
     min-width: auto;
   }
@@ -203,6 +205,38 @@ require_once __DIR__ . '/../includes/header.php';
     flex: 1;
     text-align: center;
     min-width: 120px;
+  }
+}
+
+@media (max-width: 992px) {
+  .management-header {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .management-header h1 {
+    font-size: 1.1rem !important;
+  }
+  
+  .header-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .management-header {
+    padding: 6px;
+    margin-bottom: 6px;
+  }
+  
+  .management-header h1 {
+    font-size: 0.8rem !important;
+  }
+  
+  .header-btn {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
   }
 }
 

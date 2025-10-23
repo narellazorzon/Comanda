@@ -42,6 +42,7 @@ $estado = $_GET['estado'] ?? 'pendiente';
 // Si es un mozo, solo mostrar sus llamados; si es admin, mostrar todos
 $user_id = $_SESSION['user']['id_usuario'];
 $user_rol = $_SESSION['user']['rol'];
+$rol = $user_rol;
 
 if ($user_rol === 'mozo') {
   // Los mozos pueden ver y filtrar solo sus propios llamados
@@ -53,7 +54,139 @@ if ($user_rol === 'mozo') {
 
 ?>
 
-<h2>🔔 Llamados de Mesa</h2>
+<style>
+/* Estilos para el header de gestión */
+.management-header {
+  background: linear-gradient(135deg, rgb(144, 104, 76), rgb(92, 64, 51));
+  color: white !important;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.management-header * {
+  color: white !important;
+}
+
+.management-header h1 {
+  margin: 0 !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
+  color: white !important;
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.header-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  color: white !important;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.header-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive para móvil */
+@media (max-width: 992px) {
+  .management-header {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .management-header h1 {
+    font-size: 1.1rem !important;
+  }
+  
+  .header-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .management-header {
+    padding: 8px;
+    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .management-header h1 {
+    font-size: 0.9rem !important;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-actions {
+    justify-content: center;
+  }
+  
+  .header-btn {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .management-header {
+    padding: 6px;
+    margin-bottom: 6px;
+  }
+  
+  .management-header h1 {
+    font-size: 0.8rem !important;
+  }
+  
+  .header-btn {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+</style>
+
+<!-- Header de gestión -->
+<div class="management-header">
+  <h1><?= $rol === 'administrador' ? '🔔 Llamados de Mesas' : 'Llamados de Mesas' ?></h1>
+  <div class="header-actions">
+    <!-- Aquí se pueden agregar botones de acción si es necesario -->
+  </div>
+</div>
 
 <!-- Panel de filtros -->
 <div style="margin-bottom: 1.5rem;">

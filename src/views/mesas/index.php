@@ -1487,9 +1487,9 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 .management-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
+  margin: 0 !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
   color: white !important;
   flex: 1;
   min-width: 200px;
@@ -1541,7 +1541,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 1.1rem;
+    font-size: 1.1rem !important;
   }
   
   .header-btn {
@@ -1560,7 +1560,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 0.9rem;
+    font-size: 0.9rem !important;
     text-align: center;
     margin-bottom: 0.5rem;
   }
@@ -1592,7 +1592,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 0.8rem;
+    font-size: 0.8rem !important;
   }
   
   .header-btn {
