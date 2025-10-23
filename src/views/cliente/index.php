@@ -26,7 +26,7 @@ foreach ($items as $item) {
 }
 
 // Orden preferido de categorías
-$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Ensaladas', 'Postres', 'Bebidas'];
+$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Acompañamientos', 'Ensaladas', 'Postres', 'Bebidas'];
 $categoriasOrdenadas = [];
 
 // Primero agregar las categorías en el orden preferido
@@ -50,7 +50,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 
 // Iconos para cada categoría
 $iconosCategorias = [
-    'Entradas' ,
+    'Entradas' => '🥗',
     'Platos Principales' => '🍽️',
     'Carnes' => '🥩',
     'Aves' => '🍗',
@@ -58,6 +58,7 @@ $iconosCategorias = [
     'Pastas' => '🍝',
     'Pizzas' => '🍕',
     'Hamburguesas' => '🍔',
+    'Acompañamientos' => '🍟',
     'Ensaladas' => '🥗',
     'Postres' => '🍰',
     'Bebidas' => '🥤',

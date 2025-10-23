@@ -1103,6 +1103,8 @@ $precio_max = !empty($precios) ? max($precios) : 0;
     'Carnes',
     'Pastas',
     'Pizzas',
+    'Hamburguesas',
+    'Acompañamientos',
     'Ensaladas',
     'Postres',
     'Bebidas'
@@ -1117,6 +1119,8 @@ $precio_max = !empty($precios) ? max($precios) : 0;
     'carnes' => 'Carnes',
     'pastas' => 'Pastas',
     'pizzas' => 'Pizzas',
+    'hamburguesas' => 'Hamburguesas',
+    'acompañamientos' => 'Acompañamientos',
     'ensaladas' => 'Ensaladas',
     'postres' => 'Postres',
     'bebidas' => 'Bebidas'
