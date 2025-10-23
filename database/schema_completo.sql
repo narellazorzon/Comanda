@@ -62,7 +62,9 @@ CREATE TABLE carta (
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------
--- 5. Tabla pedidos
+-- 5. Tabla pedidos (CON BORRADO LÓGICO)
+-- NOTA: Se implementa borrado lógico usando deleted_at
+-- para mantener integridad referencial y permitir auditoría
 -- -------------------------------------------------
 CREATE TABLE pedidos (
   id_pedido    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -76,6 +78,7 @@ CREATE TABLE pedidos (
   observaciones TEXT NULL,
   cliente_nombre VARCHAR(100) NULL,
   cliente_email  VARCHAR(100) NULL,
+  deleted_at   TIMESTAMP NULL DEFAULT NULL,
   FOREIGN KEY (id_mesa)
     REFERENCES mesas(id_mesa)
       ON UPDATE CASCADE ON DELETE SET NULL,
@@ -144,6 +147,8 @@ CREATE INDEX idx_pedidos_estado ON pedidos(estado);
 CREATE INDEX idx_pedidos_fecha ON pedidos(fecha_hora);
 CREATE INDEX idx_pedidos_mesa ON pedidos(id_mesa);
 CREATE INDEX idx_pedidos_mozo ON pedidos(id_mozo);
+CREATE INDEX idx_pedidos_deleted_at ON pedidos(deleted_at);
+CREATE INDEX idx_pedidos_activos ON pedidos(deleted_at, estado, fecha_hora);
 CREATE INDEX idx_detalle_pedido_pedido ON detalle_pedido(id_pedido);
 CREATE INDEX idx_propinas_fecha ON propinas(fecha_hora);
 CREATE INDEX idx_mesas_estado ON mesas(estado);

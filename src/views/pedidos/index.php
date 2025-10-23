@@ -182,6 +182,18 @@ require_once __DIR__ . '/../includes/header.php';
   background: rgba(255, 255, 255, 0.2);
 }
 
+
+
+
+
+.btn-group .btn {
+  margin-right: 2px;
+}
+
+.btn-group .btn:last-child {
+  margin-right: 0;
+}
+
 /* Responsive para el header */
 @media (max-width: 768px) {
   .management-header {
@@ -294,6 +306,7 @@ require_once __DIR__ . '/../includes/header.php';
   animation: fadeInScale 0.8s ease-out;
 }
 
+
 /* Animación para las filas de pedidos */
 .pedido-row {
   animation: slideInUp 0.5s ease-out;
@@ -384,6 +397,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="notification-container"></div>
 
 
+
 <!-- Filtros de búsqueda -->
 <div class="filters-container">
   <!-- Botón para mostrar/ocultar filtros -->
@@ -471,8 +485,9 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
-<div class="pedidos-container">
-<div class="table-responsive">
+<!-- Vista de tabla para pedidos activos -->
+<?php if ($rol === 'administrador'): ?>
+<div class="table-responsive" id="pedidos-activos">
 <table class="table">
   <thead>
     <tr>
@@ -611,6 +626,8 @@ require_once __DIR__ . '/../includes/header.php';
   </tbody>
 </table>
 </div>
+<?php endif; ?>
+
 
 <!-- Vista móvil con tarjetas -->
 <div class="mobile-cards">
@@ -755,6 +772,7 @@ require_once __DIR__ . '/../includes/header.php';
   <?php endif; ?>
 </div>
 
+
 <!-- Modal de confirmación para cambio de estado -->
 <div id="modalCambioEstado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
   <div style="background: rgb(247, 241, 225); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 400px; width: 90%; text-align: center;">
@@ -791,6 +809,7 @@ require_once __DIR__ . '/../includes/header.php';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Solo tabla visible - sin tarjetas móviles por ahora
+    
     
     // Elementos del DOM
     const searchId = document.getElementById('searchId');

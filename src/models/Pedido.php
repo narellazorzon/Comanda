@@ -8,6 +8,7 @@ use PDO;
 class Pedido {
     /**
      * Devuelve todos los pedidos con información de mesa y mozo, ordenados por fecha desc.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function all(): array {
         $db = (new Database)->getConnection();
@@ -22,12 +23,14 @@ class Pedido {
             FROM pedidos p
             LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
             LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            WHERE p.deleted_at IS NULL
             ORDER BY p.fecha_hora DESC
         ")->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Devuelve todos los pedidos del día actual con información de mesa y mozo.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function todayOnly(): array {
         $db = (new Database)->getConnection();
@@ -43,12 +46,14 @@ class Pedido {
             LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
             LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
             WHERE DATE(p.fecha_hora) = CURDATE()
+            AND p.deleted_at IS NULL
             ORDER BY p.fecha_hora DESC
         ")->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Devuelve todos los pedidos asignados a un mozo.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function allByMozo(int $mozoId): array {
         $db = (new Database)->getConnection();
@@ -56,6 +61,7 @@ class Pedido {
             SELECT *
             FROM pedidos
             WHERE id_mozo = ?
+            AND deleted_at IS NULL
             ORDER BY fecha_hora DESC
         ");
         $stmt->execute([$mozoId]);
@@ -64,6 +70,7 @@ class Pedido {
 
     /**
      * Devuelve los pedidos del día actual para las mesas asignadas a un mozo.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function todayByMesoAssigned(int $mozoId): array {
         $db = (new Database)->getConnection();
@@ -80,6 +87,7 @@ class Pedido {
             LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
             WHERE DATE(p.fecha_hora) = CURDATE()
             AND m.id_mozo = ?
+            AND p.deleted_at IS NULL
             ORDER BY p.fecha_hora DESC
         ");
         $stmt->execute([$mozoId]);
@@ -88,6 +96,7 @@ class Pedido {
 
     /**
      * Devuelve todos los pedidos de una mesa (cliente).
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function allByMesa(int $mesaId): array {
         $db = (new Database)->getConnection();
@@ -95,6 +104,7 @@ class Pedido {
             SELECT * 
             FROM pedidos 
             WHERE id_mesa = ? 
+            AND deleted_at IS NULL
             ORDER BY fecha_hora DESC
         ");
         $stmt->execute([$mesaId]);
@@ -205,7 +215,8 @@ class Pedido {
     }
 
     /**
-     * Elimina un pedido por su ID y libera la mesa si no tiene más pedidos activos.
+     * Elimina lógicamente un pedido por su ID y libera la mesa si no tiene más pedidos activos.
+     * Implementa borrado lógico marcando deleted_at con timestamp actual.
      */
     public static function delete(int $id): bool {
         $db = (new Database)->getConnection();
@@ -214,7 +225,7 @@ class Pedido {
             $db->beginTransaction();
             
             // 1. Obtener información del pedido antes de eliminarlo
-            $stmtPedido = $db->prepare("SELECT id_mesa, modo_consumo FROM pedidos WHERE id_pedido = ?");
+            $stmtPedido = $db->prepare("SELECT id_mesa, modo_consumo FROM pedidos WHERE id_pedido = ? AND deleted_at IS NULL");
             $stmtPedido->execute([$id]);
             $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
             
@@ -223,8 +234,8 @@ class Pedido {
                 return false;
             }
             
-            // 2. Eliminar el pedido
-            $stmt = $db->prepare("DELETE FROM pedidos WHERE id_pedido = ?");
+            // 2. Marcar como eliminado lógicamente
+            $stmt = $db->prepare("UPDATE pedidos SET deleted_at = NOW() WHERE id_pedido = ?");
             $resultado = $stmt->execute([$id]);
             
             if (!$resultado) {
@@ -234,13 +245,14 @@ class Pedido {
             
             // 3. Verificar si la mesa tiene más pedidos activos antes de liberarla
             if ($pedido['id_mesa'] && $pedido['modo_consumo'] === 'stay') {
-                // Contar pedidos activos restantes en la mesa
+                // Contar pedidos activos restantes en la mesa (no eliminados)
                 $stmtCount = $db->prepare("
                     SELECT COUNT(*) 
                     FROM pedidos 
                     WHERE id_mesa = ? 
                     AND estado NOT IN ('cerrado', 'cancelado')
                     AND modo_consumo = 'stay'
+                    AND deleted_at IS NULL
                 ");
                 $stmtCount->execute([$pedido['id_mesa']]);
                 $pedidosRestantes = $stmtCount->fetchColumn();
@@ -285,6 +297,7 @@ class Pedido {
 
     /**
      * Obtiene un pedido por su ID con información completa.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function find(int $id): ?array {
         $db = (new Database)->getConnection();
@@ -300,6 +313,7 @@ class Pedido {
             LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
             LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
             WHERE p.id_pedido = ?
+            AND p.deleted_at IS NULL
         ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -326,6 +340,7 @@ class Pedido {
         $stmt->execute([$id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
 
     /**
      * Actualiza un pedido existente con nuevos datos.
