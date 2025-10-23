@@ -861,7 +861,9 @@ function formatDate(dateStr) {
 }
 
 // Validar y convertir fechas al enviar el formulario
-document.querySelector('form').addEventListener('submit', function(e) {
+const form = document.querySelector('form');
+if (form) {
+    form.addEventListener('submit', function(e) {
     const desdeInput = document.getElementById('desde');
     const hastaInput = document.getElementById('hasta');
     const desdeHidden = document.getElementById('desde_hidden');
@@ -888,20 +890,27 @@ document.querySelector('form').addEventListener('submit', function(e) {
     desdeHidden.value = convertDate(desdeInput.value);
     hastaHidden.value = convertDate(hastaInput.value);
 });
+}
 
 // Formatear fecha al salir del campo
-document.getElementById('desde').addEventListener('blur', function() {
-    const value = this.value;
-    if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
-        // Auto-formatear si el usuario ingresa ddmmyyyy
-        const clean = value.replace(/\D/g, '');
-        if (clean.length === 8) {
-            this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
-        }
-    }
-});
+const desdeInput = document.getElementById('desde');
+const hastaInput = document.getElementById('hasta');
 
-document.getElementById('hasta').addEventListener('blur', function() {
+if (desdeInput) {
+    desdeInput.addEventListener('blur', function() {
+        const value = this.value;
+        if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
+            // Auto-formatear si el usuario ingresa ddmmyyyy
+            const clean = value.replace(/\D/g, '');
+            if (clean.length === 8) {
+                this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
+            }
+        }
+    });
+}
+
+if (hastaInput) {
+    hastaInput.addEventListener('blur', function() {
     const value = this.value;
     if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
         // Auto-formatear si el usuario ingresa ddmmyyyy
@@ -911,6 +920,7 @@ document.getElementById('hasta').addEventListener('blur', function() {
         }
     }
 });
+}
 
 // Configuración en español para Flatpickr
 const spanishLocale = {

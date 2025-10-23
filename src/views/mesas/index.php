@@ -597,21 +597,23 @@ function initFilters() {
     });
     
     // Event listeners para los botones de estado
-    statusButtons.forEach((button) => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remover clase active de todos los botones
-            statusButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Agregar clase active al botón clickeado
-            this.classList.add('active');
-            
-            // Actualizar filtro de estado
-            currentStatusFilter = this.dataset.status;
-            filterMesas();
+    if (statusButtons && statusButtons.length > 0) {
+        statusButtons.forEach((button) => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remover clase active de todos los botones
+                statusButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Agregar clase active al botón clickeado
+                this.classList.add('active');
+                
+                // Actualizar filtro de estado
+                currentStatusFilter = this.dataset.status;
+                filterMesas();
+            });
         });
-    });
+    }
     
     // Ejecutar filtro inicial
     filterMesas();
@@ -903,6 +905,17 @@ function confirmarReactivacionMesa(id, numero) {
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     initFilters();
+    
+    // Agregar eventos a los filtros
+    const filtroNumero = document.getElementById('filtro-numero');
+    const filtroEstado = document.getElementById('filtro-estado');
+    const filtroUbicacion = document.getElementById('filtro-ubicacion');
+    const filtroMozo = document.getElementById('filtro-mozo');
+
+    if (filtroNumero) filtroNumero.addEventListener('input', aplicarFiltrosMesas);
+    if (filtroEstado) filtroEstado.addEventListener('change', aplicarFiltrosMesas);
+    if (filtroUbicacion) filtroUbicacion.addEventListener('change', aplicarFiltrosMesas);
+    if (filtroMozo) filtroMozo.addEventListener('change', aplicarFiltrosMesas);
 });
 
 // === FUNCIONALIDAD DE FILTROS ===
@@ -1000,11 +1013,6 @@ function limpiarFiltrosMesas() {
     }
 }
 
-// Agregar eventos a los filtros
-document.getElementById('filtro-numero').addEventListener('input', aplicarFiltrosMesas);
-document.getElementById('filtro-estado').addEventListener('change', aplicarFiltrosMesas);
-document.getElementById('filtro-ubicacion').addEventListener('change', aplicarFiltrosMesas);
-document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltrosMesas);
 </script>
 
 <style>
@@ -1836,6 +1844,4 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 
 </style>
 
-<!-- Incluir CSS y JS del modal de confirmación -->
-<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
-<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
+<!-- Modal de confirmación ya incluido en header.php -->

@@ -181,7 +181,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   margin-bottom: 10px;
 }
 
-.form-group label {
+.form-group label,
+.form-label {
   display: block;
   margin-bottom: 8px;
   font-family: "Segoe UI", Tahoma, sans-serif;
@@ -1106,7 +1107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       
       <!-- Modo de Consumo -->
       <div class="form-group">
-        <label>Modo de Consumo *</label>
+        <div class="form-label">Modo de Consumo *</div>
         <div class="modo-consumo-container">
           <div class="modo-consumo-btn <?= (isset($_POST['modo_consumo']) && $_POST['modo_consumo'] === 'stay') || (!isset($_POST['modo_consumo']) && (!$pedido || $pedido['modo_consumo'] === 'stay')) ? 'selected' : '' ?>" 
                onclick="selectModoConsumo('stay')">
@@ -1126,9 +1127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <!-- Campo Mesa (solo para modo stay) -->
       <div class="form-group" id="mesa-group">
-        <label for="mesa-select">Mesa *</label>
+        <div class="form-label">Mesa *</div>
         <div class="custom-select" id="mesa-select" role="combobox" aria-expanded="false" aria-haspopup="listbox">
-          <div class="custom-select-trigger" tabindex="0" role="button" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="mesa-select">
+          <div class="custom-select-trigger" id="mesa-select-trigger" tabindex="0" role="button" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="mesa-select">
             <span id="mesa-selected-text">Seleccionar mesa</span>
             <span class="custom-select-arrow">▼</span>
           </div>
@@ -1217,7 +1218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <div class="item-controls">
                 <div class="quantity-controls">
                   <button type="button" class="quantity-btn" onclick="changeQuantity(<?= $index ?>, -1)">-</button>
-                  <input type="number" class="quantity-input" value="<?= $detalle['cantidad'] ?>" min="1" max="99" 
+                  <input type="number" id="cantidad_<?= $index ?>" class="quantity-input" value="<?= $detalle['cantidad'] ?>" min="1" max="99" 
                          onchange="updateQuantity(<?= $index ?>, this.value)">
                   <button type="button" class="quantity-btn" onclick="changeQuantity(<?= $index ?>, 1)">+</button>
                 </div>
@@ -1226,10 +1227,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   🗑️ Eliminar
                 </button>
               </div>
-              <input type="hidden" name="items[<?= $index ?>][id_item]" value="<?= $detalle['id_item'] ?>">
-              <input type="hidden" name="items[<?= $index ?>][cantidad]" value="<?= $detalle['cantidad'] ?>">
-              <input type="hidden" name="items[<?= $index ?>][precio_unitario]" value="<?= $detalle['precio_unitario'] ?>">
-              <input type="hidden" name="items[<?= $index ?>][detalle]" value="<?= htmlspecialchars($detalle['detalle']) ?>">
+              <input type="hidden" id="hidden_id_item_<?= $index ?>" name="items[<?= $index ?>][id_item]" value="<?= $detalle['id_item'] ?>">
+              <input type="hidden" id="hidden_cantidad_<?= $index ?>" name="items[<?= $index ?>][cantidad]" value="<?= $detalle['cantidad'] ?>">
+              <input type="hidden" id="hidden_precio_<?= $index ?>" name="items[<?= $index ?>][precio_unitario]" value="<?= $detalle['precio_unitario'] ?>">
+              <input type="hidden" id="hidden_detalle_<?= $index ?>" name="items[<?= $index ?>][detalle]" value="<?= htmlspecialchars($detalle['detalle']) ?>">
             </div>
           <?php endforeach; ?>
         <?php endif; ?>
@@ -1428,7 +1429,7 @@ function addItem() {
       <button onclick="this.closest('.modal').remove()" style="background: linear-gradient(135deg, #90684C, #5C4033); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(144, 104, 76, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 15px rgba(144, 104, 76, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(144, 104, 76, 0.3)'">×</button>
     </div>
     <div style="margin-bottom: 25px;">
-      <label style="display: block; margin-bottom: 8px; font-family: 'Segoe UI', Tahoma, sans-serif; font-weight: 600; color: #34495e; font-size: 0.95rem; letter-spacing: 0.3px;">🔍 Buscar Item</label>
+      <div style="display: block; margin-bottom: 8px; font-family: 'Segoe UI', Tahoma, sans-serif; font-weight: 600; color: #34495e; font-size: 0.95rem; letter-spacing: 0.3px;">🔍 Buscar Item</div>
       <input type="text" id="item-search" placeholder="Ingrese el nombre del item a buscar..." style="width: 100%; padding: 12px 16px; border: 1px solid transparent; border-radius: 8px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.95rem; box-sizing: border-box; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(144, 104, 76, 0.15), 0 0 0 1px rgba(144, 104, 76, 0.1);" onfocus="this.style.boxShadow='0 6px 20px rgba(144, 104, 76, 0.25), 0 0 0 2px rgba(144, 104, 76, 0.2)'; this.style.transform='translateY(-1px)'" onblur="this.style.boxShadow='0 4px 12px rgba(144, 104, 76, 0.15), 0 0 0 1px rgba(144, 104, 76, 0.1)'; this.style.transform='translateY(0)'">
     </div>
     <div id="items-list" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #90684C #f3e2b8;">
@@ -1585,7 +1586,7 @@ function createItemCard(item) {
     <div class="item-controls">
       <div class="quantity-controls">
         <button type="button" class="quantity-btn" onclick="changeQuantity(${item.index}, -1)">-</button>
-        <input type="number" class="quantity-input" value="${item.cantidad}" min="1" max="99" 
+        <input type="number" id="cantidad_${item.index}" class="quantity-input" value="${item.cantidad}" min="1" max="99" 
                onchange="updateQuantity(${item.index}, this.value)">
         <button type="button" class="quantity-btn" onclick="changeQuantity(${item.index}, 1)">+</button>
       </div>
@@ -1594,10 +1595,10 @@ function createItemCard(item) {
         🗑️ Eliminar
       </button>
     </div>
-    <input type="hidden" name="items[${item.index}][id_item]" value="${item.id}">
-    <input type="hidden" name="items[${item.index}][cantidad]" value="${item.cantidad}">
-    <input type="hidden" name="items[${item.index}][precio_unitario]" value="${item.precio}">
-    <input type="hidden" name="items[${item.index}][detalle]" value="${item.detalle || ''}">
+    <input type="hidden" id="hidden_id_item_${item.index}" name="items[${item.index}][id_item]" value="${item.id}">
+    <input type="hidden" id="hidden_cantidad_${item.index}" name="items[${item.index}][cantidad]" value="${item.cantidad}">
+    <input type="hidden" id="hidden_precio_${item.index}" name="items[${item.index}][precio_unitario]" value="${item.precio}">
+    <input type="hidden" id="hidden_detalle_${item.index}" name="items[${item.index}][detalle]" value="${item.detalle || ''}">
   `;
   
   container.appendChild(card);

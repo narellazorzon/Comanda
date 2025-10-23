@@ -390,10 +390,15 @@ function limpiarFiltrosMozos() {
 
 // Agregar eventos a los filtros
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('filtro-nombre').addEventListener('input', aplicarFiltrosMozos);
-    document.getElementById('filtro-estado').addEventListener('change', aplicarFiltrosMozos);
-    document.getElementById('filtro-email').addEventListener('input', aplicarFiltrosMozos);
-    document.getElementById('filtro-mesas').addEventListener('change', aplicarFiltrosMozos);
+    const filtroNombre = document.getElementById('filtro-nombre');
+    const filtroEstado = document.getElementById('filtro-estado');
+    const filtroEmail = document.getElementById('filtro-email');
+    const filtroMesas = document.getElementById('filtro-mesas');
+    
+    if (filtroNombre) filtroNombre.addEventListener('input', aplicarFiltrosMozos);
+    if (filtroEstado) filtroEstado.addEventListener('change', aplicarFiltrosMozos);
+    if (filtroEmail) filtroEmail.addEventListener('input', aplicarFiltrosMozos);
+    if (filtroMesas) filtroMesas.addEventListener('change', aplicarFiltrosMozos);
 });
 </script>
 
@@ -456,20 +461,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Event listeners para búsqueda por nombre
-    searchNombre.addEventListener('input', function() {
-        currentNombreSearch = this.value.toLowerCase();
-        filterMozos();
-    });
+    if (searchNombre) {
+        searchNombre.addEventListener('input', function() {
+            currentNombreSearch = this.value.toLowerCase();
+            filterMozos();
+        });
+    }
     
-    clearNombreSearch.addEventListener('click', function() {
-        searchNombre.value = '';
-        currentNombreSearch = '';
-        filterMozos();
-    });
+    if (clearNombreSearch) {
+        clearNombreSearch.addEventListener('click', function() {
+            if (searchNombre) {
+                searchNombre.value = '';
+                currentNombreSearch = '';
+                filterMozos();
+            }
+        });
+    }
     
     // Event listeners para filtros de estado
-    statusButtons.forEach(button => {
-        button.addEventListener('click', function() {
+    if (statusButtons && statusButtons.length > 0) {
+        statusButtons.forEach(button => {
+            button.addEventListener('click', function() {
             // Remover clase active de todos los botones
             statusButtons.forEach(btn => {
                 btn.classList.remove('active');
@@ -493,6 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
             filterMozos();
         });
     });
+    }
     
     // Aplicar filtros iniciales
     filterMozos();
@@ -628,9 +641,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- Incluir CSS y JS del modal de confirmación -->
-<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
-<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
+<!-- Modal de confirmación ya incluido en header.php -->
 
 <style>
 /* Efectos bounce y animaciones globales */
@@ -1537,8 +1548,11 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Prevenir cierre del modal al hacer clic en el contenido
-document.querySelector('.modal-content').addEventListener('click', function(e) {
-  e.stopPropagation();
-});
+const modalContent = document.querySelector('.modal-content');
+if (modalContent) {
+  modalContent.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+}
 </script>
 

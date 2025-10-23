@@ -157,7 +157,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Validación del formulario
-    document.querySelector('form').addEventListener('submit', function(e) {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
         const accionSeleccionada = document.querySelector('input[name="accion_mesas"]:checked');
         
         if (!accionSeleccionada) {
@@ -193,5 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Eliminación cancelada. Debes escribir "ELIMINAR" para confirmar.');
         }
     });
+    }
 });
 </script>
