@@ -82,7 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
 }
 
 // 1) Cargamos todas las mesas (activas e inactivas)
-$mesasActivas = Mesa::all();
+// Si es un mozo, mostrar sus mesas asignadas primero
+if ($rol === 'mozo') {
+    $mesasActivas = Mesa::allForMozo($_SESSION['user']['id_usuario']);
+} else {
+    $mesasActivas = Mesa::all();
+}
 $mesasInactivas = Mesa::allInactive();
 ?>
 
@@ -153,11 +158,11 @@ $mesasInactivas = Mesa::allInactive();
 <table class="table">
   <thead>
     <tr>
-      <th>Número</th>
+      <th style="width: 20%;">Número</th>
       <th>Ubicación</th>
-      <th>Estado</th>
+      <th style="width: 12%;">Estado</th>
       <th>Mozo Asignado</th>
-      <th>Cambiar Estado</th>
+      <th style="width: 12%;">Cambiar Estado</th>
       <?php if ($rol === 'administrador'): ?>
         <th>Acciones</th>
       <?php endif; ?>
@@ -165,8 +170,19 @@ $mesasInactivas = Mesa::allInactive();
   </thead>
   <tbody>
     <?php foreach ($mesasActivas as $m): ?>
-      <tr>
-        <td><?= htmlspecialchars($m['numero']) ?></td>
+      <?php 
+      // Verificar si esta mesa está asignada al mozo logueado
+      $esMesaAsignada = ($rol === 'mozo' && $m['id_mozo'] == $_SESSION['user']['id_usuario']);
+      ?>
+      <tr <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
+        <td>
+          <?= htmlspecialchars($m['numero']) ?>
+          <?php if ($esMesaAsignada): ?>
+            <span style="background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; font-weight: bold; margin-left: 8px;">
+              👤 Mi Mesa
+            </span>
+          <?php endif; ?>
+        </td>
         <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
         <td>
           <?php
@@ -298,9 +314,20 @@ $mesasInactivas = Mesa::allInactive();
 <!-- Vista de tarjetas para móviles -->
 <div class="mobile-cards">
   <?php foreach ($mesasActivas as $m): ?>
-    <div class="mobile-card mesa-activa">
+    <?php 
+    // Verificar si esta mesa está asignada al mozo logueado
+    $esMesaAsignada = ($rol === 'mozo' && $m['id_mozo'] == $_SESSION['user']['id_usuario']);
+    ?>
+    <div class="mobile-card mesa-activa" <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
       <div class="mobile-card-header">
-        <div class="mobile-card-number">Mesa <?= htmlspecialchars($m['numero']) ?></div>
+        <div class="mobile-card-number">
+          Mesa <?= htmlspecialchars($m['numero']) ?>
+          <?php if ($esMesaAsignada): ?>
+            <span style="background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; font-weight: bold; margin-left: 8px;">
+              👤 Mi Mesa
+            </span>
+          <?php endif; ?>
+        </div>
         <?php if ($rol === 'administrador'): ?>
           <div class="mobile-card-actions">
             <a href="<?= url('mesas/edit', ['id' => $m['id_mesa']]) ?>" class="btn-action" title="Editar mesa">
@@ -1285,6 +1312,28 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 
+
+/* Ajustes específicos para columnas de la tabla de mesas */
+.table th:nth-child(1), .table td:nth-child(1) {
+  width: 20% !important;
+  min-width: 120px;
+}
+
+.table th:nth-child(3), .table td:nth-child(3) {
+  width: 12% !important;
+  min-width: 80px;
+}
+
+.table th:nth-child(5), .table td:nth-child(5) {
+  width: 12% !important;
+  min-width: 100px;
+}
+
+/* Asegurar que el badge "Mi Mesa" se vea completo */
+.table td:nth-child(1) {
+  white-space: nowrap;
+  overflow: visible;
+}
 
 /* Responsive para móvil */
 @media (max-width: 768px) {
