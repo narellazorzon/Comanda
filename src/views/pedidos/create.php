@@ -397,51 +397,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .item-card {
-  background: #ffffff;
-  border: 2px solid #f1f3f4;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgb(250, 241, 219) 0%, #f5f2e8 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 15px rgba(144, 104, 76, 0.15), 0 2px 6px rgba(144, 104, 76, 0.1);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .item-card:hover {
-  border-color: #90684C;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(144, 104, 76, 0.25), 0 4px 12px rgba(144, 104, 76, 0.15);
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #fff3cd 0%, #f0f2f5 100%);
 }
 
 .item-detail-section {
-  margin: 10px 0;
-  padding: 8px 0;
-  border-top: 1px solid #f0f0f0;
+  margin: 8px 0;
+  padding: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(144, 104, 76, 0.08);
 }
 
 .detail-label {
   display: block;
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 5px;
-  font-weight: 500;
+  font-size: 0.8rem;
+  color: #5C4033;
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 .item-detail-input {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e8ecf0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background: #ffffff;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 8px rgba(144, 104, 76, 0.12), inset 0 1px 3px rgba(144, 104, 76, 0.1);
+  font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 .item-detail-input:focus {
   outline: none;
-  border-color: #90684C;
   background: white;
-  box-shadow: 0 0 0 3px rgba(144, 104, 76, 0.1);
+  box-shadow: 0 4px 12px rgba(144, 104, 76, 0.2), inset 0 1px 3px rgba(144, 104, 76, 0.15), 0 0 0 3px rgba(144, 104, 76, 0.15);
   transform: translateY(-1px);
 }
 
@@ -454,9 +460,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 9px;
-  padding-bottom: 7px;
-  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: none;
+  box-shadow: 0 1px 3px rgba(144, 104, 76, 0.1);
 }
 
 .item-name {
@@ -473,32 +480,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 .item-controls {
   display: grid;
-  grid-template-columns: 1fr 90px 90px;
-  gap: 10px;
+  grid-template-columns: 1fr 80px 80px;
+  gap: 8px;
   align-items: center;
 }
 
 .quantity-controls {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 4px;
 }
 
 .quantity-btn {
   background: linear-gradient(135deg, #34495e, #2c3e50);
   color: white;
   border: none;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(52, 73, 94, 0.3);
+  box-shadow: 0 2px 6px rgba(52, 73, 94, 0.3);
 }
 
 .quantity-btn:hover {
@@ -508,23 +515,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .quantity-input {
-  width: 60px;
+  width: 50px;
   text-align: center;
-  padding: 8px;
-  border: 2px solid #e8ecf0;
-  border-radius: 8px;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 1rem;
-  background: #ffffff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(144, 104, 76, 0.12), inset 0 1px 3px rgba(144, 104, 76, 0.1);
   transition: all 0.3s ease;
+  font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 .quantity-input:focus {
   outline: none;
-  border-color: #90684C;
-  box-shadow: 0 0 0 3px rgba(144, 104, 76, 0.1);
+  box-shadow: 0 4px 12px rgba(144, 104, 76, 0.2), inset 0 1px 3px rgba(144, 104, 76, 0.15), 0 0 0 3px rgba(144, 104, 76, 0.15);
   transform: translateY(-1px);
+  background: white;
 }
 
 .item-total {
@@ -538,13 +546,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
   border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  box-shadow: 0 3px 8px rgba(231, 76, 60, 0.3);
 }
 
 .remove-item-btn:hover {
