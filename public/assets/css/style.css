@@ -191,7 +191,7 @@ h2 {
 .hamburger-line {
   width: 25px;
   height: 3px;
-  background-color: var(--text);
+  background-color: rgb(144, 104, 76);
   transition: all 0.3s ease;
   border-radius: 2px;
 }

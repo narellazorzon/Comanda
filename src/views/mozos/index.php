@@ -205,7 +205,7 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
           <a href="<?= url('mesas/cambiar-mozo', ['mozo_id' => $m['id_usuario']]) ?>" class="btn-action mesas-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #17a2b8; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Gestionar mesas asignadas">
             🍽️
           </a>
-          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Editar mozo">
+          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; margin-right: 0.3rem; text-decoration: none; background: rgb(144, 104, 76); color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Editar mozo">
             ✏️
           </a>
           <?php if (!$esAdminActual): ?>
@@ -214,7 +214,7 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
               ❌
             </button>
           <?php else: ?>
-            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; background: #6c757d; color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
+            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; background: rgb(144, 104, 76); color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
               🔒
             </span>
           <?php endif; ?>
@@ -274,7 +274,10 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
           </div>
         </div>
         <div class="card-actions">
-          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #6c757d; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;">
+          <a href="<?= url('mesas/cambiar-mozo', ['mozo_id' => $m['id_usuario']]) ?>" class="btn-action mesas-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; margin-right: 0.3rem; text-decoration: none; background: #17a2b8; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;" title="Gestionar mesas asignadas">
+            🍽️
+          </a>
+          <a href="<?= url('mozos/edit', ['id' => $m['id_usuario']]) ?>" class="btn-action edit-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: rgb(144, 104, 76); color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px;">
             ✏️
           </a>
           <?php if (!$esAdminActual): ?>
@@ -283,7 +286,7 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
               ❌
             </button>
           <?php else: ?>
-            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; background: #6c757d; color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
+            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; background: rgb(144, 104, 76); color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
               🔒
             </span>
           <?php endif; ?>
@@ -746,9 +749,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Estilos para el administrador actual */
 .admin-current {
-    border-left: 4px solid #ffd700 !important;
-    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3) !important;
-    animation: pulse 2s infinite;
+    /* Efectos especiales eliminados para mantener diseño uniforme */
 }
 
 .admin-badge {
@@ -899,8 +900,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     .mobile-card {
-        background: rgb(245, 236, 198
-        );
+        background: rgb(255, 248, 225);
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         margin-bottom: 0.5rem;
@@ -973,12 +973,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     .card-actions .edit-btn {
-        background: #6c757d;
+        background: rgb(144, 104, 76);
         color: white;
     }
     
     .card-actions .edit-btn:hover {
-        background: #5a6268;
+        background: rgb(92, 64, 51);
     }
     
     .card-actions .delete-btn {
@@ -1039,12 +1039,12 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .edit-btn {
-    background: #6c757d;
+    background: rgb(144, 104, 76);
     color: white;
 }
 
 .edit-btn:hover {
-    background: #5a6268;
+    background: rgb(92, 64, 51);
 }
 
 .delete-btn {
@@ -1430,14 +1430,14 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .btn-cancelar {
-  background: #6c757d;
+  background: rgb(144, 104, 76);
   color: white;
 }
 
 .btn-cancelar:hover {
-  background: #5a6268;
+  background: rgb(92, 64, 51);
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  box-shadow: 0 4px 12px rgba(144, 104, 76, 0.3);
 }
 
 .btn-confirmar {

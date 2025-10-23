@@ -131,7 +131,7 @@ $total_mesas = 15; // Ajustable según configuración del restaurante
             min-height: 40px;
         }
         .btn-descargar {
-            background: #28a745;
+            background: rgb(144, 104, 76);
             color: white;
             border: none;
             padding: 8px 16px;
@@ -141,11 +141,11 @@ $total_mesas = 15; // Ajustable según configuración del restaurante
             transition: background 0.3s ease;
         }
         .btn-descargar:hover {
-            background: #218838;
+            background: rgb(92, 64, 51);
         }
         .back-btn {
             display: inline-block;
-            background: #6c757d;
+            background: rgb(144, 104, 76);
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 4px;
@@ -210,7 +210,7 @@ $total_mesas = 15; // Ajustable según configuración del restaurante
                 <button onclick="generarTodosQRs()" class="btn-regenerar">
                     🔄 Regenerar todos los QRs
                 </button>
-                <button onclick="descargarTodosQRs()" class="btn-regenerar" style="background: #28a745;">
+                <button onclick="descargarTodosQRs()" class="btn-regenerar" style="background: rgb(144, 104, 76);">
                     💾 Descargar todos los QRs
                 </button>
             </div>
