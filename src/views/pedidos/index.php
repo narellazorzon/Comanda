@@ -773,7 +773,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Modal de información del pedido -->
-<div id="modalInfoPedido" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+<div id="modalInfoPedido" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; padding-top: 80px;">
   <div style="background:rgb(239, 235, 224); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid #eee; padding-bottom: 1rem;">
       <h3 style="margin: 0; color: var(--secondary); font-size: 1.5rem;">📋 Información del Pedido</h3>
@@ -2070,6 +2070,248 @@ document.addEventListener('DOMContentLoaded', function() {
   
   .notification-icon {
     font-size: 1.3rem;
+  }
+}
+
+/* ==== RESPONSIVE PARA MODAL DE INFORMACIÓN DE PEDIDO ==== */
+@media (max-width: 768px) {
+  #modalInfoPedido {
+    padding: 0.5rem !important;
+    padding-top: 60px !important;
+    z-index: 2000 !important;
+  }
+  
+  #modalInfoPedido > div {
+    padding: 1.2rem !important;
+    margin: 0.5rem !important;
+    max-width: 98% !important;
+    width: 95% !important;
+    border-radius: 12px !important;
+    max-height: 85vh !important;
+  }
+  
+  #modalInfoPedido h3 {
+    font-size: 1.2rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+  
+  #cerrarInfoPedido {
+    padding: 0.5rem 1rem !important;
+    font-size: 1rem !important;
+    border-radius: 8px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgb(83, 68, 47) !important;
+    color: white !important;
+    border: 2px solid rgb(83, 68, 47) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  #cerrarInfoPedido:hover {
+    background: rgb(100, 80, 60) !important;
+    border-color: rgb(100, 80, 60) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+  }
+  
+  #modalInfoPedido .header-section {
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.8rem !important;
+  }
+  
+  #modalInfoPedido .header-section h4 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+  
+  #modalInfoPedido .info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.8rem !important;
+  }
+  
+  #modalInfoPedido .info-item {
+    padding: 0.6rem !important;
+    border-radius: 8px !important;
+  }
+  
+  #modalInfoPedido .info-label {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  
+  #modalInfoPedido .info-value {
+    font-size: 0.9rem !important;
+  }
+  
+  #modalInfoPedido .items-section {
+    margin-top: 1rem !important;
+  }
+  
+  #modalInfoPedido .items-section h4 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+  
+  #modalInfoPedido .item-card {
+    padding: 0.8rem !important;
+    margin-bottom: 0.8rem !important;
+    border-radius: 8px !important;
+  }
+  
+  #modalInfoPedido .item-name {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+  
+  #modalInfoPedido .item-details {
+    font-size: 0.8rem !important;
+    gap: 0.6rem !important;
+  }
+  
+  #modalInfoPedido .total-section {
+    margin-top: 1rem !important;
+    padding: 0.8rem !important;
+    border-radius: 8px !important;
+  }
+  
+  #modalInfoPedido .total-section h4 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+  
+  #modalInfoPedido .total-item {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+  
+  #modalInfoPedido .total-final {
+    font-size: 1rem !important;
+    padding: 0.6rem !important;
+    border-radius: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #modalInfoPedido {
+    padding: 0.3rem !important;
+    padding-top: 50px !important;
+    z-index: 2000 !important;
+  }
+  
+  #modalInfoPedido > div {
+    padding: 1rem !important;
+    margin: 0.3rem !important;
+    max-width: 99% !important;
+    width: 98% !important;
+    border-radius: 10px !important;
+    max-height: 90vh !important;
+  }
+  
+  #modalInfoPedido h3 {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+  
+  #cerrarInfoPedido {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.9rem !important;
+    border-radius: 6px !important;
+    min-width: 35px !important;
+    min-height: 35px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgb(83, 68, 47) !important;
+    color: white !important;
+    border: 2px solid rgb(83, 68, 47) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  #cerrarInfoPedido:hover {
+    background: rgb(100, 80, 60) !important;
+    border-color: rgb(100, 80, 60) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+  }
+  
+  #modalInfoPedido .header-section {
+    margin-bottom: 0.8rem !important;
+    padding-bottom: 0.6rem !important;
+  }
+  
+  #modalInfoPedido .header-section h4 {
+    font-size: 1rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+  
+  #modalInfoPedido .info-grid {
+    gap: 0.6rem !important;
+  }
+  
+  #modalInfoPedido .info-item {
+    padding: 0.5rem !important;
+    border-radius: 6px !important;
+  }
+  
+  #modalInfoPedido .info-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+  
+  #modalInfoPedido .info-value {
+    font-size: 0.85rem !important;
+  }
+  
+  #modalInfoPedido .items-section {
+    margin-top: 0.8rem !important;
+  }
+  
+  #modalInfoPedido .items-section h4 {
+    font-size: 1rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+  
+  #modalInfoPedido .item-card {
+    padding: 0.6rem !important;
+    margin-bottom: 0.6rem !important;
+    border-radius: 6px !important;
+  }
+  
+  #modalInfoPedido .item-name {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  
+  #modalInfoPedido .item-details {
+    font-size: 0.75rem !important;
+    gap: 0.4rem !important;
+  }
+  
+  #modalInfoPedido .total-section {
+    margin-top: 0.8rem !important;
+    padding: 0.6rem !important;
+    border-radius: 6px !important;
+  }
+  
+  #modalInfoPedido .total-section h4 {
+    font-size: 1rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+  
+  #modalInfoPedido .total-item {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  
+  #modalInfoPedido .total-final {
+    font-size: 0.9rem !important;
+    padding: 0.5rem !important;
+    border-radius: 4px !important;
   }
 }
 </style>

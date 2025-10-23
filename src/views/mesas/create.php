@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Mejorar el estilo del formulario */
 form {
     background: var(--surface);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     max-width: 600px;
@@ -201,7 +201,7 @@ form {
 
 form label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
     font-weight: 600;
     color: var(--secondary);
     font-size: 0.9rem;
@@ -211,12 +211,12 @@ form input[type="number"],
 form input[type="text"],
 form select {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.6rem;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s ease;
-    margin-bottom: 1rem;
+    margin-bottom: 0.7rem;
     background: white;
 }
 
@@ -231,9 +231,9 @@ form select:focus {
 form button[type="submit"] {
     background: var(--secondary);
     color: white;
-    padding: 0.75rem 1.5rem;
+    padding: 0.9rem 3.2rem;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -250,7 +250,7 @@ form button[type="submit"]:hover {
 .button {
     background: #6c757d;
     color: white;
-    padding: 0.75rem 1.5rem;
+    padding: 0.6rem 1.2rem;
     text-decoration: none;
     border-radius: 8px;
     font-size: 1rem;
@@ -283,6 +283,88 @@ form button[type="submit"]:hover {
     padding: 1rem;
     margin-bottom: 1rem;
     font-weight: 500;
+}
+
+/* ==== RESPONSIVE DESIGN ==== */
+@media (max-width: 768px) {
+    form {
+        padding: 1rem;
+        margin: 0.5rem;
+        max-width: 100%;
+    }
+    
+    form label {
+        font-size: 0.9rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    form input[type="number"],
+    form input[type="text"],
+    form select {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.6rem;
+    }
+    
+    .estado-options {
+        flex-direction: column;
+        gap: 0.3rem !important;
+    }
+    
+    .estado-option {
+        padding: 6px 10px !important;
+        font-size: 0.75rem !important;
+        justify-content: center;
+    }
+    
+    form button[type="submit"],
+    .button {
+        width: 100%;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.9rem;
+        margin-right: 0;
+        margin-bottom: 0.4rem;
+    }
+    
+    .button {
+        margin-left: 0 !important;
+        text-align: center;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    form {
+        padding: 0.8rem;
+        margin: 0.3rem;
+    }
+    
+    form input[type="number"],
+    form input[type="text"],
+    form select {
+        padding: 0.4rem;
+        font-size: 0.85rem;
+    }
+    
+    .estado-option {
+        padding: 5px 8px !important;
+        font-size: 0.7rem !important;
+    }
+    
+    form button[type="submit"],
+    .button {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.85rem;
+    }
+    
+    h2 {
+        font-size: 1.1rem;
+    }
 }
 </style>
 
