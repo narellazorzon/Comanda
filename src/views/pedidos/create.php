@@ -1126,18 +1126,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <!-- Campo Mesa (solo para modo stay) -->
       <div class="form-group" id="mesa-group">
-        <label for="id_mesa">Mesa *</label>
-        <div class="custom-select" id="mesa-select">
-          <div class="custom-select-trigger" tabindex="0">
+        <label for="mesa-select">Mesa *</label>
+        <div class="custom-select" id="mesa-select" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+          <div class="custom-select-trigger" tabindex="0" role="button" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="mesa-select">
             <span id="mesa-selected-text">Seleccionar mesa</span>
             <span class="custom-select-arrow">▼</span>
           </div>
-          <div class="custom-select-options">
-            <div class="custom-select-option" data-value="" data-mozo="">Seleccionar mesa</div>
+          <div class="custom-select-options" role="listbox" aria-labelledby="mesa-select">
+            <div class="custom-select-option" data-value="" data-mozo="" role="option" tabindex="0">Seleccionar mesa</div>
             <?php foreach ($mesas as $mesa): ?>
               <div class="custom-select-option" 
                    data-value="<?= $mesa['id_mesa'] ?>" 
                    data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
+                   role="option"
+                   tabindex="0"
                    <?= (isset($_POST['id_mesa']) && $_POST['id_mesa'] == $mesa['id_mesa']) || ($pedido && $pedido['id_mesa'] == $mesa['id_mesa']) ? 'class="selected"' : '' ?>>
                 Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
               </div>
@@ -1287,7 +1289,11 @@ function selectModoConsumo(modo) {
   });
   
   // Seleccionar nuevo modo
-  event.target.closest('.modo-consumo-btn').classList.add('selected');
+  document.querySelectorAll('.modo-consumo-btn').forEach(btn => {
+    if (btn.onclick.toString().includes(`'${modo}'`)) {
+      btn.classList.add('selected');
+    }
+  });
   document.getElementById('modo_consumo').value = modo;
   
   // Mostrar/ocultar campo de mesa según el modo
@@ -1324,13 +1330,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Abrir/cerrar dropdown
   trigger.addEventListener('click', function() {
+    const isOpen = customSelect.classList.contains('open');
     customSelect.classList.toggle('open');
+    
+    // Actualizar atributos ARIA
+    customSelect.setAttribute('aria-expanded', !isOpen);
+    trigger.setAttribute('aria-expanded', !isOpen);
   });
 
   // Cerrar dropdown al hacer clic fuera
   document.addEventListener('click', function(e) {
     if (!customSelect.contains(e.target)) {
       customSelect.classList.remove('open');
+      customSelect.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('aria-expanded', 'false');
     }
   });
 
@@ -1359,6 +1372,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Cerrar dropdown
       customSelect.classList.remove('open');
+      customSelect.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('aria-expanded', 'false');
     });
   });
 
