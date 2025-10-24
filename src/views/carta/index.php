@@ -239,17 +239,16 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 
 @media (max-width: 768px) {
   .management-header {
-    padding: 8px;
-    margin-bottom: 8px;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
+    text-align: center;
   }
   
   .management-header h1 {
     font-size: 0.9rem !important;
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
+    min-width: auto;
   }
   
   .header-actions {
@@ -257,8 +256,9 @@ $precio_max = !empty($precios) ? max($precios) : 0;
   }
   
   .header-btn {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.6rem;
+    flex: 1;
+    text-align: center;
+    min-width: 120px;
   }
 }
 

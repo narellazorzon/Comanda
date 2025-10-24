@@ -1155,30 +1155,61 @@ document.addEventListener('DOMContentLoaded', function() {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Responsive para móvil */
+/* Responsive para el header */
 @media (max-width: 768px) {
   .management-header {
-    padding: 8px;
-    margin-bottom: 8px;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
+    text-align: center;
   }
   
   .management-header h1 {
-    font-size: 0.9rem;
+    font-size: 0.9rem !important;
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
+    min-width: auto;
   }
   
   .header-actions {
     justify-content: center;
-    flex-wrap: wrap;
   }
   
   .header-btn {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.6rem;
+    flex: 1;
+    text-align: center;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 992px) {
+  .management-header {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .management-header h1 {
+    font-size: 1.1rem !important;
+  }
+  
+  .header-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .management-header {
+    padding: 6px;
+    margin-bottom: 6px;
+  }
+  
+  .management-header h1 {
+    font-size: 0.8rem !important;
+  }
+  
+  .header-btn {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
   }
 }
 
