@@ -116,9 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .pedido-edit-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 8px;
-  background: #f8f9fa;
-  min-height: auto;
+  padding: 20px;
+  min-height: 100vh;
 }
 
 .pedido-header {
@@ -142,54 +141,178 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .form-section {
-  background: rgb(245, 239, 224);
-  border: 2px solid rgb(187, 155, 123);
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 12px;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg,rgb(250, 241, 219) 0%, #f5f2e8 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(144, 104, 76, 0.1);
+  transition: all 0.3s ease;
+}
+
+.form-section:hover {
+  box-shadow: 0 8px 30px rgba(144, 104, 76, 0.15);
+  transform: translateY(-2px);
 }
 
 .form-section h3 {
-  color: #2F1B14;
+  color: #2c3e50;
   margin-top: 0;
-  margin-bottom: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-bottom: 1px solid #CD853F;
-  padding-bottom: 6px;
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-bottom: none;
+  padding-bottom: 0;
+  position: relative;
+}
+
+.form-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #90684C, #5C4033);
+  border-radius: 2px;
 }
 
 .form-group {
   margin-bottom: 10px;
 }
 
-.form-group label {
+.form-group label,
+.form-label {
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 8px;
+  font-family: "Segoe UI", Tahoma, sans-serif;
   font-weight: 600;
-  color: #2F1B14;
-  font-size: 0.9rem;
+  color: #34495e;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
 }
 
 .form-group select,
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 6px;
-  border: 1px solid #CD853F;
-  border-radius: 3px;
-  background: white;
-  font-size: 0.9rem;
+  padding: 12px 16px;
+  border: 2px solid #e8ecf0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  font-size: 0.95rem;
   box-sizing: border-box;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* Estilos para el dropdown personalizado de mesa */
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e8ecf0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-select-trigger:focus {
+  outline: none;
+  border-color: #90684C;
+  box-shadow: 0 0 0 3px rgba(144, 104, 76, 0.1);
+  transform: translateY(-1px);
+}
+
+.custom-select-arrow {
+  transition: transform 0.3s ease;
+}
+
+.custom-select.open .custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 2px solid #e8ecf0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: none;
+}
+
+.custom-select.open .custom-select-options {
+  display: block;
+}
+
+.custom-select-option {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f1f3f4;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  font-size: 0.95rem;
+}
+
+.custom-select-option:last-child {
+  border-bottom: none;
+}
+
+.custom-select-option:hover {
+  background-color: #f8f9fa;
+}
+
+.custom-select-option.selected {
+  background-color: #90684C;
+  color: white;
+}
+
+/* Scroll personalizado para las opciones */
+.custom-select-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-select-options::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 3px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #90684C, #5C4033);
+  border-radius: 3px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5C4033, #90684C);
 }
 
 .form-group select:focus,
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #DEB887;
-  box-shadow: 0 0 3px rgba(222, 184, 135, 0.5);
+  border-color: #90684C;
+  box-shadow: 0 0 0 3px rgba(144, 104, 76, 0.1);
+  transform: translateY(-1px);
 }
 
 .modo-consumo-container {
@@ -202,44 +325,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .modo-consumo-btn {
   flex: 1;
   max-width: 150px;
-  background: #F5DEB3;
-  border: 2px solid #CD853F;
-  border-radius: 8px;
-  padding: 12px;
+  background: #ffffff;
+  border: 2px solid #e8ecf0;
+  border-radius: 12px;
+  padding: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .modo-consumo-btn.selected {
-  background: rgb(177, 128, 80);
+  background: linear-gradient(135deg, #90684C, #5C4033);
   color: white;
-  transform: translateY(-1px);
-  box-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+  border-color: #5C4033;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(144, 104, 76, 0.3);
 }
 
 .modo-consumo-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border-color: #90684C;
 }
 
 .items-section {
-  background: rgb(245, 239, 224);
-  border: 2px solid #CD853F;
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 10px;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, rgb(250, 241, 219) 0%, #f5f2e8 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(144, 104, 76, 0.1);
+  transition: all 0.3s ease;
+}
+
+.items-section:hover {
+  box-shadow: 0 8px 30px rgba(144, 104, 76, 0.15);
+  transform: translateY(-2px);
 }
 
 .items-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid #CD853F;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
 }
 
 .items-controls {
@@ -249,68 +379,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .add-item-btn {
-  background: #28a745;
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
   color: white;
   border: none;
-  padding: 7px 14px;
-  border-radius: 6px;
+  padding: 12px 20px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
 }
 
 .add-item-btn:hover {
-  background: #218838;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+  background: linear-gradient(135deg, #229954, #27ae60);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
 }
 
 .item-card {
-  background: rgb(245, 239, 224);
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, rgb(250, 241, 219) 0%, #f5f2e8 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 15px rgba(144, 104, 76, 0.15), 0 2px 6px rgba(144, 104, 76, 0.1);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .item-card:hover {
-  border-color: #CD853F;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 25px rgba(144, 104, 76, 0.25), 0 4px 12px rgba(144, 104, 76, 0.15);
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #fff3cd 0%, #f0f2f5 100%);
 }
 
 .item-detail-section {
-  margin: 10px 0;
-  padding: 8px 0;
-  border-top: 1px solid #f0f0f0;
+  margin: 8px 0;
+  padding: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(144, 104, 76, 0.08);
 }
 
 .detail-label {
   display: block;
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 5px;
-  font-weight: 500;
+  font-size: 0.8rem;
+  color: #5C4033;
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 .item-detail-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: none;
+  border-radius: 6px;
   font-size: 0.9rem;
-  background: #fafafa;
+  background: rgba(255, 255, 255, 0.9);
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(144, 104, 76, 0.12), inset 0 1px 3px rgba(144, 104, 76, 0.1);
+  font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 .item-detail-input:focus {
   outline: none;
-  border-color: #CD853F;
   background: white;
-  box-shadow: 0 0 0 2px rgba(205, 133, 63, 0.2);
+  box-shadow: 0 4px 12px rgba(144, 104, 76, 0.2), inset 0 1px 3px rgba(144, 104, 76, 0.15), 0 0 0 3px rgba(144, 104, 76, 0.15);
+  transform: translateY(-1px);
 }
 
 .item-detail-input::placeholder {
@@ -322,9 +461,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 9px;
-  padding-bottom: 7px;
-  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: none;
+  box-shadow: 0 1px 3px rgba(144, 104, 76, 0.1);
 }
 
 .item-name {
@@ -341,23 +481,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 .item-controls {
   display: grid;
-  grid-template-columns: 1fr 90px 90px;
-  gap: 10px;
+  grid-template-columns: 1fr 80px 80px;
+  gap: 8px;
   align-items: center;
 }
 
 .quantity-controls {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 4px;
 }
 
 .quantity-btn {
-  background:rgb(71, 56, 34);
+  background: linear-gradient(135deg, #34495e, #2c3e50);
   color: white;
   border: none;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
   font-weight: bold;
@@ -366,27 +506,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(52, 73, 94, 0.3);
 }
 
 .quantity-btn:hover {
-  background:rgb(104, 99, 90);
+  background: linear-gradient(135deg, #2c3e50, #34495e);
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(52, 73, 94, 0.4);
 }
 
 .quantity-input {
-  width: 54px;
+  width: 50px;
   text-align: center;
-  padding: 5px;
-  border: 2px solid #e9ecef;
+  padding: 6px;
+  border: none;
   border-radius: 6px;
   font-weight: 600;
   font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(144, 104, 76, 0.12), inset 0 1px 3px rgba(144, 104, 76, 0.1);
+  transition: all 0.3s ease;
+  font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 .quantity-input:focus {
   outline: none;
-  border-color: #CD853F;
-  box-shadow: 0 0 0 3px rgba(205, 133, 63, 0.2);
+  box-shadow: 0 4px 12px rgba(144, 104, 76, 0.2), inset 0 1px 3px rgba(144, 104, 76, 0.15), 0 0 0 3px rgba(144, 104, 76, 0.15);
+  transform: translateY(-1px);
+  background: white;
 }
 
 .item-total {
@@ -397,31 +544,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .remove-item-btn {
-  background: #dc3545;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
   border: none;
-  padding: 7px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.8rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 3px 8px rgba(231, 76, 60, 0.3);
 }
 
 .remove-item-btn:hover {
-  background: #c82333;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
 }
 
 .total-section {
-  background: #2F1B14;
+  background: linear-gradient(135deg, #90684C, #5C4033);
   color: white;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 20px;
+  border-radius: 12px;
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 25px rgba(144, 104, 76, 0.3);
+  transition: all 0.3s ease;
+}
+
+.total-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(144, 104, 76, 0.4);
 }
 
 .total-section h3 {
@@ -430,9 +584,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .total-amount {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: bold;
-  color: #DEB887;
+  color: #ecf0f1;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .buttons-section {
@@ -443,67 +598,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .btn {
-  padding: 8px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
   display: inline-block;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .btn-primary {
-  background: #CD853F;
+  background: linear-gradient(135deg, #90684C, #5C4033);
   color: white;
 }
 
 .btn-primary:hover {
-  background: #A0522D;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #5C4033, #90684C);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(144, 104, 76, 0.3);
 }
 
 .btn-secondary {
-  background:rgb(131, 100, 77);
+  background: linear-gradient(135deg, #90684C, #5C4033);
   color: white;
+  border: none;
 }
 
 .btn-secondary:hover {
-  background:rgb(93, 72, 62);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #5C4033, #90684C);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(144, 104, 76, 0.3);
   text-decoration: none;
   color: white;
 }
 
 .btn-success {
-  background: #28a745;
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
   color: white;
 }
 
 .btn-success:hover {
-  background: #218838;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #229954, #27ae60);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
 }
 
 .alert {
-  padding: 8px;
-  margin-bottom: 12px;
-  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: none;
 }
 
 .alert-success {
-  background: #d4edda;
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
   color: #155724;
-  border: 1px solid #c3e6cb;
+  border: none;
 }
 
 .alert-error {
-  background: #f8d7da;
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
   color: #721c24;
-  border: 1px solid #f5c6cb;
+  border: none;
 }
 
 @media (max-width: 768px) {
@@ -537,6 +699,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   
   .form-group label {
+    font-family: "Segoe UI", Tahoma, sans-serif;
     font-size: 0.8rem;
     margin-bottom: 2px;
   }
@@ -544,8 +707,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   .form-group select,
   .form-group input,
   .form-group textarea {
-    padding: 4px;
-    font-size: 0.8rem;
+    padding: 8px 12px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .modo-consumo-container {
@@ -753,18 +919,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     /* Estilos del modal en móvil */
     .modal {
-      padding: 10px !important;
+      padding: 5px !important;
+      align-items: flex-start !important;
+      padding-top: 60px !important;
     }
     
     .modal > div {
-      width: 95% !important;
+      width: 98% !important;
       max-width: none !important;
-      padding: 15px !important;
-      max-height: 90vh !important;
+      padding: 20px 15px !important;
+      max-height: 85vh !important;
+      margin: 0 auto !important;
+      position: relative !important;
     }
     
     .modal h3 {
       font-size: 1.1rem !important;
+      margin-bottom: 15px !important;
+    }
+    
+    /* Asegurar que el botón cerrar sea accesible */
+    .modal button[onclick*="closest"] {
+      position: absolute !important;
+      top: 15px !important;
+      right: 15px !important;
+      z-index: 1001 !important;
+      width: 40px !important;
+      height: 40px !important;
+      font-size: 1.4rem !important;
     }
     
     .modal input {
@@ -789,6 +971,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-size: 0.9rem !important;
     }
   }
+}
+
+/* Estilos para barras de scroll personalizadas */
+#items-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+#items-list::-webkit-scrollbar-track {
+  background: #f3e2b8;
+  border-radius: 4px;
+}
+
+#items-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #90684C, #5C4033);
+  border-radius: 4px;
+  border: 1px solid #5C4033;
+}
+
+#items-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5C4033, #90684C);
+  box-shadow: 0 2px 4px rgba(144, 104, 76, 0.3);
+}
+
+/* Estilos para scroll del modal principal */
+.modal > div::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal > div::-webkit-scrollbar-track {
+  background: #f3e2b8;
+  border-radius: 4px;
+}
+
+.modal > div::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #90684C, #5C4033);
+  border-radius: 4px;
+  border: 1px solid #5C4033;
+}
+
+.modal > div::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5C4033, #90684C);
+  box-shadow: 0 2px 4px rgba(144, 104, 76, 0.3);
 }
 
 /* Estilos adicionales para pantallas muy pequeñas */
@@ -821,6 +1045,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   .buttons-section {
     gap: 3px;
   }
+  
+  /* Modal en pantallas muy pequeñas */
+  .modal {
+    padding-top: 50px !important;
+  }
+  
+  .modal > div {
+    width: 100% !important;
+    padding: 15px 10px !important;
+    max-height: 80vh !important;
+  }
+  
+  .modal button[onclick*="closest"] {
+    width: 35px !important;
+    height: 35px !important;
+    font-size: 1.2rem !important;
+    top: 10px !important;
+    right: 10px !important;
+  }
+  
+  /* Campos del cliente específicos para móvil */
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group textarea {
+    padding: 10px 12px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 0.9rem;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  
+  .form-group label {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
 }
 </style>
 
@@ -846,7 +1107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       
       <!-- Modo de Consumo -->
       <div class="form-group">
-        <label>Modo de Consumo *</label>
+        <div class="form-label">Modo de Consumo *</div>
         <div class="modo-consumo-container">
           <div class="modo-consumo-btn <?= (isset($_POST['modo_consumo']) && $_POST['modo_consumo'] === 'stay') || (!isset($_POST['modo_consumo']) && (!$pedido || $pedido['modo_consumo'] === 'stay')) ? 'selected' : '' ?>" 
                onclick="selectModoConsumo('stay')">
@@ -866,17 +1127,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <!-- Campo Mesa (solo para modo stay) -->
       <div class="form-group" id="mesa-group">
-        <label for="id_mesa">Mesa *</label>
-        <select name="id_mesa" id="id_mesa" required onchange="showMozoInfo()">
-          <option value="">Seleccionar mesa</option>
-          <?php foreach ($mesas as $mesa): ?>
-            <option value="<?= $mesa['id_mesa'] ?>" 
-                    data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
-                    <?= (isset($_POST['id_mesa']) && $_POST['id_mesa'] == $mesa['id_mesa']) || ($pedido && $pedido['id_mesa'] == $mesa['id_mesa']) ? 'selected' : '' ?>>
-              Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
+        <div class="form-label">Mesa *</div>
+        <div class="custom-select" id="mesa-select" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+          <div class="custom-select-trigger" id="mesa-select-trigger" tabindex="0" role="button" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="mesa-select">
+            <span id="mesa-selected-text">Seleccionar mesa</span>
+            <span class="custom-select-arrow">▼</span>
+          </div>
+          <div class="custom-select-options" role="listbox" aria-labelledby="mesa-select">
+            <div class="custom-select-option" data-value="" data-mozo="" role="option" tabindex="0">Seleccionar mesa</div>
+            <?php foreach ($mesas as $mesa): ?>
+              <div class="custom-select-option" 
+                   data-value="<?= $mesa['id_mesa'] ?>" 
+                   data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
+                   role="option"
+                   tabindex="0"
+                   <?= (isset($_POST['id_mesa']) && $_POST['id_mesa'] == $mesa['id_mesa']) || ($pedido && $pedido['id_mesa'] == $mesa['id_mesa']) ? 'class="selected"' : '' ?>>
+                Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <input type="hidden" name="id_mesa" id="id_mesa" value="<?= isset($_POST['id_mesa']) ? $_POST['id_mesa'] : ($pedido['id_mesa'] ?? '') ?>">
         <div id="mozo-info" style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; display: none;">
           <strong>Mozo asignado:</strong> <span id="mozo-nombre"></span>
         </div>
@@ -908,9 +1179,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
                 
       <div class="form-group">
-        <label for="observaciones">Observaciones</label>
+        <label for="observaciones">Observaciones Especiales</label>
         <textarea name="observaciones" id="observaciones" rows="2" 
-                  placeholder="Observaciones especiales..."><?= htmlspecialchars($_POST['observaciones'] ?? ($pedido['observaciones'] ?? '')) ?></textarea>
+                  placeholder="Ingrese observaciones especiales para el pedido..."><?= htmlspecialchars($_POST['observaciones'] ?? ($pedido['observaciones'] ?? '')) ?></textarea>
       </div>
     </div>
 
@@ -947,7 +1218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <div class="item-controls">
                 <div class="quantity-controls">
                   <button type="button" class="quantity-btn" onclick="changeQuantity(<?= $index ?>, -1)">-</button>
-                  <input type="number" class="quantity-input" value="<?= $detalle['cantidad'] ?>" min="1" max="99" 
+                  <input type="number" id="cantidad_<?= $index ?>" class="quantity-input" value="<?= $detalle['cantidad'] ?>" min="1" max="99" 
                          onchange="updateQuantity(<?= $index ?>, this.value)">
                   <button type="button" class="quantity-btn" onclick="changeQuantity(<?= $index ?>, 1)">+</button>
                 </div>
@@ -956,10 +1227,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   🗑️ Eliminar
                 </button>
               </div>
-              <input type="hidden" name="items[<?= $index ?>][id_item]" value="<?= $detalle['id_item'] ?>">
-              <input type="hidden" name="items[<?= $index ?>][cantidad]" value="<?= $detalle['cantidad'] ?>">
-              <input type="hidden" name="items[<?= $index ?>][precio_unitario]" value="<?= $detalle['precio_unitario'] ?>">
-              <input type="hidden" name="items[<?= $index ?>][detalle]" value="<?= htmlspecialchars($detalle['detalle']) ?>">
+              <input type="hidden" id="hidden_id_item_<?= $index ?>" name="items[<?= $index ?>][id_item]" value="<?= $detalle['id_item'] ?>">
+              <input type="hidden" id="hidden_cantidad_<?= $index ?>" name="items[<?= $index ?>][cantidad]" value="<?= $detalle['cantidad'] ?>">
+              <input type="hidden" id="hidden_precio_<?= $index ?>" name="items[<?= $index ?>][precio_unitario]" value="<?= $detalle['precio_unitario'] ?>">
+              <input type="hidden" id="hidden_detalle_<?= $index ?>" name="items[<?= $index ?>][detalle]" value="<?= htmlspecialchars($detalle['detalle']) ?>">
             </div>
           <?php endforeach; ?>
         <?php endif; ?>
@@ -974,12 +1245,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Botones -->
     <div class="buttons-section">
-      <a href="<?= url('pedidos') ?>" class="btn btn-secondary">
-      ← Volver a Pedidos
-    </a>
       <button type="submit" class="btn btn-success">
         <?= $is_edit ? '💾 Actualizar Pedido' : '💾 Crear Pedido' ?>
       </button>
+      <a href="<?= url('pedidos') ?>" class="btn btn-secondary">
+      ← Volver a Pedidos
+    </a>
     </div>
   </form>
   
@@ -1019,7 +1290,11 @@ function selectModoConsumo(modo) {
   });
   
   // Seleccionar nuevo modo
-  event.target.closest('.modo-consumo-btn').classList.add('selected');
+  document.querySelectorAll('.modo-consumo-btn').forEach(btn => {
+    if (btn.onclick.toString().includes(`'${modo}'`)) {
+      btn.classList.add('selected');
+    }
+  });
   document.getElementById('modo_consumo').value = modo;
   
   // Mostrar/ocultar campo de mesa según el modo
@@ -1044,19 +1319,77 @@ function selectModoConsumo(modo) {
   }
 }
 
-function showMozoInfo() {
-  const select = document.getElementById('id_mesa');
+// Inicializar dropdown personalizado de mesa
+document.addEventListener('DOMContentLoaded', function() {
+  const customSelect = document.getElementById('mesa-select');
+  const trigger = customSelect.querySelector('.custom-select-trigger');
+  const options = customSelect.querySelectorAll('.custom-select-option');
+  const hiddenInput = document.getElementById('id_mesa');
+  const selectedText = document.getElementById('mesa-selected-text');
   const mozoInfo = document.getElementById('mozo-info');
   const mozoNombre = document.getElementById('mozo-nombre');
-  
-  if (select.value) {
-    const selectedOption = select.options[select.selectedIndex];
-    const mozo = selectedOption.getAttribute('data-mozo');
-    mozoNombre.textContent = mozo;
-    mozoInfo.style.display = 'block';
-        } else {
-    mozoInfo.style.display = 'none';
-  }
+
+  // Abrir/cerrar dropdown
+  trigger.addEventListener('click', function() {
+    const isOpen = customSelect.classList.contains('open');
+    customSelect.classList.toggle('open');
+    
+    // Actualizar atributos ARIA
+    customSelect.setAttribute('aria-expanded', !isOpen);
+    trigger.setAttribute('aria-expanded', !isOpen);
+  });
+
+  // Cerrar dropdown al hacer clic fuera
+  document.addEventListener('click', function(e) {
+    if (!customSelect.contains(e.target)) {
+      customSelect.classList.remove('open');
+      customSelect.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Seleccionar opción
+  options.forEach(option => {
+    option.addEventListener('click', function() {
+      const value = this.getAttribute('data-value');
+      const text = this.textContent;
+      const mozo = this.getAttribute('data-mozo');
+      
+      // Actualizar selección
+      hiddenInput.value = value;
+      selectedText.textContent = text;
+      
+      // Remover selección anterior
+      options.forEach(opt => opt.classList.remove('selected'));
+      this.classList.add('selected');
+      
+      // Mostrar/ocultar info del mozo
+      if (value) {
+        mozoNombre.textContent = mozo;
+        mozoInfo.style.display = 'block';
+      } else {
+        mozoInfo.style.display = 'none';
+      }
+      
+      // Cerrar dropdown
+      customSelect.classList.remove('open');
+      customSelect.setAttribute('aria-expanded', 'false');
+      trigger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Navegación con teclado
+  trigger.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      customSelect.classList.toggle('open');
+    }
+  });
+});
+
+function showMozoInfo() {
+  // Esta función ya no es necesaria con el dropdown personalizado
+  // Se maneja automáticamente en el event listener
 }
 
 function addItem() {
@@ -1077,25 +1410,29 @@ function addItem() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: linear-gradient(135deg, #f7f1e1 0%, #f3e2b8 50%, #eee0be 100%);
     border-radius: 12px;
-    padding: 20px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
+    padding: 25px;
+    max-width: 600px;
+    width: 95%;
+    max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 15px 35px rgba(144, 104, 76, 0.3), 0 0 0 1px rgba(144, 104, 76, 0.1);
   `;
   
   modalContent.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="margin: 0; color: #2F1B14;">🍽️ Seleccionar Item</h3>
-      <button onclick="this.closest('.modal').remove()" style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">×</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; box-shadow: 0 2px 0 rgba(144, 104, 76, 0.3);">
+      <h3 style="margin: 0; color: #2F1B14; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 1.4rem; font-weight: 700; position: relative;">
+        🍽️ Seleccionar Item
+        <div style="position: absolute; bottom: -8px; left: 0; width: 40px; height: 3px; background: linear-gradient(90deg, #90684C, #5C4033); border-radius: 2px;"></div>
+      </h3>
+      <button onclick="this.closest('.modal').remove()" style="background: linear-gradient(135deg, #90684C, #5C4033); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(144, 104, 76, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 15px rgba(144, 104, 76, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(144, 104, 76, 0.3)'">×</button>
     </div>
-    <div style="margin-bottom: 20px;">
-      <input type="text" id="item-search" placeholder="🔍 Buscar item..." style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+    <div style="margin-bottom: 25px;">
+      <div style="display: block; margin-bottom: 8px; font-family: 'Segoe UI', Tahoma, sans-serif; font-weight: 600; color: #34495e; font-size: 0.95rem; letter-spacing: 0.3px;">🔍 Buscar Item</div>
+      <input type="text" id="item-search" placeholder="Ingrese el nombre del item a buscar..." style="width: 100%; padding: 12px 16px; border: 1px solid transparent; border-radius: 8px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.95rem; box-sizing: border-box; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(144, 104, 76, 0.15), 0 0 0 1px rgba(144, 104, 76, 0.1);" onfocus="this.style.boxShadow='0 6px 20px rgba(144, 104, 76, 0.25), 0 0 0 2px rgba(144, 104, 76, 0.2)'; this.style.transform='translateY(-1px)'" onblur="this.style.boxShadow='0 4px 12px rgba(144, 104, 76, 0.15), 0 0 0 1px rgba(144, 104, 76, 0.1)'; this.style.transform='translateY(0)'">
     </div>
-    <div id="items-list" style="max-height: 400px; overflow-y: auto;">
+    <div id="items-list" style="max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #90684C #f3e2b8;">
       ${generateItemsList()}
     </div>
   `;
@@ -1131,34 +1468,40 @@ function generateItemsList(searchTerm = '') {
   
   Object.keys(groupedItems).sort().forEach(categoria => {
     html += `<div style="margin-bottom: 15px;">
-      <h4 style="color: #CD853F; margin: 0 0 10px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">${categoria}</h4>`;
+      <h4 style="color: #90684C; margin: 0 0 10px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">${categoria}</h4>`;
     
     groupedItems[categoria].forEach(item => {
       const precioConDescuento = calcularPrecioConDescuento(item.precio, item.descuento);
       const precioHtml = item.descuento > 0 ? 
-        `<div style="font-weight: bold; color: #28a745; font-size: 1.1rem;">
-           <span style="text-decoration: line-through; color: #999; font-size: 0.9em;">$${item.precio.toFixed(2)}</span>
-           <span style="color: #e74c3c;">$${precioConDescuento.toFixed(2)}</span>
-           <span style="background: #e74c3c; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; margin-left: 5px;">-${item.descuento}%</span>
+        `<div style="text-align: right;">
+           <div style="font-family: 'Segoe UI', Tahoma, sans-serif; font-weight: bold; color: #28a745; font-size: 1.1rem; margin-bottom: 2px;">
+             <span style="text-decoration: line-through; color: #999; font-size: 0.9em;">$${item.precio.toFixed(2)}</span>
+             <span style="color: #e74c3c;">$${precioConDescuento.toFixed(2)}</span>
+           </div>
+           <span style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600; box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);">-${item.descuento}%</span>
          </div>` :
-        `<div style="font-weight: bold; color: #28a745; font-size: 1.1rem;">$${item.precio.toFixed(2)}</div>`;
+        `<div style="text-align: right;">
+           <div style="font-family: 'Segoe UI', Tahoma, sans-serif; font-weight: bold; color: #28a745; font-size: 1.1rem;">$${item.precio.toFixed(2)}</div>
+         </div>`;
       
       html += `
         <div onclick="selectItem(${item.id})" class="item-option" style="
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 12px;
-          margin-bottom: 8px;
-          background: #f8f9fa;
-          border: 2px solid #e9ecef;
-          border-radius: 8px;
+          padding: 15px 18px;
+          margin-bottom: 12px;
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+          border: 1px solid transparent;
+          border-radius: 10px;
           cursor: pointer;
           transition: all 0.3s ease;
-          min-height: 50px;
-        " onmouseover="this.style.borderColor='#CD853F'; this.style.backgroundColor='#fff3cd'" onmouseout="this.style.borderColor='#e9ecef'; this.style.backgroundColor='#f8f9fa'">
+          min-height: 60px;
+          box-shadow: 0 4px 12px rgba(144, 104, 76, 0.15), 0 0 0 1px rgba(144, 104, 76, 0.1);
+        " onmouseover="this.style.backgroundColor='linear-gradient(135deg, #fff3cd 0%, #f0f2f5 100%)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(144, 104, 76, 0.25), 0 0 0 2px rgba(144, 104, 76, 0.2)'" onmouseout="this.style.backgroundColor='linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(144, 104, 76, 0.15), 0 0 0 1px rgba(144, 104, 76, 0.1)'">
           <div>
-            <div style="font-weight: 600; color: #2F1B14; margin-bottom: 4px;">${item.nombre}</div>
+            <div style="font-family: 'Segoe UI', Tahoma, sans-serif; font-weight: 600; color: #2F1B14; margin-bottom: 4px; font-size: 1rem;">${item.nombre}</div>
+            <div style="font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.85rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px;">${item.categoria}</div>
           </div>
           ${precioHtml}
         </div>
@@ -1243,7 +1586,7 @@ function createItemCard(item) {
     <div class="item-controls">
       <div class="quantity-controls">
         <button type="button" class="quantity-btn" onclick="changeQuantity(${item.index}, -1)">-</button>
-        <input type="number" class="quantity-input" value="${item.cantidad}" min="1" max="99" 
+        <input type="number" id="cantidad_${item.index}" class="quantity-input" value="${item.cantidad}" min="1" max="99" 
                onchange="updateQuantity(${item.index}, this.value)">
         <button type="button" class="quantity-btn" onclick="changeQuantity(${item.index}, 1)">+</button>
       </div>
@@ -1252,10 +1595,10 @@ function createItemCard(item) {
         🗑️ Eliminar
       </button>
     </div>
-    <input type="hidden" name="items[${item.index}][id_item]" value="${item.id}">
-    <input type="hidden" name="items[${item.index}][cantidad]" value="${item.cantidad}">
-    <input type="hidden" name="items[${item.index}][precio_unitario]" value="${item.precio}">
-    <input type="hidden" name="items[${item.index}][detalle]" value="${item.detalle || ''}">
+    <input type="hidden" id="hidden_id_item_${item.index}" name="items[${item.index}][id_item]" value="${item.id}">
+    <input type="hidden" id="hidden_cantidad_${item.index}" name="items[${item.index}][cantidad]" value="${item.cantidad}">
+    <input type="hidden" id="hidden_precio_${item.index}" name="items[${item.index}][precio_unitario]" value="${item.precio}">
+    <input type="hidden" id="hidden_detalle_${item.index}" name="items[${item.index}][detalle]" value="${item.detalle || ''}">
   `;
   
   container.appendChild(card);

@@ -15,16 +15,19 @@ USE comanda;
 
 -- -------------------------------------------------
 -- 2. Tabla usuarios (administradores y mozos)
+-- NOTA: Se implementa borrado lógico usando estado='eliminado'
+-- y fecha_eliminacion para mantener integridad referencial
 -- -------------------------------------------------
 CREATE TABLE usuarios (
-  id_usuario     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  nombre         VARCHAR(50) NOT NULL,
-  apellido       VARCHAR(50) NOT NULL,
-  email          VARCHAR(100) NOT NULL UNIQUE,
-  contrasenia    VARCHAR(255) NOT NULL,
-  rol            ENUM('administrador','mozo') NOT NULL,
-  estado         ENUM('activo','inactivo') NOT NULL DEFAULT 'activo',
-  fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id_usuario        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre            VARCHAR(50) NOT NULL,
+  apellido          VARCHAR(50) NOT NULL,
+  email             VARCHAR(100) NOT NULL UNIQUE,
+  contrasenia       VARCHAR(255) NOT NULL,
+  rol               ENUM('administrador','mozo') NOT NULL,
+  estado            ENUM('activo','inactivo','eliminado') NOT NULL DEFAULT 'activo',
+  fecha_creacion    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_eliminacion TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------
@@ -59,7 +62,9 @@ CREATE TABLE carta (
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------
--- 5. Tabla pedidos
+-- 5. Tabla pedidos (CON BORRADO LÓGICO)
+-- NOTA: Se implementa borrado lógico usando deleted_at
+-- para mantener integridad referencial y permitir auditoría
 -- -------------------------------------------------
 CREATE TABLE pedidos (
   id_pedido    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -73,6 +78,7 @@ CREATE TABLE pedidos (
   observaciones TEXT NULL,
   cliente_nombre VARCHAR(100) NULL,
   cliente_email  VARCHAR(100) NULL,
+  deleted_at   TIMESTAMP NULL DEFAULT NULL,
   FOREIGN KEY (id_mesa)
     REFERENCES mesas(id_mesa)
       ON UPDATE CASCADE ON DELETE SET NULL,
@@ -122,7 +128,7 @@ CREATE TABLE propinas (
 CREATE TABLE llamados_mesa (
   id_llamado     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   id_mesa        INT UNSIGNED NOT NULL,
-  estado         ENUM('pendiente','en_atencion','completado') NOT NULL DEFAULT 'pendiente',
+  estado         ENUM('pendiente','atendido','completado') NOT NULL DEFAULT 'pendiente',
   hora_solicitud DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   hora_atencion  DATETIME NULL,
   atendido_por   INT UNSIGNED NULL,
@@ -141,6 +147,8 @@ CREATE INDEX idx_pedidos_estado ON pedidos(estado);
 CREATE INDEX idx_pedidos_fecha ON pedidos(fecha_hora);
 CREATE INDEX idx_pedidos_mesa ON pedidos(id_mesa);
 CREATE INDEX idx_pedidos_mozo ON pedidos(id_mozo);
+CREATE INDEX idx_pedidos_deleted_at ON pedidos(deleted_at);
+CREATE INDEX idx_pedidos_activos ON pedidos(deleted_at, estado, fecha_hora);
 CREATE INDEX idx_detalle_pedido_pedido ON detalle_pedido(id_pedido);
 CREATE INDEX idx_propinas_fecha ON propinas(fecha_hora);
 CREATE INDEX idx_mesas_estado ON mesas(estado);
@@ -150,6 +158,7 @@ CREATE INDEX idx_carta_disponibilidad ON carta(disponibilidad);
 CREATE INDEX idx_carta_categoria ON carta(categoria);
 CREATE INDEX idx_usuarios_rol ON usuarios(rol);
 CREATE INDEX idx_usuarios_estado ON usuarios(estado);
+CREATE INDEX idx_usuarios_no_eliminados ON usuarios(estado, rol);
 CREATE INDEX idx_llamados_estado ON llamados_mesa(estado);
 CREATE INDEX idx_llamados_fecha ON llamados_mesa(hora_solicitud);
 

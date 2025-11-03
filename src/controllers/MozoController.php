@@ -256,7 +256,7 @@ class MozoController {
             exit;
         }
         
-        // Si no tiene mesas asignadas, eliminar directamente
+        // Si no tiene mesas asignadas, eliminar directamente (borrado lógico)
         if (Usuario::delete($id)) {
             header('Location: ' . url('mozos', ['success' => 'Mozo eliminado exitosamente']));
         } else {
@@ -298,7 +298,7 @@ class MozoController {
             }
         }
         
-        // Eliminar el mozo
+        // Eliminar el mozo (borrado lógico)
         if (Usuario::delete($id_mozo)) {
             $mensaje = 'Mozo eliminado exitosamente';
             if ($accion_mesas === 'reasignar') {

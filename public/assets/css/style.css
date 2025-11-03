@@ -3,7 +3,7 @@
   --background: #f7f1e1; /* beige muy claro */
   --surface: hsl(42, 60%, 84%); /* blanco para cartas y tablas */
   --primary: #f3e2b8; /* marrón oscuro más visible */
-  --secondary: #7f654d; /* marrón suave */
+  --secondary: rgb(144, 104, 76); /* marrón suave */
   --accent: #eee0be; /* tonalidad intermedia */
   --text: #3f3f3f; /* gris oscuro para texto */
   --text-light: #ffffff; /* texto claro sobre fondo oscuro */
@@ -191,7 +191,7 @@ h2 {
 .hamburger-line {
   width: 25px;
   height: 3px;
-  background-color: var(--text);
+  background-color: rgb(144, 104, 76);
   transition: all 0.3s ease;
   border-radius: 2px;
 }

@@ -176,11 +176,12 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .management-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
+  margin: 0 !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
   color: white !important;
   flex: 1;
+  min-width: 200px;
 }
 
 .header-actions {
@@ -220,19 +221,34 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 /* Responsive para móvil */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .management-header {
-    padding: 8px;
-    margin-bottom: 8px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
+    padding: 10px;
+    margin-bottom: 10px;
   }
   
   .management-header h1 {
-    font-size: 0.9rem;
+    font-size: 1.1rem !important;
+  }
+  
+  .header-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .management-header {
+    flex-direction: column;
+    align-items: stretch;
     text-align: center;
-    margin-bottom: 0.5rem;
+  }
+  
+  .management-header h1 {
+    font-size: 0.9rem !important;
+    text-align: center;
+    margin-bottom: 0.2rem;
+    min-width: auto;
   }
   
   .header-actions {
@@ -240,8 +256,25 @@ $precio_max = !empty($precios) ? max($precios) : 0;
   }
   
   .header-btn {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.6rem;
+    flex: 1;
+    text-align: center;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .management-header {
+    padding: 6px;
+    margin-bottom: 6px;
+  }
+  
+  .management-header h1 {
+    font-size: 0.8rem !important;
+  }
+  
+  .header-btn {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
   }
 }
 
@@ -254,7 +287,7 @@ $precio_max = !empty($precios) ? max($precios) : 0;
   overflow-x: auto;
   padding: 0 1rem;
   scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
+  scrollbar-color: rgba(144, 104, 76, 0.6) transparent;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
@@ -268,12 +301,12 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .categorias-nav::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: rgba(144, 104, 76, 0.6);
   border-radius: 3px;
 }
 
 .categorias-nav::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background: rgb(144, 104, 76);
 }
 
 .categoria-btn {
@@ -292,9 +325,9 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .categoria-btn:hover, .categoria-btn.active {
-  background: #8B4513;
+  background: rgb(144, 104, 76);
   color: white;
-  border-color: #8B4513;
+  border-color: rgb(144, 104, 76);
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 4px 8px rgba(0,0,0,0.25);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -316,17 +349,17 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .menu-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--primary);
   border-radius: 4px;
 }
 
 .menu-grid::-webkit-scrollbar-thumb {
-  background: #8B4513;
+  background:rgb(144, 104, 76);
   border-radius: 4px;
 }
 
 .menu-grid::-webkit-scrollbar-thumb:hover {
-  background: #A0522D;
+  background: var(--secondary);
 }
 
 .menu-item {
@@ -400,7 +433,7 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 }
 
 .item-category {
-  background: #8B4513;
+  background: rgb(144, 104, 76);
   color: white;
   padding: 3px 10px;
   border-radius: 12px;
@@ -986,12 +1019,12 @@ $precio_max = !empty($precios) ? max($precios) : 0;
   
   .categorias-nav::before {
     left: 0;
-    background: linear-gradient(to right, rgba(247, 241, 225, 1), rgba(247, 241, 225, 0));
+    background: transparent;
   }
   
   .categorias-nav::after {
     right: 0;
-    background: linear-gradient(to left, rgba(247, 241, 225, 1), rgba(247, 241, 225, 0));
+    background: transparent;
   }
   
   .categoria-btn {
@@ -1082,7 +1115,7 @@ $precio_max = !empty($precios) ? max($precios) : 0;
 <div class="carta-container">
   <!-- Header de gestión -->
   <div class="management-header">
-    <h1>🍽️ Gestion de carta</h1>
+    <h1><?= $rol === 'administrador' ? '🍽️ Gestión de Carta' : 'Consulta de Carta' ?></h1>
     <div class="header-actions">
       <?php if ($rol === 'administrador'): ?>
         <a href="<?= url('carta/create') ?>" class="header-btn">
@@ -1103,6 +1136,8 @@ $precio_max = !empty($precios) ? max($precios) : 0;
     'Carnes',
     'Pastas',
     'Pizzas',
+    'Hamburguesas',
+    'Acompañamientos',
     'Ensaladas',
     'Postres',
     'Bebidas'
@@ -1117,6 +1152,8 @@ $precio_max = !empty($precios) ? max($precios) : 0;
     'carnes' => 'Carnes',
     'pastas' => 'Pastas',
     'pizzas' => 'Pizzas',
+    'hamburguesas' => 'Hamburguesas',
+    'acompañamientos' => 'Acompañamientos',
     'ensaladas' => 'Ensaladas',
     'postres' => 'Postres',
     'bebidas' => 'Bebidas'

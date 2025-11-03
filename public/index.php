@@ -21,6 +21,45 @@ if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
 // Obtener la ruta solicitada
 $route = $_GET['route'] ?? 'cliente';
 
+// Manejar archivos estáticos (assets) antes del routing
+if (preg_match('/^assets\//', $route)) {
+    $file = __DIR__ . '/' . $route;
+    if (file_exists($file)) {
+        $ext = pathinfo($file, PATHINFO_EXTENSION);
+        $mime = [
+            'js' => 'application/javascript',
+            'css' => 'text/css',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+            'ico' => 'image/x-icon',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ttf' => 'font/ttf',
+            'eot' => 'application/vnd.ms-fontobject'
+        ][$ext] ?? 'text/plain';
+        
+        header("Content-Type: $mime");
+        
+        // Agregar cache headers para archivos estáticos
+        if (in_array($ext, ['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'woff', 'woff2', 'ttf', 'eot'])) {
+            header('Cache-Control: public, max-age=31536000'); // 1 año
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+        }
+        
+        readfile($file);
+        exit;
+    } else {
+        // Si el archivo no existe, devolver 404
+        http_response_code(404);
+        echo 'File not found';
+        exit;
+    }
+}
+
 // Función para redirigir al login si no está autenticado
 function requireAuth() {
     if (empty($_SESSION['user'])) {
@@ -217,7 +256,7 @@ switch ($route) {
         break;
 
     case 'pedidos/info':
-        requireMozoOrAdmin();
+        // Permitir acceso sin autenticación para obtener info del mozo desde cliente
         \App\Controllers\PedidoController::info();
         break;
 
@@ -263,6 +302,12 @@ switch ($route) {
     case 'llamados':
         requireMozoOrAdmin();
         include __DIR__ . '/../src/views/llamados/index.php';
+        break;
+
+    case 'llamado_atender':
+        requireMozoOrAdmin();
+        require_once __DIR__ . '/../src/controllers/LlamadoController.php';
+        \App\Controllers\LlamadoController::atender();
         break;
 
     // Ruta para llamar personal desde cliente

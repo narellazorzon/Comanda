@@ -9,11 +9,11 @@ class Reporte {
     /**
      * Obtiene los platos más vendidos por período
      */
-    public static function platosMasVendidos(string $periodo = 'mes', int $limite = 10): array {
+    public static function platosMasVendidos(string $periodo = 'mes', int $limite = 10, ?string $fechaDesde = null, ?string $fechaHasta = null): array {
         $db = (new Database)->getConnection();
         
-        // Construir filtro de fecha según el período
-        $fecha_filtro = self::getFiltroFecha($periodo);
+        // Construir filtro de fecha según el período o fechas personalizadas
+        $fecha_filtro = self::getFiltroFecha($periodo, $fechaDesde, $fechaHasta);
         
         $stmt = $db->prepare("
             SELECT 
@@ -31,20 +31,29 @@ class Reporte {
             $fecha_filtro
             GROUP BY c.id_item, c.nombre, c.categoria, c.precio
             ORDER BY total_vendido DESC, ingresos_totales DESC
-            LIMIT ?
+            LIMIT :limite
         ");
         
-        $stmt->execute([$limite]);
+        // Preparar parámetros
+        $params = ['limite' => $limite];
+        
+        // Si se usan fechas personalizadas, agregar los parámetros
+        if ($fechaDesde && $fechaHasta && self::validarFormatoFecha($fechaDesde) && self::validarFormatoFecha($fechaHasta) && $fechaDesde <= $fechaHasta) {
+            $params['fechaDesde'] = $fechaDesde;
+            $params['fechaHasta'] = $fechaHasta;
+        }
+        
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     /**
      * Obtiene estadísticas generales del período
      */
-    public static function estadisticasPeriodo(string $periodo = 'mes'): array {
+    public static function estadisticasPeriodo(string $periodo = 'mes', ?string $fechaDesde = null, ?string $fechaHasta = null): array {
         $db = (new Database)->getConnection();
         
-        $fecha_filtro = self::getFiltroFecha($periodo);
+        $fecha_filtro = self::getFiltroFecha($periodo, $fechaDesde, $fechaHasta);
         
         $stmt = $db->prepare("
             SELECT 
@@ -57,17 +66,26 @@ class Reporte {
             $fecha_filtro
         ");
         
-        $stmt->execute();
+        // Preparar parámetros
+        $params = [];
+        
+        // Si se usan fechas personalizadas, agregar los parámetros
+        if ($fechaDesde && $fechaHasta && self::validarFormatoFecha($fechaDesde) && self::validarFormatoFecha($fechaHasta) && $fechaDesde <= $fechaHasta) {
+            $params['fechaDesde'] = $fechaDesde;
+            $params['fechaHasta'] = $fechaHasta;
+        }
+        
+        $stmt->execute($params);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
     }
     
     /**
      * Obtiene ventas por categoría
      */
-    public static function ventasPorCategoria(string $periodo = 'mes'): array {
+    public static function ventasPorCategoria(string $periodo = 'mes', ?string $fechaDesde = null, ?string $fechaHasta = null): array {
         $db = (new Database)->getConnection();
         
-        $fecha_filtro = self::getFiltroFecha($periodo);
+        $fecha_filtro = self::getFiltroFecha($periodo, $fechaDesde, $fechaHasta);
         
         $stmt = $db->prepare("
             SELECT 
@@ -84,17 +102,26 @@ class Reporte {
             ORDER BY ingresos_totales DESC
         ");
         
-        $stmt->execute();
+        // Preparar parámetros
+        $params = [];
+        
+        // Si se usan fechas personalizadas, agregar los parámetros
+        if ($fechaDesde && $fechaHasta && self::validarFormatoFecha($fechaDesde) && self::validarFormatoFecha($fechaHasta) && $fechaDesde <= $fechaHasta) {
+            $params['fechaDesde'] = $fechaDesde;
+            $params['fechaHasta'] = $fechaHasta;
+        }
+        
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     /**
      * Obtiene ventas por día del período
      */
-    public static function ventasPorDia(string $periodo = 'mes'): array {
+    public static function ventasPorDia(string $periodo = 'mes', ?string $fechaDesde = null, ?string $fechaHasta = null): array {
         $db = (new Database)->getConnection();
         
-        $fecha_filtro = self::getFiltroFecha($periodo);
+        $fecha_filtro = self::getFiltroFecha($periodo, $fechaDesde, $fechaHasta);
         
         $stmt = $db->prepare("
             SELECT 
@@ -108,17 +135,26 @@ class Reporte {
             ORDER BY fecha DESC
         ");
         
-        $stmt->execute();
+        // Preparar parámetros
+        $params = [];
+        
+        // Si se usan fechas personalizadas, agregar los parámetros
+        if ($fechaDesde && $fechaHasta && self::validarFormatoFecha($fechaDesde) && self::validarFormatoFecha($fechaHasta) && $fechaDesde <= $fechaHasta) {
+            $params['fechaDesde'] = $fechaDesde;
+            $params['fechaHasta'] = $fechaHasta;
+        }
+        
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     /**
      * Obtiene el rendimiento de los mozos
      */
-    public static function rendimientoMozos(string $periodo = 'mes'): array {
+    public static function rendimientoMozos(string $periodo = 'mes', ?string $fechaDesde = null, ?string $fechaHasta = null): array {
         $db = (new Database)->getConnection();
 
-        $fecha_filtro = self::getFiltroFecha($periodo);
+        $fecha_filtro = self::getFiltroFecha($periodo, $fechaDesde, $fechaHasta);
 
         $stmt = $db->prepare("
             SELECT
@@ -136,7 +172,16 @@ class Reporte {
             ORDER BY ingresos_generados DESC
         ");
 
-        $stmt->execute();
+        // Preparar parámetros
+        $params = [];
+        
+        // Si se usan fechas personalizadas, agregar los parámetros
+        if ($fechaDesde && $fechaHasta && self::validarFormatoFecha($fechaDesde) && self::validarFormatoFecha($fechaHasta) && $fechaDesde <= $fechaHasta) {
+            $params['fechaDesde'] = $fechaDesde;
+            $params['fechaHasta'] = $fechaHasta;
+        }
+
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -176,9 +221,23 @@ class Reporte {
     }
     
     /**
-     * Construye el filtro de fecha SQL según el período
+     * Construye el filtro de fecha SQL según el período o fechas personalizadas
      */
-    private static function getFiltroFecha(string $periodo): string {
+    private static function getFiltroFecha(string $periodo, ?string $fechaDesde = null, ?string $fechaHasta = null): string {
+        // Si se proporcionan fechas personalizadas, validarlas y usarlas
+        if ($fechaDesde && $fechaHasta) {
+            // Validar formato de fecha (YYYY-MM-DD)
+            if (self::validarFormatoFecha($fechaDesde) && self::validarFormatoFecha($fechaHasta)) {
+                // Validar que fechaDesde <= fechaHasta
+                if ($fechaDesde <= $fechaHasta) {
+                    return "AND DATE(p.fecha_hora) BETWEEN :fechaDesde AND :fechaHasta";
+                }
+            }
+            // Si las fechas no son válidas, usar período 'todos'
+            $periodo = 'todos';
+        }
+        
+        // Usar lógica de períodos existente
         switch ($periodo) {
             case 'semana':
                 return "AND p.fecha_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
@@ -191,6 +250,14 @@ class Reporte {
             default:
                 return "AND p.fecha_hora >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
         }
+    }
+    
+    /**
+     * Valida que una fecha tenga el formato YYYY-MM-DD
+     */
+    private static function validarFormatoFecha(string $fecha): bool {
+        $d = \DateTime::createFromFormat('Y-m-d', $fecha);
+        return $d && $d->format('Y-m-d') === $fecha;
     }
     
     /**

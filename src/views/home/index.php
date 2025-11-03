@@ -306,12 +306,12 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 }
 
 .widget-btn.primary {
-    background: var(--secondary);
+    background: linear-gradient(135deg, var(--secondary) 0%, rgb(92, 64, 51) 100%);
     color: white;
 }
 
 .widget-btn.primary:hover {
-    background: #8b5e46;
+    background: linear-gradient(135deg, rgb(120, 85, 60) 0%, rgb(75, 50, 40) 100%);
     transform: translateX(4px);
 }
 

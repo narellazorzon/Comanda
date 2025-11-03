@@ -47,23 +47,23 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
 
 <h2>⚠️ Confirmar Inactivación del Personal</h2>
 
-<div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin-bottom: 2rem;">
-    <h3 style="margin: 0 0 15px 0; color: #856404;">🚨 Atención: Mozo con Mesas Asignadas</h3>
-    <p style="margin: 0 0 15px 0; color: #856404; font-size: 1.1em;">
+<div style="background:rgb(238, 224, 191); border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin-bottom: 2rem;">
+    <h3 style="margin: 0 0 15px 0; color:rgb(240, 100, 98);">🚨 Atención: Mozo con Mesas Asignadas</h3>
+    <p style="margin: 0 0 15px 0; color:rgb(109, 93, 69); font-size: 1.1em;">
         <strong><?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?></strong> 
         tiene <strong><?= $mesas_asignadas ?> mesa(s)</strong> asignada(s).
     </p>
-    <p style="margin: 0; color: #856404;">
+    <p style="margin: 0; color:rgb(109, 93, 69);">
         Antes de inactivar este mozo, debes decidir qué hacer con sus mesas asignadas.
     </p>
 </div>
 
 <!-- Mostrar mesas asignadas -->
-<div style="background: #f8f9fa; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
-    <h4 style="margin: 0 0 15px 0; color: #495057;">📍 Mesas Actualmente Asignadas</h4>
+<div style="background:rgb(238, 224, 191);border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+    <h4 style="margin: 0 0 15px 0; rgb(109, 93, 69);">📍 Mesas Actualmente Asignadas</h4>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <?php foreach ($mesas_del_mozo as $mesa): ?>
-            <div style="background: white; border: 2px solid #ffc107; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
+            <div style="background: white; border: 2px solid rgb(111, 88, 57); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
                 <strong>Mesa <?= $mesa['numero'] ?></strong>
                 <?php if (!empty($mesa['ubicacion'])): ?>
                     <span style="color: #6c757d; font-size: 0.9em;">(<?= htmlspecialchars($mesa['ubicacion']) ?>)</span>
@@ -89,12 +89,12 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
         <input type="hidden" name="nueva_contrasenia" value="<?= htmlspecialchars($_GET['nueva_contrasenia']) ?>">
     <?php endif; ?>
     
-    <h3 style="margin: 0 0 20px 0; color: #495057;">🎯 ¿Qué hacer con las mesas asignadas?</h3>
+    <h3 style="margin: 0 0 20px 0; color:rgb(109, 93, 69);">🎯 ¿Qué hacer con las mesas asignadas?</h3>
     
     <div style="margin-bottom: 25px;">
-        <label style="display: flex; align-items: center; margin-bottom: 15px; cursor: pointer; padding: 15px; border: 2px solid #dee2e6; border-radius: 8px; transition: all 0.3s;" 
-               onmouseover="this.style.backgroundColor='#f8f9fa'" 
-               onmouseout="this.style.backgroundColor='white'">
+        <label style="display: flex; align-items: center; margin-bottom: 15px; cursor: pointer; padding: 15px; border: 2px solid #dee2e6; border-radius: 8px; transition: all 0.3s; background-color: rgb(238, 224, 191);" 
+               onmouseover="this.style.backgroundColor='rgb(220, 200, 160)'" 
+               onmouseout="this.style.backgroundColor='rgb(238, 224, 191)'">
             <input type="radio" name="accion_mesas" value="reasignar" required style="margin-right: 12px; transform: scale(1.2);">
             <div>
                 <strong style="color: #007bff; font-size: 1.1em;">🔄 Reasignar a otro mozo</strong>
@@ -116,9 +116,9 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
             </select>
         </div>
         
-        <label style="display: flex; align-items: center; cursor: pointer; padding: 15px; border: 2px solid #dee2e6; border-radius: 8px; transition: all 0.3s;" 
-               onmouseover="this.style.backgroundColor='#f8f9fa'" 
-               onmouseout="this.style.backgroundColor='white'">
+        <label style="display: flex; align-items: center; cursor: pointer; padding: 15px; border: 2px solid #dee2e6; border-radius: 8px; transition: all 0.3s; background-color: rgb(238, 224, 191);" 
+               onmouseover="this.style.backgroundColor='rgb(220, 200, 160)'" 
+               onmouseout="this.style.backgroundColor='rgb(238, 224, 191)'">
             <input type="radio" name="accion_mesas" value="liberar" required style="margin-right: 12px; transform: scale(1.2);">
             <div>
                 <strong style="color: #ffc107; font-size: 1.1em;">🏃‍♂️ Liberar mesas</strong>
@@ -129,13 +129,67 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
         </label>
     </div>
     
-    <div style="display: flex; gap: 15px; justify-content: center; padding-top: 20px; border-top: 1px solid #dee2e6;">
-        <button type="submit" class="button" style="background: #dc3545; font-size: 1.1em; padding: 12px 25px;">
-            ⚠️ Confirmar Inactivación
-        </button>
-        <a href="<?= url('mozos/edit', ['id' => $id_mozo]) ?>" class="button" style="background: #6c757d; font-size: 1.1em; padding: 12px 25px;">
-            ❌ Cancelar
-        </a>
+    <div style="
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      padding-top: 15px;
+      border-top: 1px solid #dee2e6;
+      margin-top: 15px;
+    ">
+      <!-- Botón Confirmar -->
+      <button type="submit" style="
+          background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 1.05em;
+          font-weight: 500;
+          padding: 12px 25px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+          width: 220px;
+          height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          line-height: 1.2;
+          transform: translateY(-25px);
+      " 
+      onmouseover="this.style.transform='translateY(-27px)'; this.style.boxShadow='0 6px 16px rgba(220, 53, 69, 0.4)'" 
+      onmouseout="this.style.transform='translateY(-25px)'; this.style.boxShadow='0 4px 12px rgba(220, 53, 69, 0.3)'">
+          <span style="font-size: 1.1em; display: flex; align-items: center; justify-content: center; transform: translateY(-1px);">⚠️</span>
+          <span>Confirmar Inactivación</span>
+      </button>
+
+      <!-- Botón Cancelar -->
+      <a href="<?= url('mozos/edit', ['id' => $id_mozo]) ?>" style="
+          background: linear-gradient(135deg, #8b5e46 0%, #6b442f 100%);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 1.05em;
+          font-weight: 500;
+          padding: 12px 25px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(139, 94, 70, 0.3);
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 220px;
+          height: 60px;
+          line-height: 1.2;
+      " 
+      onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(139, 94, 70, 0.4)'" 
+      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(139, 94, 70, 0.3)'">
+          <span style="font-size: 1.2em; display: flex; align-items: center; justify-content: center;">❌</span>
+          <span>Cancelar</span>
+      </a>
     </div>
 </form>
 
@@ -160,7 +214,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Validación del formulario
-    document.querySelector('form').addEventListener('submit', function(e) {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
         const accionSeleccionada = document.querySelector('input[name="accion_mesas"]:checked');
         
         if (!accionSeleccionada) {
@@ -191,5 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
         }
     });
+    }
 });
 </script>

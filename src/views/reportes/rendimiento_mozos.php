@@ -73,7 +73,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .apply-btn {
-    background: var(--primary);
+    background:var(--secondary);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -85,7 +85,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .apply-btn:hover {
-    background-color: #d97817;
+    background-color: #8b5e46;
     transform: translateY(-2px);
 }
 
@@ -485,9 +485,9 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
             <div class="card mb-4">
                 <div class="card-body">
                     <form method="GET" action="" class="row g-3">
-                        <input type="hidden" name="route" value="reportes/rendimiento-mozos">
+                        <input type="hidden" name="route" value="reportes/rendimiento-personal">
                         
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="desde" class="form-label">Desde</label>
                             <input type="text" class="form-control" id="desde" name="desde"
                                    value="<?= date('d/m/Y', strtotime($desde)) ?>"
@@ -497,7 +497,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                    value="<?= htmlspecialchars($desde) ?>">
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="hasta" class="form-label">Hasta</label>
                             <input type="text" class="form-control" id="hasta" name="hasta"
                                    value="<?= date('d/m/Y', strtotime($hasta)) ?>"
@@ -507,26 +507,11 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                    value="<?= htmlspecialchars($hasta) ?>">
                         </div>
                         
-                        <div class="col-md-3">
-                            <label for="agrupar" class="form-label">Agrupar por</label>
-                            <select class="form-select" id="agrupar" name="agrupar">
-                                <option value="ninguno" <?= $agrupar === 'ninguno' ? 'selected' : '' ?>>
-                                    Sin agrupar (Ranking)
-                                </option>
-                                <option value="dia" <?= $agrupar === 'dia' ? 'selected' : '' ?>>
-                                    Por día
-                                </option>
-                                <option value="mes" <?= $agrupar === 'mes' ? 'selected' : '' ?>>
-                                    Por mes
-                                </option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-4 d-flex align-items-end">
                             <button type="submit" class="apply-btn me-2">
                                 🔍 Filtrar
                             </button>
-                            <a href="?route=reportes/rendimiento-mozos" class="clear-btn">
+                            <a href="?route=reportes/rendimiento-personal" class="clear-btn">
                                 🔄 Limpiar
                             </a>
                         </div>
@@ -876,7 +861,9 @@ function formatDate(dateStr) {
 }
 
 // Validar y convertir fechas al enviar el formulario
-document.querySelector('form').addEventListener('submit', function(e) {
+const form = document.querySelector('form');
+if (form) {
+    form.addEventListener('submit', function(e) {
     const desdeInput = document.getElementById('desde');
     const hastaInput = document.getElementById('hasta');
     const desdeHidden = document.getElementById('desde_hidden');
@@ -903,20 +890,27 @@ document.querySelector('form').addEventListener('submit', function(e) {
     desdeHidden.value = convertDate(desdeInput.value);
     hastaHidden.value = convertDate(hastaInput.value);
 });
+}
 
 // Formatear fecha al salir del campo
-document.getElementById('desde').addEventListener('blur', function() {
-    const value = this.value;
-    if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
-        // Auto-formatear si el usuario ingresa ddmmyyyy
-        const clean = value.replace(/\D/g, '');
-        if (clean.length === 8) {
-            this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
-        }
-    }
-});
+const desdeInput = document.getElementById('desde');
+const hastaInput = document.getElementById('hasta');
 
-document.getElementById('hasta').addEventListener('blur', function() {
+if (desdeInput) {
+    desdeInput.addEventListener('blur', function() {
+        const value = this.value;
+        if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
+            // Auto-formatear si el usuario ingresa ddmmyyyy
+            const clean = value.replace(/\D/g, '');
+            if (clean.length === 8) {
+                this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
+            }
+        }
+    });
+}
+
+if (hastaInput) {
+    hastaInput.addEventListener('blur', function() {
     const value = this.value;
     if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
         // Auto-formatear si el usuario ingresa ddmmyyyy
@@ -926,6 +920,7 @@ document.getElementById('hasta').addEventListener('blur', function() {
         }
     }
 });
+}
 
 // Configuración en español para Flatpickr
 const spanishLocale = {

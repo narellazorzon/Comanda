@@ -60,7 +60,7 @@ class CartaController {
                 $data = [
                     'nombre' => trim($_POST['nombre']),
                     'descripcion' => trim($_POST['descripcion'] ?? ''),
-                    'precio' => (float) $_POST['precio'],
+                    'precio' => self::calcularPrecioFinal($_POST['precio'], $_POST['descuento']),
                     'categoria' => trim($_POST['categoria']),
                     'disponibilidad' => (int) ($_POST['disponibilidad'] ?? 1),
                     'imagen_url' => $imagenUrl,
@@ -133,7 +133,7 @@ class CartaController {
         $data = [
             'nombre' => trim($_POST['nombre']),
             'descripcion' => trim($_POST['descripcion'] ?? ''),
-            'precio' => (float) $_POST['precio'],
+            'precio' => self::calcularPrecioFinal($_POST['precio'], $_POST['descuento']),
             'categoria' => trim($_POST['categoria']),
             'disponibilidad' => (int) ($_POST['disponibilidad'] ?? 1),
             'imagen_url' => $imagenUrl,
@@ -208,5 +208,18 @@ class CartaController {
             header('Location: ' . url('carta', $params));
         }
         exit;
+    }
+
+    private static function calcularPrecioFinal($precioBase, $descuento) {
+        $precio = (float) $precioBase;
+        $desc = isset($descuento) && $descuento !== '' ? (float) $descuento : 0.0;
+
+        if ($desc > 0) {
+            $precioFinal = $precio - ($precio * $desc / 100);
+        } else {
+            $precioFinal = $precio;
+        }
+
+        return round($precioFinal, 2);
     }
 }

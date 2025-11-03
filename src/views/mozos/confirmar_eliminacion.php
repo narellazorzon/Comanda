@@ -48,13 +48,13 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
 <h2>🗑️ Confirmar Eliminación del Personal</h2>
 
 <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 20px; margin-bottom: 2rem;">
-    <h3 style="margin: 0 0 15px 0; color: #721c24;">⚠️ ATENCIÓN: Eliminación Permanente</h3>
+    <h3 style="margin: 0 0 15px 0; color: #721c24;">⚠️ ATENCIÓN: Eliminación del Personal</h3>
     <p style="margin: 0 0 15px 0; color: #721c24; font-size: 1.1em;">
         <strong><?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?></strong> 
         tiene <strong><?= $mesas_asignadas ?> mesa(s)</strong> asignada(s).
     </p>
     <p style="margin: 0; color: #721c24;">
-        <strong>Esta acción es IRREVERSIBLE.</strong> Antes de eliminar este mozo, debes decidir qué hacer con sus mesas asignadas.
+        <strong>El mozo será marcado como eliminado</strong> (borrado lógico) y no podrá acceder al sistema. Antes de eliminar este mozo, debes decidir qué hacer con sus mesas asignadas.
     </p>
 </div>
 
@@ -157,7 +157,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Validación del formulario
-    document.querySelector('form').addEventListener('submit', function(e) {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
         const accionSeleccionada = document.querySelector('input[name="accion_mesas"]:checked');
         
         if (!accionSeleccionada) {
@@ -175,8 +177,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Confirmación final
         const mozoNombre = '<?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>';
         const mesasCount = <?= $mesas_asignadas ?>;
-        let mensaje = `⚠️ CONFIRMACIÓN FINAL ⚠️\n\n¿Estás SEGURO de eliminar PERMANENTEMENTE a ${mozoNombre}?\n\n`;
-        mensaje += `Esta acción NO se puede deshacer.\n\n`;
+        let mensaje = `⚠️ CONFIRMACIÓN FINAL ⚠️\n\n¿Estás SEGURO de eliminar a ${mozoNombre}?\n\n`;
+        mensaje += `El mozo será marcado como eliminado y no podrá acceder al sistema.\n\n`;
         
         if (accionSeleccionada.value === 'reasignar') {
             const nuevoMozoTexto = selectMozo.options[selectMozo.selectedIndex].text;
@@ -193,5 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Eliminación cancelada. Debes escribir "ELIMINAR" para confirmar.');
         }
     });
+    }
 });
 </script>

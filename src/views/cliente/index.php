@@ -26,7 +26,7 @@ foreach ($items as $item) {
 }
 
 // Orden preferido de categorías
-$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Ensaladas', 'Postres', 'Bebidas'];
+$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Acompañamientos', 'Ensaladas', 'Postres', 'Bebidas'];
 $categoriasOrdenadas = [];
 
 // Primero agregar las categorías en el orden preferido
@@ -50,7 +50,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 
 // Iconos para cada categoría
 $iconosCategorias = [
-    'Entradas' ,
+    'Entradas' => '🥗',
     'Platos Principales' => '🍽️',
     'Carnes' => '🥩',
     'Aves' => '🍗',
@@ -58,6 +58,7 @@ $iconosCategorias = [
     'Pastas' => '🍝',
     'Pizzas' => '🍕',
     'Hamburguesas' => '🍔',
+    'Acompañamientos' => '🍟',
     'Ensaladas' => '🥗',
     'Postres' => '🍰',
     'Bebidas' => '🥤',
@@ -145,13 +146,13 @@ $iconosCategorias = [
     }
 
     .menu-filters::-webkit-scrollbar-thumb {
-        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(90deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 3px;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .menu-filters::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(90deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
     
     .menu-filters button {
@@ -199,19 +200,19 @@ $iconosCategorias = [
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb {
-        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(90deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(90deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(90deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
 
     .categoria-btn {
@@ -239,7 +240,7 @@ $iconosCategorias = [
     }
 
     .categoria-btn.active {
-        background: rgb(83, 52, 31);
+        background: var(--color-secundario);
         color: white;
     }
 
@@ -847,19 +848,19 @@ $iconosCategorias = [
     }
 
     .cart-panel::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.3);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .cart-panel::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .cart-panel::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(180deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
 
     /* Indicador de scroll para el panel completo */
@@ -1060,7 +1061,7 @@ $iconosCategorias = [
     }
 
     .cart-items::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 5px;
         border: 2px solid rgba(255, 255, 255, 0.3);
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1);
@@ -1068,13 +1069,13 @@ $iconosCategorias = [
     }
 
     .cart-items::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15);
         transform: scaleX(1.1);
     }
 
     .cart-items::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(180deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
     }
 
@@ -2400,14 +2401,14 @@ $iconosCategorias = [
     }
 
     .modal-pago-footer .btn-secundario {
-        background: #6c757d;
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         color: white;
     }
 
     .modal-pago-footer .btn-secundario:hover {
-        background: #5a6268;
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
     }
 
     .confirmacion-acciones {
@@ -2441,14 +2442,14 @@ $iconosCategorias = [
     }
 
     .confirmacion-acciones .btn-secundario {
-        background: #6c757d;
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         color: white;
     }
 
     .confirmacion-acciones .btn-secundario:hover {
-        background: #5a6268;
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
     }
 
     .confirmacion-mesa {
@@ -2560,16 +2561,16 @@ $iconosCategorias = [
                             <div class="producto-footer">
                                 <?php 
                                 $precioOriginal = $item['precio'];
-                                $descuento = $item['descuento'] ?? 0;
-                                $precioConDescuento = $precioOriginal - $descuento;
-                                $tieneDescuento = $descuento > 0;
+                                $descuentoPorcentaje = $item['descuento'] ?? 0;
+                                $precioConDescuento = $precioOriginal - ($precioOriginal * $descuentoPorcentaje / 100);
+                                $tieneDescuento = $descuentoPorcentaje > 0;
                                 ?>
                                 
                                 <?php if ($tieneDescuento): ?>
                                     <div class="precio-container">
                                         <span class="precio-original">$<?= number_format($precioOriginal, 2) ?></span>
                                         <span class="precio-descuento">$<?= number_format($precioConDescuento, 2) ?></span>
-                                        <span class="descuento-badge">-<?= number_format(($descuento / $precioOriginal) * 100, 0) ?>%</span>
+                                        <span class="descuento-badge">-<?= number_format($descuentoPorcentaje, 0) ?>%</span>
                                     </div>
                                 <?php else: ?>
                                     <span class="producto-precio">$<?= number_format($precioOriginal, 2) ?></span>
@@ -2651,14 +2652,35 @@ $iconosCategorias = [
             
             <!-- Formulario de pedido -->
             <form id="checkout-form" class="checkout-form">
-                <div class="form-group">
-                    <label>Modalidad de consumo:</label>
-                    <select id="modo-consumo" name="modo_consumo" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="stay">🪑 Consumir en el local</option>
-                        <option value="takeaway">📦 Para llevar</option>
+                <?php
+                $modo_qr    = $_SESSION['modo_consumo_qr'] ?? null;
+                $id_mesa_qr = $_SESSION['mesa_qr'] ?? null;
+                ?>
+
+                <?php if ($modo_qr !== null): ?>
+                  <!-- QR detectado: no mostrar selector -->
+                  <input type="hidden" name="modo_consumo" value="<?= htmlspecialchars($modo_qr) ?>">
+                  <?php if ($modo_qr === 'stay' && $id_mesa_qr): ?>
+                    <input type="hidden" name="id_mesa" value="<?= (int)$id_mesa_qr ?>">
+                    <div class="alert alert-success" style="background:#f4f9f4;border:1px solid #7ec77b;color:#2e662b;padding:6px 10px;border-radius:6px;margin-bottom:10px;">
+                      ✅ Pedido en <strong>mesa #<?= (int)$id_mesa_qr ?></strong> (desde QR)
+                    </div>
+                  <?php elseif ($modo_qr === 'takeaway'): ?>
+                    <div class="alert alert-info" style="background:#f0f7ff;border:1px solid #72b5f2;color:#1d5c9c;padding:6px 10px;border-radius:6px;margin-bottom:10px;">
+                      🛍️ Pedido para llevar
+                    </div>
+                  <?php endif; ?>
+                <?php else: ?>
+                  <!-- Solo se muestra cuando NO viene desde QR (por ejemplo el admin o menú sin QR) -->
+                  <div class="form-group">
+                    <label for="modo_consumo">Modo de consumo:</label>
+                    <select name="modo_consumo" id="modo_consumo" required>
+                      <option value="">Seleccionar...</option>
+                      <option value="stay">En el local</option>
+                      <option value="takeaway">Para llevar</option>
                     </select>
-                </div>
+                  </div>
+                <?php endif; ?>
                 
                 <div id="mesa-field-container">
                     <!-- Campo mesa desde QR (visible cuando viene por QR) -->
@@ -2801,6 +2823,17 @@ $iconosCategorias = [
         qrText.textContent = `✅ Mesa ${mesaFromQR} (desde QR)`;
         
         document.getElementById('numero-mesa').value = mesaFromQR;
+        
+        // Establecer modo de consumo como 'stay' (en el local)
+        // Buscar tanto el select como el input hidden
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumoSelect.value = 'stay';
+        } else if (modoConsumoHidden) {
+            modoConsumoHidden.value = 'stay';
+        }
     }
 
     // Configurar modo manual
@@ -2836,9 +2869,14 @@ $iconosCategorias = [
         }
         
         // Establecer modo de consumo como takeaway
-        const modoConsumo = document.getElementById('modo_consumo');
-        if (modoConsumo) {
-            modoConsumo.value = 'takeaway';
+        // Buscar tanto el select como el input hidden
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumoSelect.value = 'takeaway';
+        } else if (modoConsumoHidden) {
+            modoConsumoHidden.value = 'takeaway';
         }
         
         // Ocultar botón de llamar mozo (no aplica para takeaway)
@@ -3088,7 +3126,17 @@ $iconosCategorias = [
 
     // Validación del formulario para modo QR
     function validateFormQR() {
-        const modoConsumo = document.getElementById('modo-consumo').value;
+        // Obtener modo de consumo (puede ser del selector visible o del campo oculto)
+        let modoConsumo = '';
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumo = modoConsumoSelect.value;
+        } else if (modoConsumoHidden) {
+            modoConsumo = modoConsumoHidden.value;
+        }
+        
         const nombreCompleto = document.getElementById('nombre-completo').value.trim();
         const email = document.getElementById('email').value.trim();
         
@@ -3252,8 +3300,10 @@ $iconosCategorias = [
             });
         }
         
-        // Lógica de campos de mesa
-        document.getElementById('modo-consumo').addEventListener('change', function() {
+        // Lógica de campos de mesa (solo si existe el selector)
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        if (modoConsumoSelect) {
+            modoConsumoSelect.addEventListener('change', function() {
             if (this.value === 'stay') {
                 if (!isQRMode) {
                     document.getElementById('mesa-manual-field').style.display = 'block';
@@ -3266,10 +3316,11 @@ $iconosCategorias = [
                 document.getElementById('numero-mesa').value = '';
             }
             validateFormQR();
-        });
+            });
+        }
         
         // Validación en tiempo real
-        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email'];
+        const formFields = ['numero-mesa', 'nombre-completo', 'email'];
         formFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
@@ -3277,6 +3328,12 @@ $iconosCategorias = [
                 field.addEventListener('change', validateFormQR);
             }
         });
+        
+        // Agregar validación para el selector de modo de consumo si existe
+        if (modoConsumoSelect) {
+            modoConsumoSelect.addEventListener('input', validateFormQR);
+            modoConsumoSelect.addEventListener('change', validateFormQR);
+        }
         
         // Envío del formulario
         document.getElementById('checkout-form').addEventListener('submit', async function(e) {
@@ -3288,7 +3345,17 @@ $iconosCategorias = [
             }
             
             let mesaFinal = null;
-            const modoConsumo = document.getElementById('modo-consumo').value;
+            
+            // Obtener modo de consumo (puede ser del selector visible o del campo oculto)
+            let modoConsumo = '';
+            const modoConsumoSelect = document.getElementById('modo_consumo');
+            const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+            
+            if (modoConsumoSelect) {
+                modoConsumo = modoConsumoSelect.value;
+            } else if (modoConsumoHidden) {
+                modoConsumo = modoConsumoHidden.value;
+            }
             
             if (modoConsumo === 'stay') {
                 if (isQRMode && mesaFromQR) {
@@ -3438,6 +3505,9 @@ $iconosCategorias = [
             // Obtener información del mozo asignado a la mesa
             mozoInfoDiv.innerHTML = '<p>🔄 Buscando información del mozo...</p>';
 
+            console.log('Buscando mozo para mesa:', mesaNumero);
+            console.log('URL de petición:', '<?= $base_url ?>/index.php?route=pedidos/info');
+            
             fetch('<?= $base_url ?>/index.php?route=pedidos/info', {
                 method: 'POST',
                 headers: {
@@ -3445,18 +3515,30 @@ $iconosCategorias = [
                 },
                 body: JSON.stringify({
                     accion: 'obtener_mozo_mesa',
-                    numero_mesa: mesaNumero
+                    numero_mesa: parseInt(mesaNumero)
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Waiter info response:', data);
-                if (data.success && data.mozo) {
+                console.log('Data success:', data.success);
+                console.log('Data mozo:', data.mozo);
+                
+                if (data.success && data.mozo && data.mozo.nombre) {
+                    console.log('Mostrando nombre del mozo:', data.mozo.nombre, data.mozo.apellido);
                     mozoInfoDiv.innerHTML = `
-                        <p><strong>${data.mozo.nombre} ${data.mozo.apellido}</strong></p>
+                        <p><strong>👨‍🍳 ${data.mozo.nombre} ${data.mozo.apellido || ''}</strong></p>
                         <p>Mozo asignado a la Mesa ${mesaNumero}</p>
                     `;
                 } else {
+                    console.log('No se encontró mozo o datos incompletos');
                     mozoInfoDiv.innerHTML = `
                         <p>👨‍🍳 Mozo asignado a la Mesa ${mesaNumero}</p>
                         <p>Te atenderá en breve</p>

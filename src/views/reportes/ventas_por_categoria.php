@@ -13,6 +13,18 @@ use App\Models\Reporte;
 
 // Parámetros de filtro
 $periodo = $_GET['periodo'] ?? 'todos';
+$fecha_desde = $_GET['fecha_desde'] ?? '';
+$fecha_hasta = $_GET['fecha_hasta'] ?? '';
+$error = '';
+
+// Validar rango de fechas
+if ($fecha_desde && $fecha_hasta) {
+    $desde_ts = strtotime($fecha_desde);
+    $hasta_ts = strtotime($fecha_hasta);
+    if ($hasta_ts < $desde_ts) {
+        $error = '⚠️ Fechas inválidas: la fecha "Hasta" no puede ser anterior a la fecha "Desde".';
+    }
+}
 
 // Validar período
 $periodos_validos = ['semana', 'mes', 'año', 'todos'];
@@ -20,9 +32,9 @@ if (!in_array($periodo, $periodos_validos)) {
     $periodo = 'todos';
 }
 
-// Obtener datos usando el modelo Reporte
-$categorias = Reporte::ventasPorCategoria($periodo);
-$stats = Reporte::estadisticasPeriodo($periodo);
+// Obtener datos del modelo solo si no hay error
+$categorias = $error ? [] : Reporte::ventasPorCategoria($periodo, $fecha_desde, $fecha_hasta);
+$stats = $error ? [] : Reporte::estadisticasPeriodo($periodo, $fecha_desde, $fecha_hasta);
 ?>
 
 <style>
@@ -305,9 +317,44 @@ $stats = Reporte::estadisticasPeriodo($periodo);
     <div class="report-header">
         <h1>📊 Ventas por Categoría</h1>
         <p>Análisis de rendimiento por categoría de productos</p>
+        <?php if ($fecha_desde && $fecha_hasta): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: del <?= htmlspecialchars($fecha_desde) ?> al <?= htmlspecialchars($fecha_hasta) ?>
+            </p>
+        <?php elseif ($periodo !== 'todos'): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: <?= ucfirst($periodo) ?>
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <!-- Contenedor de alerta para fechas inválidas -->
+    <div id="alerta-fechas" 
+         style="display:<?= $error ? 'block' : 'none' ?>; 
+                background:#f8d7da; 
+                color:#721c24; 
+                border:1px solid #f5c6cb; 
+                border-radius:6px; 
+                padding:10px; 
+                margin-bottom:1rem;">
+        <?= htmlspecialchars($error) ?>
     </div>
 
     <div class="filters-section">
+        <div class="filter-group">
+            <label for="fecha_desde">Fecha Desde:</label>
+            <input type="date" name="fecha_desde" id="fecha_desde" 
+                   value="<?= htmlspecialchars($fecha_desde) ?>" 
+                   onchange="validarFechas()">
+        </div>
+        
+        <div class="filter-group">
+            <label for="fecha_hasta">Fecha Hasta:</label>
+            <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                   value="<?= htmlspecialchars($fecha_hasta) ?>" 
+                   onchange="validarFechas()">
+        </div>
+        
         <div class="filter-group">
             <label for="periodo">Período:</label>
             <select name="periodo" id="periodo" onchange="updateFilters()">
@@ -386,10 +433,49 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 </div>
 
 <script>
+function validarFechas() {
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    const alerta = document.getElementById('alerta-fechas');
+    
+    if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+        alerta.style.display = 'block';
+        alerta.innerText = '⚠️ Fechas inválidas: la fecha "Hasta" no puede ser anterior a la fecha "Desde".';
+        return false;
+    } else {
+        alerta.style.display = 'none';
+        return true;
+    }
+}
+
 function updateFilters() {
+    // Validar fechas antes de proceder
+    if (!validarFechas()) {
+        return false;
+    }
+    
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
     const periodo = document.getElementById('periodo').value;
     
     const url = new URL(window.location);
+    
+    // Limpiar parámetros de período anterior
+    url.searchParams.delete('periodo');
+    
+    // Agregar nuevos parámetros
+    if (fechaDesde) {
+        url.searchParams.set('fecha_desde', fechaDesde);
+    } else {
+        url.searchParams.delete('fecha_desde');
+    }
+    
+    if (fechaHasta) {
+        url.searchParams.set('fecha_hasta', fechaHasta);
+    } else {
+        url.searchParams.delete('fecha_hasta');
+    }
+    
     url.searchParams.set('periodo', periodo);
     
     window.location.href = url.toString();

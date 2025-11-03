@@ -26,6 +26,29 @@ class Mesa {
     }
 
     /**
+     * Devuelve todas las mesas activas ordenadas con las mesas del mozo logueado primero.
+     */
+    public static function allForMozo(int $id_mozo): array {
+        $db   = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT m.*, 
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as mozo_nombre_completo,
+                   (SELECT COUNT(*) FROM pedidos p WHERE p.id_mesa = m.id_mesa AND p.estado NOT IN ('cerrado', 'cancelado')) as pedidos_activos,
+                   CASE 
+                       WHEN m.id_mozo = ? THEN 0 
+                       ELSE 1 
+                   END as es_mesa_asignada
+            FROM mesas m
+            LEFT JOIN usuarios u ON m.id_mozo = u.id_usuario
+            ORDER BY es_mesa_asignada ASC, m.numero ASC
+        ");
+        $stmt->execute([$id_mozo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Busca una mesa activa por su ID con información del mozo asignado, o devuelve null si no existe.
      */
     public static function find(int $id): ?array {

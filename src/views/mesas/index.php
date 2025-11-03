@@ -82,7 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
 }
 
 // 1) Cargamos todas las mesas (activas e inactivas)
-$mesasActivas = Mesa::all();
+// Si es un mozo, mostrar sus mesas asignadas primero
+if ($rol === 'mozo') {
+    $mesasActivas = Mesa::allForMozo($_SESSION['user']['id_usuario']);
+} else {
+    $mesasActivas = Mesa::all();
+}
 $mesasInactivas = Mesa::allInactive();
 ?>
 
@@ -153,11 +158,11 @@ $mesasInactivas = Mesa::allInactive();
 <table class="table">
   <thead>
     <tr>
-      <th>Número</th>
+      <th style="width: 20%;">Número</th>
       <th>Ubicación</th>
-      <th>Estado</th>
+      <th style="width: 12%;">Estado</th>
       <th>Mozo Asignado</th>
-      <th>Cambiar Estado</th>
+      <th style="width: 12%;">Cambiar Estado</th>
       <?php if ($rol === 'administrador'): ?>
         <th>Acciones</th>
       <?php endif; ?>
@@ -165,8 +170,19 @@ $mesasInactivas = Mesa::allInactive();
   </thead>
   <tbody>
     <?php foreach ($mesasActivas as $m): ?>
-      <tr>
-        <td><?= htmlspecialchars($m['numero']) ?></td>
+      <?php 
+      // Verificar si esta mesa está asignada al mozo logueado
+      $esMesaAsignada = ($rol === 'mozo' && $m['id_mozo'] == $_SESSION['user']['id_usuario']);
+      ?>
+      <tr <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
+        <td>
+          <?= htmlspecialchars($m['numero']) ?>
+          <?php if ($esMesaAsignada): ?>
+            <span style="background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; font-weight: bold; margin-left: 8px;">
+              👤 Mi Mesa
+            </span>
+          <?php endif; ?>
+        </td>
         <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
         <td>
           <?php
@@ -298,9 +314,20 @@ $mesasInactivas = Mesa::allInactive();
 <!-- Vista de tarjetas para móviles -->
 <div class="mobile-cards">
   <?php foreach ($mesasActivas as $m): ?>
-    <div class="mobile-card mesa-activa">
+    <?php 
+    // Verificar si esta mesa está asignada al mozo logueado
+    $esMesaAsignada = ($rol === 'mozo' && $m['id_mozo'] == $_SESSION['user']['id_usuario']);
+    ?>
+    <div class="mobile-card mesa-activa" <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
       <div class="mobile-card-header">
-        <div class="mobile-card-number">Mesa <?= htmlspecialchars($m['numero']) ?></div>
+        <div class="mobile-card-number">
+          Mesa <?= htmlspecialchars($m['numero']) ?>
+          <?php if ($esMesaAsignada): ?>
+            <span style="background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; font-weight: bold; margin-left: 8px;">
+              👤 Mi Mesa
+            </span>
+          <?php endif; ?>
+        </div>
         <?php if ($rol === 'administrador'): ?>
           <div class="mobile-card-actions">
             <a href="<?= url('mesas/edit', ['id' => $m['id_mesa']]) ?>" class="btn-action" title="Editar mesa">
@@ -570,21 +597,23 @@ function initFilters() {
     });
     
     // Event listeners para los botones de estado
-    statusButtons.forEach((button) => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remover clase active de todos los botones
-            statusButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Agregar clase active al botón clickeado
-            this.classList.add('active');
-            
-            // Actualizar filtro de estado
-            currentStatusFilter = this.dataset.status;
-            filterMesas();
+    if (statusButtons && statusButtons.length > 0) {
+        statusButtons.forEach((button) => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remover clase active de todos los botones
+                statusButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Agregar clase active al botón clickeado
+                this.classList.add('active');
+                
+                // Actualizar filtro de estado
+                currentStatusFilter = this.dataset.status;
+                filterMesas();
+            });
         });
-    });
+    }
     
     // Ejecutar filtro inicial
     filterMesas();
@@ -876,6 +905,17 @@ function confirmarReactivacionMesa(id, numero) {
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     initFilters();
+    
+    // Agregar eventos a los filtros
+    const filtroNumero = document.getElementById('filtro-numero');
+    const filtroEstado = document.getElementById('filtro-estado');
+    const filtroUbicacion = document.getElementById('filtro-ubicacion');
+    const filtroMozo = document.getElementById('filtro-mozo');
+
+    if (filtroNumero) filtroNumero.addEventListener('input', aplicarFiltrosMesas);
+    if (filtroEstado) filtroEstado.addEventListener('change', aplicarFiltrosMesas);
+    if (filtroUbicacion) filtroUbicacion.addEventListener('change', aplicarFiltrosMesas);
+    if (filtroMozo) filtroMozo.addEventListener('change', aplicarFiltrosMesas);
 });
 
 // === FUNCIONALIDAD DE FILTROS ===
@@ -973,16 +1013,7 @@ function limpiarFiltrosMesas() {
     }
 }
 
-// Agregar eventos a los filtros
-document.getElementById('filtro-numero').addEventListener('input', aplicarFiltrosMesas);
-document.getElementById('filtro-estado').addEventListener('change', aplicarFiltrosMesas);
-document.getElementById('filtro-ubicacion').addEventListener('change', aplicarFiltrosMesas);
-document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltrosMesas);
 </script>
-
-<!-- Incluir CSS y JS del modal de confirmación -->
-<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
-<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
 /* Efectos bounce y animaciones globales */
@@ -1135,7 +1166,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .tab-button.active {
-    border-bottom-color: #007bff;
+    border-bottom-color:rgb(255, 166, 0);
     background: #e3f2fd;
   }
   
@@ -1244,7 +1275,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 .search-input-group button:hover {
-    background: #5a6268;
+    background:rgb(137, 122, 100);
 }
 
 .status-filters {
@@ -1289,6 +1320,28 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 
+
+/* Ajustes específicos para columnas de la tabla de mesas */
+.table th:nth-child(1), .table td:nth-child(1) {
+  width: 20% !important;
+  min-width: 120px;
+}
+
+.table th:nth-child(3), .table td:nth-child(3) {
+  width: 12% !important;
+  min-width: 80px;
+}
+
+.table th:nth-child(5), .table td:nth-child(5) {
+  width: 12% !important;
+  min-width: 100px;
+}
+
+/* Asegurar que el badge "Mi Mesa" se vea completo */
+.table td:nth-child(1) {
+  white-space: nowrap;
+  overflow: visible;
+}
 
 /* Responsive para móvil */
 @media (max-width: 768px) {
@@ -1442,9 +1495,9 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 .management-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
+  margin: 0 !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
   color: white !important;
   flex: 1;
   min-width: 200px;
@@ -1496,7 +1549,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 1.1rem;
+    font-size: 1.1rem !important;
   }
   
   .header-btn {
@@ -1515,7 +1568,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 0.9rem;
+    font-size: 0.9rem !important;
     text-align: center;
     margin-bottom: 0.5rem;
   }
@@ -1547,7 +1600,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 0.8rem;
+    font-size: 0.8rem !important;
   }
   
   .header-btn {
@@ -1790,3 +1843,5 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 </style>
+
+<!-- Modal de confirmación ya incluido en header.php -->

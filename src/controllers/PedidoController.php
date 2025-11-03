@@ -70,7 +70,7 @@ class PedidoController
     }
 
     /**
-     * Elimina (soft-delete) un pedido. Solo administradores.
+     * Elimina lógicamente un pedido. Solo administradores.
      */
     public static function delete(): void
     {
@@ -103,6 +103,7 @@ class PedidoController
         ]));
         exit;
     }
+
 
     /**
      * Devuelve informacion completa de un pedido (JSON).

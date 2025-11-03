@@ -802,13 +802,13 @@ $takeawayPresets = [
 }
 
 .btn-edit {
-  background: #6c757d;
+  background: rgb(144, 104, 76);
   color: white;
-  border-color: #5a6268;
+  border-color: rgb(92, 64, 51);
 }
 
 .btn-edit:hover {
-  background: #5a6268;
+  background: rgb(92, 64, 51);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
@@ -827,7 +827,7 @@ $takeawayPresets = [
 
 .btn-action {
   padding: 4px 8px;
-  background: #28a745;
+  background: rgb(144, 104, 76);
   color: white;
   border: none;
   border-radius: 4px;
@@ -837,7 +837,7 @@ $takeawayPresets = [
 }
 
 .btn-action:hover {
-  background: #218838;
+  background: rgb(92, 64, 51);
   transform: translateY(-1px);
 }
 
