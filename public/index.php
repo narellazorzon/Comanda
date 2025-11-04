@@ -192,6 +192,12 @@ switch ($route) {
         \App\Controllers\MozoController::inactivar();
         break;
 
+    case 'mozos/activar':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/MozoController.php';
+        \App\Controllers\MozoController::activar();
+        break;
+
     // Rutas de Carta
     case 'carta':
         requireMozoOrAdmin();

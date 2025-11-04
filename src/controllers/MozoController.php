@@ -244,7 +244,20 @@ class MozoController {
             exit;
         }
         
-        // Verificar si el mozo tiene mesas asignadas
+        // Primero inactivar el mozo (cambiar estado a inactivo)
+        $data = [
+            'nombre' => $usuario['nombre'],
+            'apellido' => $usuario['apellido'],
+            'email' => $usuario['email'],
+            'estado' => 'inactivo'
+        ];
+        
+        if (!Usuario::update($id, $data)) {
+            header('Location: ' . url('mozos', ['error' => 'Error al inactivar el mozo']));
+            exit;
+        }
+        
+        // Verificar si el mozo tiene mesas asignadas DESPUÉS de inactivarlo
         $mesas_asignadas = Mesa::countMesasByMozo($id);
         
         if ($mesas_asignadas > 0) {
@@ -262,18 +275,63 @@ class MozoController {
             exit;
         }
         
-        // Si no tiene mesas asignadas, inactivar directamente (borrado lógico)
+        // Si no tiene mesas asignadas, mostrar mensaje de éxito
+        header('Location: ' . url('mozos', ['success' => 'Mozo inactivado exitosamente']));
+        exit;
+    }
+
+    public static function activar() {
+        self::authorize();
+        $id = (int) ($_GET['id'] ?? $_GET['activar'] ?? 0);
+        
+        if ($id <= 0) {
+            header('Location: ' . url('mozos', ['error' => 'ID de usuario inválido']));
+            exit;
+        }
+        
+        // Verificar que el usuario existe y no es administrador
+        $usuario = Usuario::find($id);
+        if (!$usuario) {
+            header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
+            exit;
+        }
+        
+        if ($usuario['rol'] === 'administrador') {
+            header('Location: ' . url('mozos', ['error' => 'No se puede cambiar el estado de un usuario administrador']));
+            exit;
+        }
+        
+        // Si ya está activo, no hacer nada
+        if ($usuario['estado'] === 'activo') {
+            header('Location: ' . url('mozos', ['error' => 'El mozo ya está activo']));
+            exit;
+        }
+        
+        // Verificar si el mozo tiene mesas asignadas y liberarlas automáticamente
+        $mesas_asignadas = Mesa::countMesasByMozo($id);
+        if ($mesas_asignadas > 0) {
+            $mesas = Mesa::getMesasByMozo($id);
+            foreach ($mesas as $mesa) {
+                Mesa::asignarMozo($mesa['id_mesa'], null);
+            }
+        }
+        
+        // Activar el mozo (cambiar estado a activo)
         $data = [
             'nombre' => $usuario['nombre'],
             'apellido' => $usuario['apellido'],
             'email' => $usuario['email'],
-            'estado' => 'inactivo'
+            'estado' => 'activo'
         ];
         
         if (Usuario::update($id, $data)) {
-            header('Location: ' . url('mozos', ['success' => 'Mozo inactivado exitosamente']));
+            $mensaje = 'Mozo activado exitosamente';
+            if ($mesas_asignadas > 0) {
+                $mensaje .= ' y sus ' . $mesas_asignadas . ' mesa(s) fueron liberadas automáticamente';
+            }
+            header('Location: ' . url('mozos', ['success' => $mensaje]));
         } else {
-            header('Location: ' . url('mozos', ['error' => 'Error al inactivar el mozo']));
+            header('Location: ' . url('mozos', ['error' => 'Error al activar el mozo']));
         }
         exit;
     }

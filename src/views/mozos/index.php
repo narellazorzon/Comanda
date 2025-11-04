@@ -198,12 +198,19 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
             ✏️
           </a>
           <?php if (!$esAdminActual): ?>
-            <button class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; border: none; cursor: pointer;" title="Eliminar mozo"
-               onclick="confirmarEliminacion(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>')">
-              ❌
-            </button>
+            <?php if ($m['estado'] === 'inactivo'): ?>
+              <button class="btn-action activate-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #28a745; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; border: none; cursor: pointer;" title="Activar mozo"
+                 onclick="confirmarEliminacion(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>', 'inactivo')">
+                ✅
+              </button>
+            <?php else: ?>
+              <button class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; border: none; cursor: pointer;" title="Inactivar mozo (borrado lógico)"
+                 onclick="confirmarEliminacion(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>', 'activo')">
+                ❌
+              </button>
+            <?php endif; ?>
           <?php else: ?>
-            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; background: rgb(144, 104, 76); color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
+            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; background: rgb(144, 104, 76); color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes inactivarte a ti mismo">
               🔒
             </span>
           <?php endif; ?>
@@ -270,12 +277,19 @@ if (($_SESSION['user']['rol'] ?? '') === 'administrador') {
             ✏️
           </a>
           <?php if (!$esAdminActual): ?>
-            <button class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; border: none; cursor: pointer;"
-               onclick="confirmarEliminacion(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>')">
-              ❌
-            </button>
+            <?php if ($m['estado'] === 'inactivo'): ?>
+              <button class="btn-action activate-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #28a745; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; border: none; cursor: pointer;" title="Activar mozo"
+                 onclick="confirmarEliminacion(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>', 'inactivo')">
+                ✅
+              </button>
+            <?php else: ?>
+              <button class="btn-action delete-btn" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; text-decoration: none; background: #dc3545; color: white; border-radius: 6px; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; border: none; cursor: pointer;" title="Inactivar mozo (borrado lógico)"
+                 onclick="confirmarEliminacion(<?= $m['id_usuario'] ?>, '<?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']) ?>', 'activo')">
+                ❌
+              </button>
+            <?php endif; ?>
           <?php else: ?>
-            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; background: rgb(144, 104, 76); color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes eliminarte a ti mismo">
+            <span class="btn-action disabled" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; background: rgb(144, 104, 76); color: #999; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 32px; cursor: not-allowed;" title="No puedes inactivarte a ti mismo">
               🔒
             </span>
           <?php endif; ?>
@@ -635,21 +649,21 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Modal de confirmación personalizado -->
 <div id="modalEliminacion" class="modal-eliminacion" style="display: none;">
   <div class="modal-overlay" onclick="cerrarModalEliminacion()"></div>
-  <div class="modal-content">
+  <div class="modal-content" id="modalContent">
     <div class="modal-header">
-      <h3>❌ Confirmar Inactivación</h3>
+      <h3 id="modalTitulo">❌ Confirmar Inactivación</h3>
       <button class="modal-close" onclick="cerrarModalEliminacion()">×</button>
     </div>
     <div class="modal-body">
-      <div class="warning-icon">⚠️</div>
-      <p class="modal-message">¿Estás seguro de inactivar a <strong id="nombreMozo"></strong>?</p>
+      <div class="warning-icon" id="modalIcono">⚠️</div>
+      <p class="modal-message" id="modalMensaje">¿Estás seguro de inactivar a <strong id="nombreMozo"></strong>?</p>
       <div class="modal-info">
-        <p>Esta acción marcará al mozo como inactivo (borrado lógico). El mozo no podrá acceder al sistema y, si tiene mesas asignadas, deberás reasignarlas o liberarlas.</p>
+        <p id="modalDescripcion">Esta acción marcará al mozo como inactivo (borrado lógico). El mozo no podrá acceder al sistema y, si tiene mesas asignadas, deberás reasignarlas o liberarlas.</p>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModalEliminacion()">Cancelar</button>
-      <button class="btn-confirmar" onclick="eliminarMozo()">Inactivar</button>
+      <button class="btn-confirmar" id="btnConfirmarModal" onclick="eliminarMozo()">Inactivar</button>
     </div>
   </div>
 </div>
@@ -1385,6 +1399,11 @@ document.addEventListener('DOMContentLoaded', function() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background 0.3s ease;
+}
+
+.modal-content.modal-activar .modal-header {
+  background: linear-gradient(135deg, #28a745, #218838);
 }
 
 .modal-header h3 {
@@ -1485,12 +1504,23 @@ document.addEventListener('DOMContentLoaded', function() {
   background: linear-gradient(135deg, #dc3545, #c82333);
   color: white;
   box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  transition: all 0.3s ease;
 }
 
 .btn-confirmar:hover {
   background: linear-gradient(135deg, #c82333, #bd2130);
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+}
+
+.modal-content.modal-activar .btn-confirmar {
+  background: linear-gradient(135deg, #28a745, #218838);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.modal-content.modal-activar .btn-confirmar:hover {
+  background: linear-gradient(135deg, #218838, #1e7e34);
+  box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
 }
 
 @keyframes fadeIn {
@@ -1557,11 +1587,35 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // Variables globales para el modal
 let mozoIdAEliminar = null;
+let mozoEstadoActual = null;
 
 // Función para mostrar el modal de confirmación
-function confirmarEliminacion(id, nombre) {
+function confirmarEliminacion(id, nombre, estado) {
   mozoIdAEliminar = id;
+  mozoEstadoActual = estado;
   document.getElementById('nombreMozo').textContent = nombre;
+  
+  const modalContent = document.getElementById('modalContent');
+  
+  // Actualizar el modal según el estado
+  if (estado === 'inactivo') {
+    // Modal para activar - estilo verde
+    modalContent.classList.add('modal-activar');
+    document.getElementById('modalTitulo').textContent = '✅ Confirmar Activación';
+    document.getElementById('modalIcono').textContent = '✅';
+    document.getElementById('modalMensaje').innerHTML = '¿Estás seguro de activar a <strong>' + nombre + '</strong>?';
+    document.getElementById('modalDescripcion').textContent = 'Esta acción marcará al mozo como activo. Si tiene mesas asignadas, serán liberadas automáticamente para que pueda recibir nuevas asignaciones.';
+    document.getElementById('btnConfirmarModal').textContent = 'Activar';
+  } else {
+    // Modal para inactivar - estilo rojo
+    modalContent.classList.remove('modal-activar');
+    document.getElementById('modalTitulo').textContent = '❌ Confirmar Inactivación';
+    document.getElementById('modalIcono').textContent = '⚠️';
+    document.getElementById('modalMensaje').innerHTML = '¿Estás seguro de inactivar a <strong>' + nombre + '</strong>?';
+    document.getElementById('modalDescripcion').textContent = 'Esta acción marcará al mozo como inactivo (borrado lógico). El mozo no podrá acceder al sistema y, si tiene mesas asignadas, deberás reasignarlas o liberarlas.';
+    document.getElementById('btnConfirmarModal').textContent = 'Inactivar';
+  }
+  
   document.getElementById('modalEliminacion').style.display = 'flex';
   document.body.style.overflow = 'hidden'; // Prevenir scroll del body
 }
@@ -1570,15 +1624,23 @@ function confirmarEliminacion(id, nombre) {
 function cerrarModalEliminacion() {
   document.getElementById('modalEliminacion').style.display = 'none';
   document.body.style.overflow = 'auto'; // Restaurar scroll del body
+  document.getElementById('modalContent').classList.remove('modal-activar');
   mozoIdAEliminar = null;
+  mozoEstadoActual = null;
 }
 
-// Función para confirmar la inactivación (borrado lógico)
+// Función para confirmar la inactivación o activación
 function eliminarMozo() {
   if (mozoIdAEliminar) {
-    // Redirigir a la URL de inactivación
-    const inactivarUrl = '<?= url("mozos/inactivar") ?>';
-    window.location.href = inactivarUrl + (inactivarUrl.includes('?') ? '&' : '?') + 'id=' + mozoIdAEliminar;
+    if (mozoEstadoActual === 'inactivo') {
+      // Activar el mozo
+      const activarUrl = '<?= url("mozos/activar") ?>';
+      window.location.href = activarUrl + (activarUrl.includes('?') ? '&' : '?') + 'id=' + mozoIdAEliminar;
+    } else {
+      // Inactivar el mozo
+      const inactivarUrl = '<?= url("mozos/inactivar") ?>';
+      window.location.href = inactivarUrl + (inactivarUrl.includes('?') ? '&' : '?') + 'id=' + mozoIdAEliminar;
+    }
   }
 }
 
