@@ -278,6 +278,54 @@ $takeawayPresets = [
   <?php endforeach; ?>
 </div>
 
+<!-- Tarjetas móviles para Takeaway -->
+<div class="mobile-cards" id="qr-takeaway-mobile" style="display: none;">
+  <div class="mobile-card">
+    <div class="mobile-card-header">
+      <div class="mobile-card-number">
+        <strong>🥡 Take Away</strong>
+        <span class="card-category">Pedidos para llevar</span>
+      </div>
+      <div class="mobile-card-actions">
+        <label style="font-size: 0.7rem; cursor: pointer;">
+          <input type="checkbox" class="qr-checkbox-takeaway" data-tipo="takeaway" style="margin-right: 0.2rem;">
+          ✅
+        </label>
+      </div>
+    </div>
+
+    <div class="mobile-card-body">
+      <div class="mobile-card-item">
+        <div class="mobile-card-label">🌐 URL</div>
+        <div class="mobile-card-value"><?php echo htmlspecialchars($baseUrl . '/index.php?route=cliente&takeaway=1'); ?></div>
+      </div>
+
+      <div class="mobile-card-item">
+        <div class="mobile-card-label">📱 Servicio</div>
+        <div class="mobile-card-value">Pedidos para llevar</div>
+      </div>
+    </div>
+
+    <div class="card-image">
+      <div class="qr-card-preview" id="qr-takeaway-mobile-content">
+        <div class="qr-card-placeholder">
+          <div class="qr-spinner" aria-hidden="true"></div>
+          <p>Generando QR...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-actions">
+      <button type="button" class="btn-modern btn-edit" onclick="descargarQRTakeaway()">
+        ⬇️ Descargar
+      </button>
+      <button type="button" class="btn-modern btn-delete" onclick="imprimirQRTakeaway()">
+        🖨️ Imprimir
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Sección Takeaway -->
 <div id="qr-takeaway-section" style="display: none;">
   <div class="table-responsive">
@@ -1109,6 +1157,18 @@ $takeawayPresets = [
   overflow-y: visible;
 }
 
+/* Estilos para secciones ocultas - eliminar espacio */
+#qr-stay-section[style*="display: none"],
+#qr-takeaway-section[style*="display: none"],
+#qr-stay-mobile[style*="display: none"],
+#qr-takeaway-mobile[style*="display: none"] {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
 .mobile-card {
   background: white;
   border-radius: 8px;
@@ -1582,11 +1642,78 @@ function generarQRTakeaway(force) {
   img.src = qrImageUrl;
 }
 
+function generarQRTakeawayMobile() {
+  const takeawayMobileContent = document.getElementById('qr-takeaway-mobile-content');
+  
+  if (!takeawayMobileContent) {
+    return;
+  }
+
+  if (takeawayMobileContent.querySelector('.qr-image')) {
+    return;
+  }
+
+  const config = readConfig();
+  const takeawayUrl = baseUrl + '/index.php?route=cliente&takeaway=1';
+  const qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=' + config.size + 'x' + config.size + '&data=' + encodeURIComponent(takeawayUrl) + '&color=' + config.color.replace('#', '') + '&bgcolor=' + config.bgcolor.replace('#', '') + '&margin=' + config.margin;
+
+  // Show loading state
+  takeawayMobileContent.innerHTML = '<div class="qr-card-placeholder"><div class="qr-spinner" aria-hidden="true"></div><p>Generando QR...</p></div>';
+
+  // Create image element to handle loading errors
+  const img = new Image();
+  img.onload = function() {
+    const takeawayHtml = '<div class="qr-code-container"><img src="' + qrImageUrl + '" alt="QR Takeaway" class="qr-image" /><div class="qr-info"><div class="qr-url">' + takeawayUrl + '</div></div></div>';
+
+    takeawayMobileContent.innerHTML = takeawayHtml;
+    
+    // Verificar visibilidad del elemento padre
+    const takeawayMobile = document.getElementById('qr-takeaway-mobile');
+    if (takeawayMobile) {
+      const rect = takeawayMobile.getBoundingClientRect();
+      
+      // Si no está visible, hacer scroll hacia él
+      if (rect.top < 0 || rect.top > window.innerHeight) {
+        takeawayMobile.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    const takeawayCheckbox = document.querySelector('#qr-takeaway-mobile .qr-checkbox-takeaway');
+    if (takeawayCheckbox) {
+      takeawayCheckbox.addEventListener('change', handleTakeawaySelectionChange);
+    }
+  };
+
+  img.onerror = function() {
+    const errorHtml = '<div class="qr-code-container"><div class="qr-error" style="color: #dc3545; padding: 20px; text-align: center;">❌ Error al generar QR<br><small>Verifique su conexión a internet</small></div><div class="qr-info"><div class="qr-url">' + takeawayUrl + '</div></div></div>';
+
+    takeawayMobileContent.innerHTML = errorHtml;
+  };
+
+  // Set timeout in case image takes too long to load
+  setTimeout(function() {
+    if (!img.complete && takeawayMobileContent.innerHTML.includes('Generando QR...')) {
+      const timeoutHtml = '<div class="qr-code-container"><div class="qr-timeout" style="color: #ffc107; padding: 20px; text-align: center;">⏱️ Tiempo de espera agotado<br><small>Intente recargar la página</small></div><div class="qr-info"><div class="qr-url">' + takeawayUrl + '</div></div></div>';
+
+      takeawayMobileContent.innerHTML = timeoutHtml;
+    }
+  }, 10000); // 10 second timeout
+
+  img.src = qrImageUrl;
+}
+
 function descargarQRTakeaway() {
   const takeawayContent = document.getElementById('qr-takeaway-content');
-  if (!takeawayContent) return;
-
-  const img = takeawayContent.querySelector('.qr-image');
+  const takeawayMobileContent = document.getElementById('qr-takeaway-mobile-content');
+  
+  let img = null;
+  if (takeawayContent) {
+    img = takeawayContent.querySelector('.qr-image');
+  }
+  if (!img && takeawayMobileContent) {
+    img = takeawayMobileContent.querySelector('.qr-image');
+  }
+  
   if (!img) {
     showNotification('❌ QR Takeaway no generado aún', 'error', 3000);
     return;
@@ -1602,15 +1729,26 @@ function descargarQRTakeaway() {
 
 function imprimirQRTakeaway() {
   const takeawayContent = document.getElementById('qr-takeaway-content');
-  if (!takeawayContent) return;
-
-  const img = takeawayContent.querySelector('.qr-image');
+  const takeawayMobileContent = document.getElementById('qr-takeaway-mobile-content');
+  
+  let img = null;
+  let urlElement = null;
+  
+  if (takeawayContent) {
+    img = takeawayContent.querySelector('.qr-image');
+    urlElement = takeawayContent.querySelector('.qr-url');
+  }
+  if (!img && takeawayMobileContent) {
+    img = takeawayMobileContent.querySelector('.qr-image');
+    urlElement = takeawayMobileContent.querySelector('.qr-url');
+  }
+  
   if (!img) {
     showNotification('❌ QR Takeaway no generado aún', 'error', 3000);
     return;
   }
 
-  const url = takeawayContent.querySelector('.qr-url').textContent;
+  const url = urlElement ? urlElement.textContent : baseUrl + '/index.php?route=cliente&takeaway=1';
 
   const printWindow = window.open('', '_blank');
   const printContent = '<!DOCTYPE html><html><head><title>QR Take Away</title><style>body { margin: 0; padding: 20px; text-align: center; font-family: Arial, sans-serif; }.qr-container { display: inline-block; padding: 20px; border: 2px solid #ddd; border-radius: 8px; }.qr-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; }.qr-image { max-width: 300px; height: auto; border: 1px solid #ddd; border-radius: 4px; }.qr-url { font-size: 12px; color: #666; margin-top: 10px; word-break: break-all; background: #f5f5f5; padding: 8px; border-radius: 4px; }</style></head><body><div class="qr-container"><div class="qr-title">Take Away</div><img src="' + img.src + '" class="qr-image" alt="QR Take Away" /><div class="qr-url">' + url + '</div></div><script>window.onload = function() { setTimeout(function() { window.print(); window.close(); }, 500); }<\/script></body></html>';
@@ -1638,29 +1776,168 @@ function showTab(tabName) {
   const staySection = document.getElementById('qr-stay-section');
   const takeWaySection = document.getElementById('qr-takeaway-section');
   const stayMobile = document.getElementById('qr-stay-mobile');
+  const takeawayMobile = document.getElementById('qr-takeaway-mobile');
 
-  if (staySection) staySection.style.display = 'none';
-  if (takeWaySection) takeWaySection.style.display = 'none';
-  if (stayMobile) stayMobile.style.display = 'none';
+  // Ocultar TODAS las secciones primero - FORZAR ocultación
+  if (staySection) {
+    staySection.style.display = 'none';
+    staySection.style.visibility = 'hidden';
+  }
+  if (takeWaySection) {
+    takeWaySection.style.display = 'none';
+    takeWaySection.style.visibility = 'hidden';
+  }
+  if (stayMobile) {
+    stayMobile.style.display = 'none';
+    stayMobile.style.visibility = 'hidden';
+  }
+  if (takeawayMobile) {
+    takeawayMobile.style.display = 'none';
+    takeawayMobile.style.visibility = 'hidden';
+  }
+  
+  // Forzar eliminación de espacio residual
+  setTimeout(function() {
+    if (staySection && staySection.style.display === 'none') {
+      staySection.style.height = '0';
+      staySection.style.margin = '0';
+      staySection.style.padding = '0';
+    }
+    if (takeWaySection && takeWaySection.style.display === 'none') {
+      takeWaySection.style.height = '0';
+      takeWaySection.style.margin = '0';
+      takeWaySection.style.padding = '0';
+    }
+    if (stayMobile && stayMobile.style.display === 'none') {
+      stayMobile.style.height = '0';
+      stayMobile.style.margin = '0';
+      stayMobile.style.padding = '0';
+    }
+    if (takeawayMobile && takeawayMobile.style.display === 'none') {
+      takeawayMobile.style.height = '0';
+      takeawayMobile.style.margin = '0';
+      takeawayMobile.style.padding = '0';
+    }
+  }, 50);
 
   document.querySelectorAll('.tab-button').forEach(function(btn) {
     btn.classList.remove('active');
   });
 
   if (tabName === 'stay') {
-    if (staySection) staySection.style.display = 'block';
-    if (stayMobile) stayMobile.style.display = 'block';
-    const stayTab = document.querySelector('.tab-button[onclick="showTab(\'stay\')"]');
-    if (stayTab) stayTab.classList.add('active');
-  } else if (tabName === 'takeaway') {
-    if (takeWaySection) {
-      takeWaySection.style.display = 'block';
-      if (!takeWaySection.querySelector('.qr-image')) {
-        generarQRTakeaway();
+    // Detectar si es móvil
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // Mostrar solo versión móvil de mesas
+      if (stayMobile) {
+        stayMobile.style.display = 'block';
+        stayMobile.style.visibility = 'visible';
+      }
+      // Ocultar versión desktop de mesas
+      if (staySection) {
+        staySection.style.display = 'none';
+        staySection.style.visibility = 'hidden';
+      }
+    } else {
+      // Mostrar solo versión desktop de mesas
+      if (staySection) {
+        staySection.style.display = 'block';
+        staySection.style.visibility = 'visible';
+      }
+      // Ocultar versión móvil de mesas
+      if (stayMobile) {
+        stayMobile.style.display = 'none';
+        stayMobile.style.visibility = 'hidden';
       }
     }
+    
+    // Asegurar que takeaway esté oculto (ambas versiones)
+    if (takeWaySection) {
+      takeWaySection.style.display = 'none';
+      takeWaySection.style.visibility = 'hidden';
+    }
+    if (takeawayMobile) {
+      takeawayMobile.style.display = 'none';
+      takeawayMobile.style.visibility = 'hidden';
+    }
+    
+    const stayTab = document.querySelector('.tab-button[onclick="showTab(\'stay\')"]');
+    if (stayTab) stayTab.classList.add('active');
+    
+    // Restaurar estilos normales para secciones visibles
+    setTimeout(function() {
+      if (staySection && staySection.style.display === 'block') {
+        staySection.style.height = 'auto';
+        staySection.style.margin = '';
+        staySection.style.padding = '';
+      }
+      if (stayMobile && stayMobile.style.display === 'block') {
+        stayMobile.style.height = 'auto';
+        stayMobile.style.margin = '';
+        stayMobile.style.padding = '';
+      }
+    }, 100);
+  } else if (tabName === 'takeaway') {
+    // Detectar si es móvil
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // Mostrar solo versión móvil de takeaway
+      if (takeawayMobile) {
+        takeawayMobile.style.display = 'block';
+        takeawayMobile.style.visibility = 'visible';
+        if (!takeawayMobile.querySelector('.qr-image')) {
+          generarQRTakeawayMobile();
+        }
+      }
+      // Ocultar versión desktop de takeaway
+      if (takeWaySection) {
+        takeWaySection.style.display = 'none';
+        takeWaySection.style.visibility = 'hidden';
+      }
+    } else {
+      // Mostrar solo versión desktop de takeaway
+      if (takeWaySection) {
+        takeWaySection.style.display = 'block';
+        takeWaySection.style.visibility = 'visible';
+        if (!takeWaySection.querySelector('.qr-image')) {
+          generarQRTakeaway();
+        }
+      }
+      // Ocultar versión móvil de takeaway
+      if (takeawayMobile) {
+        takeawayMobile.style.display = 'none';
+        takeawayMobile.style.visibility = 'hidden';
+      }
+    }
+    
+    // Asegurar que mesas esté oculto (ambas versiones)
+    if (staySection) {
+      staySection.style.display = 'none';
+      staySection.style.visibility = 'hidden';
+    }
+    if (stayMobile) {
+      stayMobile.style.display = 'none';
+      stayMobile.style.visibility = 'hidden';
+    }
+    
     const takeawayTab = document.querySelector('.tab-button[onclick="showTab(\'takeaway\')"]');
     if (takeawayTab) takeawayTab.classList.add('active');
+    
+    // Restaurar estilos normales para secciones visibles
+    setTimeout(function() {
+      if (takeWaySection && takeWaySection.style.display === 'block') {
+        takeWaySection.style.height = 'auto';
+        takeWaySection.style.margin = '';
+        takeWaySection.style.padding = '';
+      }
+      if (takeawayMobile && takeawayMobile.style.display === 'block') {
+        takeawayMobile.style.height = 'auto';
+        takeawayMobile.style.margin = '';
+        takeawayMobile.style.padding = '';
+      }
+    }, 100);
   }
 }
 
