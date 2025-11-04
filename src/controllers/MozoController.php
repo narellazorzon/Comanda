@@ -217,9 +217,9 @@ class MozoController {
         exit;
     }
 
-    public static function delete() {
+    public static function inactivar() {
         self::authorize();
-        $id = (int) ($_GET['delete'] ?? 0);
+        $id = (int) ($_GET['id'] ?? $_GET['inactivar'] ?? 0);
         
         if ($id <= 0) {
             header('Location: ' . url('mozos', ['error' => 'ID de usuario inválido']));
@@ -234,7 +234,13 @@ class MozoController {
         }
         
         if ($usuario['rol'] === 'administrador') {
-            header('Location: ' . url('mozos', ['error' => 'No se puede eliminar un usuario administrador']));
+            header('Location: ' . url('mozos', ['error' => 'No se puede inactivar un usuario administrador']));
+            exit;
+        }
+        
+        // Si ya está inactivo, no hacer nada
+        if ($usuario['estado'] === 'inactivo') {
+            header('Location: ' . url('mozos', ['error' => 'El mozo ya está inactivo']));
             exit;
         }
         
@@ -242,9 +248,9 @@ class MozoController {
         $mesas_asignadas = Mesa::countMesasByMozo($id);
         
         if ($mesas_asignadas > 0) {
-            // Redirigir a pantalla de confirmación con los datos del mozo
+            // Redirigir a pantalla de confirmación de inactivación con los datos del mozo
             $query_params = [
-                'confirmar_eliminacion' => '1',
+                'confirmar_inactivacion' => '1',
                 'id_mozo' => $id,
                 'nombre' => $usuario['nombre'],
                 'apellido' => $usuario['apellido'],
@@ -252,64 +258,22 @@ class MozoController {
                 'mesas_asignadas' => $mesas_asignadas
             ];
             
-            header('Location: ' . url('mozos/confirmar-eliminacion', $query_params));
+            header('Location: ' . url('mozos/confirmar-inactivacion', $query_params));
             exit;
         }
         
-        // Si no tiene mesas asignadas, eliminar directamente (borrado lógico)
-        if (Usuario::delete($id)) {
-            header('Location: ' . url('mozos', ['success' => 'Mozo eliminado exitosamente']));
+        // Si no tiene mesas asignadas, inactivar directamente (borrado lógico)
+        $data = [
+            'nombre' => $usuario['nombre'],
+            'apellido' => $usuario['apellido'],
+            'email' => $usuario['email'],
+            'estado' => 'inactivo'
+        ];
+        
+        if (Usuario::update($id, $data)) {
+            header('Location: ' . url('mozos', ['success' => 'Mozo inactivado exitosamente']));
         } else {
-            header('Location: ' . url('mozos', ['error' => 'Error al eliminar el mozo']));
-        }
-        exit;
-    }
-
-    public static function procesarEliminacion() {
-        self::authorize();
-        
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . url('mozos'));
-            exit;
-        }
-        
-        $id_mozo = (int) ($_POST['id_mozo'] ?? 0);
-        $accion_mesas = $_POST['accion_mesas'] ?? '';
-        $nuevo_mozo = !empty($_POST['nuevo_mozo']) ? (int) $_POST['nuevo_mozo'] : null;
-        
-        $mozo = Usuario::find($id_mozo);
-        if (!$mozo || !in_array($mozo['rol'], ['mozo', 'administrador'])) {
-            header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
-            exit;
-        }
-        
-        // Procesar las mesas según la acción elegida
-        if ($accion_mesas === 'reasignar' && $nuevo_mozo) {
-            // Reasignar todas las mesas al nuevo mozo
-            $mesas = Mesa::getMesasByMozo($id_mozo);
-            foreach ($mesas as $mesa) {
-                Mesa::asignarMozo($mesa['id_mesa'], $nuevo_mozo);
-            }
-        } elseif ($accion_mesas === 'liberar') {
-            // Liberar todas las mesas (sin mozo asignado)
-            $mesas = Mesa::getMesasByMozo($id_mozo);
-            foreach ($mesas as $mesa) {
-                Mesa::asignarMozo($mesa['id_mesa'], null);
-            }
-        }
-        
-        // Eliminar el mozo (borrado lógico)
-        if (Usuario::delete($id_mozo)) {
-            $mensaje = 'Mozo eliminado exitosamente';
-            if ($accion_mesas === 'reasignar') {
-                $nuevo_mozo_info = Usuario::find($nuevo_mozo);
-                $mensaje .= ' y sus mesas fueron reasignadas a ' . $nuevo_mozo_info['nombre'] . ' ' . $nuevo_mozo_info['apellido'];
-            } elseif ($accion_mesas === 'liberar') {
-                $mensaje .= ' y sus mesas fueron liberadas';
-            }
-            header('Location: ' . url('mozos', ['success' => $mensaje]));
-        } else {
-            header('Location: ' . url('mozos', ['error' => 'Error al eliminar el mozo']));
+            header('Location: ' . url('mozos', ['error' => 'Error al inactivar el mozo']));
         }
         exit;
     }

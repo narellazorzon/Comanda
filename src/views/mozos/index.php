@@ -17,17 +17,6 @@ if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administra
     exit;
 }
 
-// 1) Si llega ?delete=ID, borramos y redirigimos
-if (isset($_GET['delete'])) {
-    $resultado = MozoController::delete();
-    
-    // Si es una petición AJAX, devolver JSON
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => $resultado]);
-        exit;
-    }
-}
 
 // 2) Cargamos todos los mozos
 $mozos = Usuario::allByRole('mozo');
@@ -648,19 +637,19 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="modal-overlay" onclick="cerrarModalEliminacion()"></div>
   <div class="modal-content">
     <div class="modal-header">
-      <h3>🗑️ Confirmar Eliminación</h3>
+      <h3>❌ Confirmar Inactivación</h3>
       <button class="modal-close" onclick="cerrarModalEliminacion()">×</button>
     </div>
     <div class="modal-body">
       <div class="warning-icon">⚠️</div>
-      <p class="modal-message">¿Estás seguro de eliminar a <strong id="nombreMozo"></strong>?</p>
+      <p class="modal-message">¿Estás seguro de inactivar a <strong id="nombreMozo"></strong>?</p>
       <div class="modal-info">
-        <p>Esta acción marcará al mozo como eliminado (borrado lógico) y no podrá acceder al sistema.</p>
+        <p>Esta acción marcará al mozo como inactivo (borrado lógico). El mozo no podrá acceder al sistema y, si tiene mesas asignadas, deberás reasignarlas o liberarlas.</p>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModalEliminacion()">Cancelar</button>
-      <button class="btn-confirmar" onclick="eliminarMozo()">Eliminar</button>
+      <button class="btn-confirmar" onclick="eliminarMozo()">Inactivar</button>
     </div>
   </div>
 </div>
@@ -1584,11 +1573,12 @@ function cerrarModalEliminacion() {
   mozoIdAEliminar = null;
 }
 
-// Función para confirmar la eliminación
+// Función para confirmar la inactivación (borrado lógico)
 function eliminarMozo() {
   if (mozoIdAEliminar) {
-    // Redirigir a la URL de eliminación
-    window.location.href = `<?= url('mozos/delete') ?>?delete=${mozoIdAEliminar}`;
+    // Redirigir a la URL de inactivación
+    const inactivarUrl = '<?= url("mozos/inactivar") ?>';
+    window.location.href = inactivarUrl + (inactivarUrl.includes('?') ? '&' : '?') + 'id=' + mozoIdAEliminar;
   }
 }
 

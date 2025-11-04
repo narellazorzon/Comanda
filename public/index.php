@@ -180,27 +180,16 @@ switch ($route) {
         include __DIR__ . '/../src/views/mozos/confirmar_inactivacion.php';
         break;
 
-    case 'mozos/confirmar-eliminacion':
-        requireAdmin();
-        include __DIR__ . '/../src/views/mozos/confirmar_eliminacion.php';
-        break;
-
     case 'mozos/procesar-inactivacion':
         requireAdmin();
         require_once __DIR__ . '/../src/controllers/MozoController.php';
         \App\Controllers\MozoController::procesarInactivacion();
         break;
 
-    case 'mozos/delete':
+    case 'mozos/inactivar':
         requireAdmin();
         require_once __DIR__ . '/../src/controllers/MozoController.php';
-        \App\Controllers\MozoController::delete();
-        break;
-
-    case 'mozos/procesar-eliminacion':
-        requireAdmin();
-        require_once __DIR__ . '/../src/controllers/MozoController.php';
-        \App\Controllers\MozoController::procesarEliminacion();
+        \App\Controllers\MozoController::inactivar();
         break;
 
     // Rutas de Carta

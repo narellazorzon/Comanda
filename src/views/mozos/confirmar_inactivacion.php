@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\Usuario;
 use App\Models\Mesa;
+use App\Controllers\MozoController;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -14,6 +15,12 @@ if (session_status() === PHP_SESSION_NONE) {
 // Solo administradores pueden acceder
 if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administrador') {
     header('Location: ' . url('login'));
+    exit;
+}
+
+// Si viene un POST, delegamos al controlador y salimos
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    MozoController::procesarInactivacion();
     exit;
 }
 
@@ -28,8 +35,8 @@ if ($id_mozo <= 0) {
 
 // Obtener información del mozo
 $mozo = Usuario::find($id_mozo);
-if (!$mozo || $mozo['rol'] !== 'mozo') {
-    header('Location: ' . url('mozos', ['error' => 'Mozo no encontrado']));
+if (!$mozo || !in_array($mozo['rol'], ['mozo', 'administrador'])) {
+    header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
     exit;
 }
 
@@ -79,7 +86,7 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
 </div>
 
 <!-- Formulario de confirmación -->
-<form method="post" action="<?= url('mozos/procesar-inactivacion') ?>" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 25px;">
+<form method="post" action="<?= url('mozos/confirmar-inactivacion') ?>" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 25px;">
     <!-- Datos del mozo (hidden) -->
     <input type="hidden" name="id_mozo" value="<?= $id_mozo ?>">
     <input type="hidden" name="nombre" value="<?= htmlspecialchars($_GET['nombre'] ?? $mozo['nombre']) ?>">
