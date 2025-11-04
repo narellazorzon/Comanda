@@ -419,9 +419,31 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentStatusFilter = 'all';
     
     function getMozoStatus(row) {
-        const statusSpan = row.querySelector('td:nth-child(4) span');
+        const statusSpan = row.querySelector('td:nth-child(5) span');
         if (statusSpan) {
-            return statusSpan.textContent.toLowerCase().trim().replace(/[✅❌]/g, '').trim();
+            // Extraer el texto del estado, remover emojis y espacios, convertir a minúsculas
+            let estadoText = statusSpan.textContent.trim();
+            estadoText = estadoText.replace(/[✅❌]/g, '').trim();
+            estadoText = estadoText.toLowerCase();
+            // Si el texto es "activo" o "inactivo", retornarlo directamente
+            if (estadoText === 'activo' || estadoText === 'inactivo') {
+                return estadoText;
+            }
+        }
+        return '';
+    }
+    
+    function getMozoStatusFromCard(card) {
+        const estadoElement = card.querySelector('.card-status span');
+        if (estadoElement) {
+            // Extraer el texto del estado, remover emojis y espacios, convertir a minúsculas
+            let estadoText = estadoElement.textContent.trim();
+            estadoText = estadoText.replace(/[✅❌]/g, '').trim();
+            estadoText = estadoText.toLowerCase();
+            // Si el texto es "activo" o "inactivo", retornarlo directamente
+            if (estadoText === 'activo' || estadoText === 'inactivo') {
+                return estadoText;
+            }
         }
         return '';
     }
@@ -448,8 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mobileCards.forEach(card => {
             const nombreElement = card.querySelector('.card-title strong');
             const nombreText = nombreElement ? nombreElement.textContent.toLowerCase().trim() : '';
-            const estadoElement = card.querySelector('.card-status span');
-            const estadoText = estadoElement ? estadoElement.textContent.toLowerCase().trim().replace(/[✅❌]/g, '').trim() : '';
+            const estadoText = getMozoStatusFromCard(card);
             
             // Buscar solo al inicio del nombre
             const matchesNombre = currentNombreSearch === '' || nombreText.startsWith(currentNombreSearch);
