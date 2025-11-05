@@ -202,16 +202,74 @@ class Pedido {
     }
 
     /**
-     * Actualiza el estado de un pedido.
+     * Actualiza el estado de un pedido y libera la mesa si todos los pedidos están cerrados.
      */
     public static function updateEstado(int $id, string $nuevoEstado): bool {
         $db = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            UPDATE pedidos 
-            SET estado = ? 
-            WHERE id_pedido = ?
-        ");
-        return $stmt->execute([$nuevoEstado, $id]);
+        
+        try {
+            $db->beginTransaction();
+            
+            // 1. Obtener información del pedido antes de actualizarlo
+            $stmtPedido = $db->prepare("SELECT id_mesa, modo_consumo FROM pedidos WHERE id_pedido = ? AND deleted_at IS NULL");
+            $stmtPedido->execute([$id]);
+            $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$pedido) {
+                $db->rollback();
+                return false;
+            }
+            
+            // 2. Actualizar el estado del pedido
+            $stmt = $db->prepare("
+                UPDATE pedidos 
+                SET estado = ? 
+                WHERE id_pedido = ?
+            ");
+            $resultado = $stmt->execute([$nuevoEstado, $id]);
+            
+            if (!$resultado) {
+                $db->rollback();
+                return false;
+            }
+            
+            // 3. Si el pedido se cerró y está asociado a una mesa, verificar si debe liberarse la mesa
+            if ($nuevoEstado === 'cerrado' && $pedido['id_mesa']) {
+                // Contar pedidos activos restantes en la mesa (no cerrados, no cancelados, no eliminados)
+                // Contamos TODOS los pedidos de la mesa, no solo los 'stay'
+                $stmtCount = $db->prepare("
+                    SELECT COUNT(*) 
+                    FROM pedidos 
+                    WHERE id_mesa = ? 
+                    AND estado NOT IN ('cerrado', 'cancelado')
+                    AND deleted_at IS NULL
+                ");
+                $stmtCount->execute([$pedido['id_mesa']]);
+                $pedidosRestantes = (int) $stmtCount->fetchColumn();
+                
+                // Solo liberar la mesa si no hay más pedidos activos
+                // Esto aplica tanto para pedidos 'stay' como 'takeaway' asociados a la mesa
+                if ($pedidosRestantes == 0) {
+                    $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'libre' WHERE id_mesa = ?");
+                    $resultMesa = $stmtMesa->execute([$pedido['id_mesa']]);
+                    
+                    // Verificar si la actualización fue exitosa
+                    if (!$resultMesa) {
+                        error_log("Error al actualizar estado de mesa " . $pedido['id_mesa'] . " a libre");
+                    } elseif ($stmtMesa->rowCount() == 0) {
+                        // Si no se actualizó ninguna fila, podría ser que la mesa ya está libre o no existe
+                        error_log("Advertencia: No se actualizó ninguna fila al intentar liberar mesa " . $pedido['id_mesa']);
+                    }
+                }
+            }
+            
+            $db->commit();
+            return true;
+            
+        } catch (\Exception $e) {
+            $db->rollback();
+            throw $e;
+        }
     }
 
     /**
