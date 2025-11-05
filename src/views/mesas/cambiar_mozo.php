@@ -290,31 +290,54 @@ foreach ($mesas as $mesa) {
     </div>
     
     <!-- Mesas por Mozo -->
-    <?php foreach ($mesas_por_mozo as $data): ?>
-        <div class="mozo-group" style="background: linear-gradient(135deg, rgb(237, 230, 215) 0%, rgb(245, 238, 220) 100%); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #d4c4a8; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
-            <div class="mozo-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div style="background: var(--secondary); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 1rem; color: white;">👤</span>
+    <?php foreach ($mesas_por_mozo as $index => $data): ?>
+        <?php $collapseId = 'collapse-mozo-' . $data['mozo']['id']; ?>
+        <div class="mozo-group" style="background: linear-gradient(135deg, rgb(237, 230, 215) 0%, rgb(245, 238, 220) 100%); border-radius: 6px; padding: 0.4rem; margin-bottom: 0.5rem; border: 1px solid #d4c4a8; box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: all 0.3s ease;" 
+             onmouseenter="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.borderColor='#c4b299';" 
+             onmouseleave="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)'; this.style.borderColor='#d4c4a8';">
+            <div class="mozo-header" 
+                 role="button" 
+                 tabindex="0"
+                 aria-expanded="false"
+                 aria-controls="<?= $collapseId ?>"
+                 aria-label="Expandir o colapsar mesas de <?= htmlspecialchars($data['mozo']['nombre']) ?>"
+                 style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 0.15rem 0.2rem; border-radius: 4px; transition: background-color 0.2s ease; user-select: none;" 
+                 onclick="toggleMozoCollapse('<?= $collapseId ?>')"
+                 onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleMozoCollapse('<?= $collapseId ?>'); }"
+                 onmouseenter="this.style.backgroundColor='rgba(212, 196, 168, 0.2)';"
+                 onmouseleave="this.style.backgroundColor='transparent';">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                    <div style="background: var(--secondary); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span style="font-size: 0.75rem; color: white;">👤</span>
                     </div>
-                    <div>
-                        <h4 style="margin: 0; color: var(--secondary); font-size: 0.9rem; font-weight: 600;">
+                    <div style="flex: 1; min-width: 0;">
+                        <h4 style="margin: 0; color: var(--secondary); font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; line-height: 1.2;">
                             <?= htmlspecialchars($data['mozo']['nombre']) ?>
                         </h4>
-                        <p style="margin: 0.15rem 0 0 0; color: #666; font-size: 0.7rem;">Mozo asignado</p>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span class="badge" style="background: var(--secondary); color: white; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.7rem; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; gap: 0.3rem; flex-shrink: 0;">
+                    <span class="badge" style="background: var(--secondary); color: white; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.6rem; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                         <?= count($data['mesas']) ?> mesas
                     </span>
-                    <form method="post" style="display: inline; margin: 0;" onsubmit="return confirm('¿Desasignar todas las mesas de <?= htmlspecialchars($data['mozo']['nombre']) ?>?');">
+                    <button type="button"
+                            id="icon-<?= $collapseId ?>"
+                            aria-label="Expandir o colapsar"
+                            style="background: rgba(155, 114, 79, 0.1); border: 1px solid rgba(155, 114, 79, 0.3); border-radius: 4px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; font-size: 0.85rem; color: var(--secondary); flex-shrink: 0; padding: 0;"
+                            onclick="event.stopPropagation(); toggleMozoCollapse('<?= $collapseId ?>')"
+                            onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); toggleMozoCollapse('<?= $collapseId ?>'); }"
+                            onmouseenter="this.style.background='rgba(155, 114, 79, 0.2)'; this.style.borderColor='var(--secondary)'; this.style.transform='scale(1.05)';"
+                            onmouseleave="this.style.background='rgba(155, 114, 79, 0.1)'; this.style.borderColor='rgba(155, 114, 79, 0.3)'; this.style.transform='scale(1)';">
+                        <span style="transition: transform 0.3s ease; display: inline-block;">▼</span>
+                    </button>
+                    <form method="post" style="display: inline; margin: 0;" onclick="event.stopPropagation();" onsubmit="return confirm('¿Desasignar todas las mesas de <?= htmlspecialchars($data['mozo']['nombre']) ?>?');">
                         <input type="hidden" name="accion" value="desasignar_todas_mesas">
                         <input type="hidden" name="mozo_id" value="<?= $data['mozo']['id'] ?>">
-                        <button type="submit" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 5px; font-size: 0.65rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.3rem; box-shadow: 0 1px 3px rgba(220, 53, 69, 0.3); line-height: 1.2;" 
+                        <button type="submit" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.55rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.2rem; box-shadow: 0 1px 3px rgba(220, 53, 69, 0.3); line-height: 1.2;" 
                                 onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 5px rgba(220, 53, 69, 0.4)';" 
                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(220, 53, 69, 0.3)';" 
-                                title="Desasignar todas las mesas de este mozo">
+                                title="Desasignar todas las mesas de este mozo"
+                                aria-label="Desasignar todas las mesas de <?= htmlspecialchars($data['mozo']['nombre']) ?>">
                             <span>🔓</span>
                             <span>Todas</span>
                         </button>
@@ -322,38 +345,40 @@ foreach ($mesas as $mesa) {
                 </div>
             </div>
             
-            <div class="mesas-scroll-container" style="max-height: 280px; overflow-y: auto; overflow-x: hidden; padding-right: 8px; margin-top: 0.5rem;">
-                <div class="mesas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.6rem; padding-bottom: 0.5rem;">
-                    <?php foreach ($data['mesas'] as $mesa): ?>
-                        <div class="mesa-card" style="background: rgb(245, 244, 241); border: 1px solid #d4c4a8; border-radius: 6px; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; transition: all 0.3s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05); min-width: 120px;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;">
-                                <strong style="color: var(--secondary); font-size: 0.85rem; font-weight: 600;">🪑 <?= $mesa['numero'] ?></strong>
-                                <span class="estado-badge" style="padding: 0.15rem 0.35rem; border-radius: 6px; font-size: 0.65rem; font-weight: bold; 
-                                             background: <?= $mesa['estado'] === 'libre' ? '#d4edda' : ($mesa['estado'] === 'ocupada' ? '#f8d7da' : '#fff3cd') ?>; 
-                                             color: <?= $mesa['estado'] === 'libre' ? '#155724' : ($mesa['estado'] === 'ocupada' ? '#721c24' : '#856404') ?>; 
-                                             border: 1px solid <?= $mesa['estado'] === 'libre' ? '#c3e6cb' : ($mesa['estado'] === 'ocupada' ? '#f5c6cb' : '#ffeaa7') ?>;">
-                                    <?= $mesa['estado'] === 'libre' ? '🟢' : ($mesa['estado'] === 'ocupada' ? '🔴' : '🟡') ?>
-                                </span>
-                            </div>
-                            <?php if (!empty($mesa['ubicacion'])): ?>
-                                <div style="color: #6c757d; font-size: 0.65rem; display: flex; align-items: center; gap: 0.25rem; line-height: 1.2;">
-                                    <span>📍</span>
-                                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= htmlspecialchars($mesa['ubicacion']) ?></span>
+            <div id="<?= $collapseId ?>" class="mesas-collapse" role="region" aria-labelledby="header-<?= $collapseId ?>" style="display: none; margin-top: 0.4rem;">
+                <div class="mesas-scroll-container" style="max-height: 280px; overflow-y: auto; overflow-x: hidden; padding-right: 8px;">
+                    <div class="mesas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.6rem; padding-bottom: 0.5rem;">
+                        <?php foreach ($data['mesas'] as $mesa): ?>
+                            <div class="mesa-card" style="background: rgb(245, 244, 241); border: 1px solid #d4c4a8; border-radius: 6px; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; transition: all 0.3s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05); min-width: 120px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;">
+                                    <strong style="color: var(--secondary); font-size: 0.85rem; font-weight: 600;">🪑 <?= $mesa['numero'] ?></strong>
+                                    <span class="estado-badge" style="padding: 0.15rem 0.35rem; border-radius: 6px; font-size: 0.65rem; font-weight: bold; 
+                                                 background: <?= $mesa['estado'] === 'libre' ? '#d4edda' : ($mesa['estado'] === 'ocupada' ? '#f8d7da' : '#fff3cd') ?>; 
+                                                 color: <?= $mesa['estado'] === 'libre' ? '#155724' : ($mesa['estado'] === 'ocupada' ? '#721c24' : '#856404') ?>; 
+                                                 border: 1px solid <?= $mesa['estado'] === 'libre' ? '#c3e6cb' : ($mesa['estado'] === 'ocupada' ? '#f5c6cb' : '#ffeaa7') ?>;">
+                                        <?= $mesa['estado'] === 'libre' ? '🟢' : ($mesa['estado'] === 'ocupada' ? '🔴' : '🟡') ?>
+                                    </span>
                                 </div>
-                            <?php endif; ?>
-                            <form method="post" style="display: inline; margin: 0; margin-top: 0.2rem;" onsubmit="return confirm('¿Desasignar la Mesa <?= $mesa['numero'] ?>?');">
-                                <input type="hidden" name="accion" value="desasignar_mesa">
-                                <input type="hidden" name="mesa_id" value="<?= $mesa['id_mesa'] ?>">
-                                <button type="submit" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.55rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.25rem; box-shadow: 0 1px 2px rgba(220, 53, 69, 0.25); line-height: 1.2;" 
-                                        onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 4px rgba(220, 53, 69, 0.35)';" 
-                                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 2px rgba(220, 53, 69, 0.25)';" 
-                                        title="Desasignar esta mesa">
-                                    <span>🔓</span>
-                                    <span>Desasignar</span>
-                                </button>
-                            </form>
-                        </div>
-                    <?php endforeach; ?>
+                                <?php if (!empty($mesa['ubicacion'])): ?>
+                                    <div style="color: #6c757d; font-size: 0.65rem; display: flex; align-items: center; gap: 0.25rem; line-height: 1.2;">
+                                        <span>📍</span>
+                                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= htmlspecialchars($mesa['ubicacion']) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <form method="post" style="display: inline; margin: 0; margin-top: 0.2rem;" onsubmit="return confirm('¿Desasignar la Mesa <?= $mesa['numero'] ?>?');">
+                                    <input type="hidden" name="accion" value="desasignar_mesa">
+                                    <input type="hidden" name="mesa_id" value="<?= $mesa['id_mesa'] ?>">
+                                    <button type="submit" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.55rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.25rem; box-shadow: 0 1px 2px rgba(220, 53, 69, 0.25); line-height: 1.2;" 
+                                            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 4px rgba(220, 53, 69, 0.35)';" 
+                                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 2px rgba(220, 53, 69, 0.25)';" 
+                                            title="Desasignar esta mesa">
+                                        <span>🔓</span>
+                                        <span>Desasignar</span>
+                                    </button>
+                                </form>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -361,45 +386,71 @@ foreach ($mesas as $mesa) {
     
     <!-- Mesas Sin Asignar -->
     <?php if (!empty($mesas_sin_asignar)): ?>
-        <div class="mozo-group unassigned" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 8px; padding: 1rem; border: 1px solid #ffc107; box-shadow: 0 1px 4px rgba(255, 193, 7, 0.2);">
-            <div class="mozo-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div style="background: #ffc107; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 1rem; color: #212529;">⚠️</span>
+        <?php $collapseIdSinAsignar = 'collapse-sin-asignar'; ?>
+        <div class="mozo-group unassigned" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 6px; padding: 0.4rem; margin-bottom: 0.5rem; border: 1px solid #ffc107; box-shadow: 0 1px 4px rgba(255, 193, 7, 0.2); transition: all 0.3s ease;"
+             onmouseenter="this.style.boxShadow='0 2px 8px rgba(255, 193, 7, 0.3)'; this.style.borderColor='#ffb300';" 
+             onmouseleave="this.style.boxShadow='0 1px 4px rgba(255, 193, 7, 0.2)'; this.style.borderColor='#ffc107';">
+            <div class="mozo-header" 
+                 role="button" 
+                 tabindex="0"
+                 aria-expanded="false"
+                 aria-controls="<?= $collapseIdSinAsignar ?>"
+                 aria-label="Expandir o colapsar mesas sin asignar"
+                 style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 0.15rem 0.2rem; border-radius: 4px; transition: background-color 0.2s ease; user-select: none;" 
+                 onclick="toggleMozoCollapse('<?= $collapseIdSinAsignar ?>')"
+                 onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleMozoCollapse('<?= $collapseIdSinAsignar ?>'); }"
+                 onmouseenter="this.style.backgroundColor='rgba(255, 193, 7, 0.15)';"
+                 onmouseleave="this.style.backgroundColor='transparent';">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                    <div style="background: #ffc107; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span style="font-size: 0.75rem; color: #212529;">⚠️</span>
                     </div>
-                    <div>
-                        <h4 style="margin: 0; color: #856404; font-size: 0.9rem; font-weight: 600;">
+                    <div style="flex: 1; min-width: 0;">
+                        <h4 style="margin: 0; color: #856404; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; line-height: 1.2;">
                             Mesas Sin Asignar
                         </h4>
-                        <p style="margin: 0.15rem 0 0 0; color: #856404; font-size: 0.7rem; opacity: 0.8;">Requieren asignación</p>
                     </div>
                 </div>
-                <span class="badge" style="background: #ffc107; color: #212529; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.7rem; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                    <?= count($mesas_sin_asignar) ?> mesas
-                </span>
+                <div style="display: flex; align-items: center; gap: 0.3rem; flex-shrink: 0;">
+                    <span class="badge" style="background: #ffc107; color: #212529; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.6rem; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.1); flex-shrink: 0;">
+                        <?= count($mesas_sin_asignar) ?> mesas
+                    </span>
+                    <button type="button"
+                            id="icon-<?= $collapseIdSinAsignar ?>"
+                            aria-label="Expandir o colapsar"
+                            style="background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.4); border-radius: 4px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; font-size: 0.85rem; color: #856404; flex-shrink: 0; padding: 0;"
+                            onclick="event.stopPropagation(); toggleMozoCollapse('<?= $collapseIdSinAsignar ?>')"
+                            onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); toggleMozoCollapse('<?= $collapseIdSinAsignar ?>'); }"
+                            onmouseenter="this.style.background='rgba(255, 193, 7, 0.25)'; this.style.borderColor='#ffc107'; this.style.transform='scale(1.05)';"
+                            onmouseleave="this.style.background='rgba(255, 193, 7, 0.15)'; this.style.borderColor='rgba(255, 193, 7, 0.4)'; this.style.transform='scale(1)';">
+                        <span style="transition: transform 0.3s ease; display: inline-block;">▼</span>
+                    </button>
+                </div>
             </div>
             
-            <div class="mesas-scroll-container" style="max-height: 280px; overflow-y: auto; overflow-x: hidden; padding-right: 8px; margin-top: 0.5rem;">
-                <div class="mesas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.6rem; padding-bottom: 0.5rem;">
-                    <?php foreach ($mesas_sin_asignar as $mesa): ?>
-                        <div class="mesa-card" style="background: rgb(247, 243, 238); border: 1px solid #ffc107; border-radius: 6px; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; transition: all 0.3s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05); min-width: 120px;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;">
-                                <strong style="color: var(--secondary); font-size: 0.85rem; font-weight: 600;">🪑 <?= $mesa['numero'] ?></strong>
-                                <span class="estado-badge" style="padding: 0.15rem 0.35rem; border-radius: 6px; font-size: 0.65rem; font-weight: bold; 
-                                             background: <?= $mesa['estado'] === 'libre' ? '#d4edda' : ($mesa['estado'] === 'ocupada' ? '#f8d7da' : '#fff3cd') ?>; 
-                                             color: <?= $mesa['estado'] === 'libre' ? '#155724' : ($mesa['estado'] === 'ocupada' ? '#721c24' : '#856404') ?>; 
-                                             border: 1px solid <?= $mesa['estado'] === 'libre' ? '#c3e6cb' : ($mesa['estado'] === 'ocupada' ? '#f5c6cb' : '#ffeaa7') ?>;">
-                                    <?= $mesa['estado'] === 'libre' ? '🟢' : ($mesa['estado'] === 'ocupada' ? '🔴' : '🟡') ?>
-                                </span>
-                            </div>
-                            <?php if (!empty($mesa['ubicacion'])): ?>
-                                <div style="color: #6c757d; font-size: 0.65rem; display: flex; align-items: center; gap: 0.25rem; line-height: 1.2;">
-                                    <span>📍</span>
-                                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= htmlspecialchars($mesa['ubicacion']) ?></span>
+            <div id="<?= $collapseIdSinAsignar ?>" class="mesas-collapse" role="region" aria-labelledby="header-<?= $collapseIdSinAsignar ?>" style="display: none; margin-top: 0.4rem;">
+                <div class="mesas-scroll-container" style="max-height: 280px; overflow-y: auto; overflow-x: hidden; padding-right: 8px;">
+                    <div class="mesas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.6rem; padding-bottom: 0.5rem;">
+                        <?php foreach ($mesas_sin_asignar as $mesa): ?>
+                            <div class="mesa-card" style="background: rgb(247, 243, 238); border: 1px solid #ffc107; border-radius: 6px; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; transition: all 0.3s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05); min-width: 120px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;">
+                                    <strong style="color: var(--secondary); font-size: 0.85rem; font-weight: 600;">🪑 <?= $mesa['numero'] ?></strong>
+                                    <span class="estado-badge" style="padding: 0.15rem 0.35rem; border-radius: 6px; font-size: 0.65rem; font-weight: bold; 
+                                                 background: <?= $mesa['estado'] === 'libre' ? '#d4edda' : ($mesa['estado'] === 'ocupada' ? '#f8d7da' : '#fff3cd') ?>; 
+                                                 color: <?= $mesa['estado'] === 'libre' ? '#155724' : ($mesa['estado'] === 'ocupada' ? '#721c24' : '#856404') ?>; 
+                                                 border: 1px solid <?= $mesa['estado'] === 'libre' ? '#c3e6cb' : ($mesa['estado'] === 'ocupada' ? '#f5c6cb' : '#ffeaa7') ?>;">
+                                        <?= $mesa['estado'] === 'libre' ? '🟢' : ($mesa['estado'] === 'ocupada' ? '🔴' : '🟡') ?>
+                                    </span>
                                 </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
+                                <?php if (!empty($mesa['ubicacion'])): ?>
+                                    <div style="color: #6c757d; font-size: 0.65rem; display: flex; align-items: center; gap: 0.25rem; line-height: 1.2;">
+                                        <span>📍</span>
+                                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><?= htmlspecialchars($mesa['ubicacion']) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -597,3 +648,39 @@ foreach ($mesas as $mesa) {
     }
 }
 </style>
+
+<script>
+function toggleMozoCollapse(collapseId) {
+    const collapseElement = document.getElementById(collapseId);
+    const iconButton = document.getElementById('icon-' + collapseId);
+    const headerElement = collapseElement?.closest('.mozo-group')?.querySelector('.mozo-header');
+    
+    if (collapseElement && iconButton && headerElement) {
+        const isExpanded = collapseElement.style.display !== 'none';
+        const iconSpan = iconButton.querySelector('span');
+        
+        if (isExpanded) {
+            // Colapsar
+            collapseElement.style.display = 'none';
+            if (iconSpan) {
+                iconSpan.style.transform = 'rotate(0deg)';
+                iconSpan.textContent = '▼';
+            }
+            headerElement.setAttribute('aria-expanded', 'false');
+            iconButton.setAttribute('aria-label', 'Expandir mesas');
+        } else {
+            // Expandir
+            collapseElement.style.display = 'block';
+            if (iconSpan) {
+                iconSpan.style.transform = 'rotate(180deg)';
+                iconSpan.textContent = '▲';
+            }
+            headerElement.setAttribute('aria-expanded', 'true');
+            iconButton.setAttribute('aria-label', 'Colapsar mesas');
+            
+            // Opcional: scroll suave al elemento expandido
+            collapseElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+}
+</script>
