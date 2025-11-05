@@ -136,6 +136,62 @@ foreach ($mesas as $mesa) {
     </div>
 <?php endif; ?>
 
+<!-- Asignación Individual -->
+<div class="card" style="background: var(--surface); border: 2px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div class="card-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+        <div style="background: var(--primary); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 1.2rem; color: white;">🎯</span>
+        </div>
+        <div>
+            <h3 style="margin: 0; color: var(--secondary); font-size: 1rem; font-weight: 600;">Asignación Individual</h3>
+            <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.8rem;">Cambiar mozo de una mesa específica</p>
+        </div>
+    </div>
+    
+    <form method="post" id="formAsignacionIndividual" class="form-compact" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end;">
+        <input type="hidden" name="accion" value="asignar_mesa_individual">
+        
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--secondary); font-size: 0.8rem;">🪑 Mesa:</label>
+            <select name="mesa_id" id="mesa_id" required class="form-select">
+                <option value="">-- Seleccionar mesa --</option>
+                <?php foreach ($mesas as $mesa): ?>
+                    <option value="<?= $mesa['id_mesa'] ?>" data-numero="<?= $mesa['numero'] ?>" data-ubicacion="<?= htmlspecialchars($mesa['ubicacion'] ?? '') ?>" data-mozo-actual="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>">
+                        Mesa <?= $mesa['numero'] ?>
+                        <?php if (!empty($mesa['ubicacion'])): ?>
+                            (<?= htmlspecialchars($mesa['ubicacion']) ?>)
+                        <?php endif; ?>
+                        <?php if (!empty($mesa['mozo_nombre_completo'])): ?>
+                            - Actual: <?= htmlspecialchars($mesa['mozo_nombre_completo']) ?>
+                        <?php else: ?>
+                            - Sin asignar
+                        <?php endif; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--secondary); font-size: 0.8rem;">👤 Nuevo mozo:</label>
+            <select name="nuevo_mozo" id="nuevo_mozo" class="form-select">
+                <option value="">-- Sin asignar --</option>
+                <?php foreach ($mozos as $mozo): ?>
+                    <option value="<?= $mozo['id_usuario'] ?>" data-nombre="<?= htmlspecialchars($mozo['nombre_completo']) ?>" <?= $mozo['estado'] === 'inactivo' ? 'style="color: #6c757d; font-style: italic;"' : '' ?>>
+                        <?= htmlspecialchars($mozo['nombre_completo']) ?>
+                        <?php if ($mozo['estado'] === 'inactivo'): ?>
+                            (Inactivo)
+                        <?php endif; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="background: var(--secondary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; font-size: 0.8rem; box-shadow: 0 1px 4px rgba(155, 114, 79, 0.94);">
+            ✅ Asignar
+        </button>
+    </form>
+</div>
+
 <!-- Cambio Masivo de Mozo -->
 <div class="card emergency" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 2px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);">
     <div class="card-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
@@ -149,15 +205,15 @@ foreach ($mesas as $mesa) {
         <span class="badge" style="background: #ffc107; color: #212529; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.7rem; font-weight: bold; margin-left: auto;">EMERGENCIA</span>
     </div>
     
-    <form method="post" class="form-compact" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end;">
+    <form method="post" id="formCambioMasivo" class="form-compact" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end;">
         <input type="hidden" name="accion" value="cambiar_mozo_masivo">
         
         <div class="form-group">
             <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: #856404; font-size: 0.8rem;">👤 Mozo que no puede trabajar:</label>
-            <select name="mozo_origen" required class="form-select">
+            <select name="mozo_origen" id="mozo_origen" required class="form-select">
                 <option value="">-- Seleccionar mozo --</option>
                 <?php foreach ($mesas_por_mozo as $data): ?>
-                    <option value="<?= $data['mozo']['id'] ?>">
+                    <option value="<?= $data['mozo']['id'] ?>" data-nombre="<?= htmlspecialchars($data['mozo']['nombre']) ?>" data-mesas="<?= count($data['mesas']) ?>">
                         <?= htmlspecialchars($data['mozo']['nombre']) ?> (<?= count($data['mesas']) ?> mesas)
                     </option>
                 <?php endforeach; ?>
@@ -166,10 +222,10 @@ foreach ($mesas as $mesa) {
         
         <div class="form-group">
             <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: #856404; font-size: 0.8rem;">➡️ Reasignar a:</label>
-            <select name="mozo_destino" class="form-select">
+            <select name="mozo_destino" id="mozo_destino" class="form-select">
                 <option value="">-- Sin asignar --</option>
                 <?php foreach ($mozos_activos as $mozo): ?>
-                    <option value="<?= $mozo['id_usuario'] ?>">
+                    <option value="<?= $mozo['id_usuario'] ?>" data-nombre="<?= htmlspecialchars($mozo['nombre_completo']) ?>">
                         <?= htmlspecialchars($mozo['nombre_completo']) ?>
                     </option>
                 <?php endforeach; ?>
@@ -285,62 +341,6 @@ foreach ($mesas as $mesa) {
             </div>
         </div>
     <?php endif; ?>
-</div>
-
-<!-- Asignación Individual -->
-<div class="card" style="background: var(--surface); border: 2px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-    <div class="card-header" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-        <div style="background: var(--primary); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-            <span style="font-size: 1.2rem; color: white;">🎯</span>
-        </div>
-        <div>
-            <h3 style="margin: 0; color: var(--secondary); font-size: 1rem; font-weight: 600;">Asignación Individual</h3>
-            <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.8rem;">Cambiar mozo de una mesa específica</p>
-        </div>
-    </div>
-    
-    <form method="post" class="form-compact" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end;">
-        <input type="hidden" name="accion" value="asignar_mesa_individual">
-        
-        <div class="form-group">
-            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--secondary); font-size: 0.8rem;">🪑 Mesa:</label>
-            <select name="mesa_id" required class="form-select">
-                <option value="">-- Seleccionar mesa --</option>
-                <?php foreach ($mesas as $mesa): ?>
-                    <option value="<?= $mesa['id_mesa'] ?>">
-                        Mesa <?= $mesa['numero'] ?>
-                        <?php if (!empty($mesa['ubicacion'])): ?>
-                            (<?= htmlspecialchars($mesa['ubicacion']) ?>)
-                        <?php endif; ?>
-                        <?php if (!empty($mesa['mozo_nombre_completo'])): ?>
-                            - Actual: <?= htmlspecialchars($mesa['mozo_nombre_completo']) ?>
-                        <?php else: ?>
-                            - Sin asignar
-                        <?php endif; ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--secondary); font-size: 0.8rem;">👤 Nuevo mozo:</label>
-            <select name="nuevo_mozo" class="form-select">
-                <option value="">-- Sin asignar --</option>
-                <?php foreach ($mozos as $mozo): ?>
-                    <option value="<?= $mozo['id_usuario'] ?>" <?= $mozo['estado'] === 'inactivo' ? 'style="color: #6c757d; font-style: italic;"' : '' ?>>
-                        <?= htmlspecialchars($mozo['nombre_completo']) ?>
-                        <?php if ($mozo['estado'] === 'inactivo'): ?>
-                            (Inactivo)
-                        <?php endif; ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        
-        <button type="submit" class="btn btn-primary" style="background: var(--secondary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; font-size: 0.8rem; box-shadow: 0 1px 4px rgba(155, 114, 79, 0.94);">
-            ✅ Asignar
-        </button>
-    </form>
 </div>
 
 <div style="text-align: center; margin-top: 1rem;">
