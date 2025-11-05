@@ -20,8 +20,22 @@ if (empty($_SESSION['user']) || ($_SESSION['user']['rol'] ?? '') !== 'administra
 $error = '';
 $success = '';
 
-// Obtener todos los mozos activos
-$mozos = Usuario::getMozosActivos();
+// Obtener todos los mozos (activos e inactivos) para la asignación individual
+// Para cambio masivo, solo mostramos mozos con mesas asignadas
+$mozos_todos = Usuario::allByRole('mozo');
+// Formatear para que tenga el mismo formato que getMozosActivos
+$mozos = array_map(function($mozo) {
+    return [
+        'id_usuario' => $mozo['id_usuario'],
+        'nombre' => $mozo['nombre'],
+        'apellido' => $mozo['apellido'],
+        'nombre_completo' => $mozo['nombre'] . ' ' . $mozo['apellido'],
+        'estado' => $mozo['estado']
+    ];
+}, $mozos_todos);
+
+// Para el cambio masivo, solo necesitamos mozos activos
+$mozos_activos = Usuario::getMozosActivos();
 
 // Procesar el formulario de cambio masivo
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
@@ -154,7 +168,7 @@ foreach ($mesas as $mesa) {
             <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: #856404; font-size: 0.8rem;">➡️ Reasignar a:</label>
             <select name="mozo_destino" class="form-select">
                 <option value="">-- Sin asignar --</option>
-                <?php foreach ($mozos as $mozo): ?>
+                <?php foreach ($mozos_activos as $mozo): ?>
                     <option value="<?= $mozo['id_usuario'] ?>">
                         <?= htmlspecialchars($mozo['nombre_completo']) ?>
                     </option>
@@ -313,8 +327,11 @@ foreach ($mesas as $mesa) {
             <select name="nuevo_mozo" class="form-select">
                 <option value="">-- Sin asignar --</option>
                 <?php foreach ($mozos as $mozo): ?>
-                    <option value="<?= $mozo['id_usuario'] ?>">
+                    <option value="<?= $mozo['id_usuario'] ?>" <?= $mozo['estado'] === 'inactivo' ? 'style="color: #6c757d; font-style: italic;"' : '' ?>>
                         <?= htmlspecialchars($mozo['nombre_completo']) ?>
+                        <?php if ($mozo['estado'] === 'inactivo'): ?>
+                            (Inactivo)
+                        <?php endif; ?>
                     </option>
                 <?php endforeach; ?>
             </select>
