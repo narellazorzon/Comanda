@@ -223,37 +223,317 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validación del formulario
     const form = document.querySelector('form');
     if (form) {
-        form.addEventListener('submit', function(e) {
-        const accionSeleccionada = document.querySelector('input[name="accion_mesas"]:checked');
-        
-        if (!accionSeleccionada) {
+        form._submitHandler = function(e) {
+            const accionSeleccionada = document.querySelector('input[name="accion_mesas"]:checked');
+            
+            if (!accionSeleccionada) {
+                e.preventDefault();
+                alert('Por favor, selecciona qué hacer con las mesas asignadas.');
+                return;
+            }
+            
+            if (accionSeleccionada.value === 'reasignar' && !selectMozo.value) {
+                e.preventDefault();
+                alert('Por favor, selecciona un mozo para reasignar las mesas.');
+                return;
+            }
+            
+            // Confirmación final
+            const mozoNombre = '<?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>';
+            const mesasCount = <?= $mesas_asignadas ?>;
+            let mensaje = `¿Estás seguro de inactivar a ${mozoNombre}?\n\n`;
+            
+            if (accionSeleccionada.value === 'reasignar') {
+                const nuevoMozoTexto = selectMozo.options[selectMozo.selectedIndex].text;
+                mensaje += `Sus ${mesasCount} mesa(s) serán reasignadas a: ${nuevoMozoTexto}`;
+            } else {
+                mensaje += `Sus ${mesasCount} mesa(s) quedarán sin mozo asignado.`;
+            }
+            
+            // Mostrar modal personalizado en lugar de confirm()
             e.preventDefault();
-            alert('Por favor, selecciona qué hacer con las mesas asignadas.');
-            return;
-        }
+            mostrarModalConfirmacion(mensaje, accionSeleccionada.value, selectMozo.value);
+        };
         
-        if (accionSeleccionada.value === 'reasignar' && !selectMozo.value) {
-            e.preventDefault();
-            alert('Por favor, selecciona un mozo para reasignar las mesas.');
-            return;
-        }
-        
-        // Confirmación final
-        const mozoNombre = '<?= htmlspecialchars($mozo['nombre'] . ' ' . $mozo['apellido']) ?>';
-        const mesasCount = <?= $mesas_asignadas ?>;
-        let mensaje = `¿Estás seguro de inactivar a ${mozoNombre}?\n\n`;
-        
-        if (accionSeleccionada.value === 'reasignar') {
-            const nuevoMozoTexto = selectMozo.options[selectMozo.selectedIndex].text;
-            mensaje += `Sus ${mesasCount} mesa(s) serán reasignadas a: ${nuevoMozoTexto}`;
-        } else {
-            mensaje += `Sus ${mesasCount} mesa(s) quedarán sin mozo asignado.`;
-        }
-        
-        if (!confirm(mensaje)) {
-            e.preventDefault();
-        }
-    });
+        form.addEventListener('submit', form._submitHandler);
+    }
+});
+
+// Función para mostrar el modal de confirmación
+function mostrarModalConfirmacion(mensaje, accion, nuevoMozoId) {
+    const modal = document.getElementById('modalConfirmacionInactivacion');
+    const mensajeModal = document.getElementById('mensajeModalConfirmacion');
+    
+    // Formatear el mensaje para HTML
+    let mensajeHTML = mensaje.replace(/\n/g, '<br>');
+    mensajeHTML = mensajeHTML.replace(/¿Estás seguro de inactivar a (.+?)\?/g, '¿Estás seguro de inactivar a <strong>$1</strong>?');
+    
+    // Si es reasignación, mostrar el nombre del nuevo mozo
+    if (accion === 'reasignar' && nuevoMozoId) {
+        const selectMozo = document.querySelector('select[name="nuevo_mozo"]');
+        const nuevoMozoTexto = selectMozo.options[selectMozo.selectedIndex].text;
+        mensajeHTML = mensajeHTML.replace(/serán reasignadas a: (.+)/g, `serán reasignadas a: <strong>$1</strong>`);
+    }
+    
+    mensajeModal.innerHTML = mensajeHTML;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Guardar referencia al formulario para enviarlo después
+    modal.dataset.formId = 'formConfirmacion';
+}
+
+// Función para confirmar la inactivación
+function confirmarInactivacion() {
+    const form = document.querySelector('form');
+    // Remover el event listener temporal para evitar el loop
+    form.removeEventListener('submit', form._submitHandler);
+    form.submit();
+}
+
+// Función para cerrar el modal
+function cerrarModalConfirmacion() {
+    document.getElementById('modalConfirmacionInactivacion').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+</script>
+
+<!-- Modal de confirmación personalizado -->
+<div id="modalConfirmacionInactivacion" class="modal-reasignacion" style="display: none;">
+  <div class="modal-overlay" onclick="cerrarModalConfirmacion()"></div>
+  <div class="modal-content modal-warning">
+    <div class="modal-header">
+      <h3>⚠️ Confirmar Inactivación</h3>
+      <button class="modal-close" onclick="cerrarModalConfirmacion()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="warning-icon">⚠️</div>
+      <p class="modal-message" id="mensajeModalConfirmacion"></p>
+      <div class="modal-info">
+        <p>Esta acción es irreversible. El mozo quedará inactivo y las mesas serán procesadas según tu selección.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModalConfirmacion()">Cancelar</button>
+      <button class="btn-confirmar btn-confirmar-warning" onclick="confirmarInactivacion()">⚠️ Confirmar Inactivación</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Estilos para modal de confirmación de inactivación */
+.modal-reasignacion {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-reasignacion .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-reasignacion .modal-content {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideInScale 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 10001;
+}
+
+.modal-reasignacion .modal-header {
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-reasignacion .modal-content.modal-warning .modal-header {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.modal-reasignacion .modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-reasignacion .modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modal-reasignacion .modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.modal-reasignacion .modal-body {
+    padding: 24px;
+    text-align: center;
+}
+
+.modal-reasignacion .warning-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    animation: pulse 2s infinite;
+}
+
+.modal-reasignacion .modal-message {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.modal-reasignacion .modal-info {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 16px;
+}
+
+.modal-reasignacion .modal-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+.modal-reasignacion .modal-footer {
+    padding: 20px 24px;
+    background: #f8f9fa;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-reasignacion .btn-cancelar,
+.modal-reasignacion .btn-confirmar {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    min-width: 100px;
+}
+
+.modal-reasignacion .btn-cancelar {
+    background: rgb(144, 104, 76);
+    color: white;
+}
+
+.modal-reasignacion .btn-cancelar:hover {
+    background: rgb(92, 64, 51);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(144, 104, 76, 0.3);
+}
+
+.modal-reasignacion .btn-confirmar-warning {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.modal-reasignacion .btn-confirmar-warning:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes slideInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .modal-reasignacion .modal-content {
+        max-width: 95%;
+        width: 95%;
+    }
+    
+    .modal-reasignacion .modal-footer {
+        flex-direction: column;
+    }
+    
+    .modal-reasignacion .btn-cancelar,
+    .modal-reasignacion .btn-confirmar {
+        width: 100%;
+        margin: 4px 0;
+    }
+}
+</style>
+
+<script>
+// Cerrar modal con tecla Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalConfirmacion();
+    }
+});
+
+// Prevenir cierre del modal al hacer clic en el contenido
+document.addEventListener('DOMContentLoaded', function() {
+    const modalContent = document.querySelector('.modal-reasignacion .modal-content');
+    if (modalContent) {
+        modalContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
     }
 });
 </script>
