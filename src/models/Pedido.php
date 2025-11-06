@@ -58,18 +58,28 @@ class Pedido {
     public static function allByMozo(int $mozoId): array {
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
-            SELECT *
-            FROM pedidos
-            WHERE id_mozo = ?
-            AND deleted_at IS NULL
-            ORDER BY fecha_hora DESC
+            SELECT p.*,
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   p.fecha_hora as fecha_creacion
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            WHERE p.id_mozo = ?
+            AND p.deleted_at IS NULL
+            ORDER BY p.fecha_hora DESC
         ");
         $stmt->execute([$mozoId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Devuelve los pedidos del día actual para las mesas asignadas a un mozo.
+     * Devuelve los pedidos del día actual para un mozo.
+     * Incluye pedidos asignados directamente al mozo (p.id_mozo) 
+     * y pedidos de mesas asignadas al mozo (m.id_mozo).
      * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function todayByMesoAssigned(int $mozoId): array {
@@ -86,12 +96,78 @@ class Pedido {
             LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
             LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
             WHERE DATE(p.fecha_hora) = CURDATE()
-            AND m.id_mozo = ?
+            AND (p.id_mozo = ? OR m.id_mozo = ?)
             AND p.deleted_at IS NULL
             ORDER BY p.fecha_hora DESC
         ");
-        $stmt->execute([$mozoId]);
+        $stmt->execute([$mozoId, $mozoId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Devuelve todos los pedidos para un mozo (incluyendo cerrados).
+     * Incluye pedidos asignados directamente al mozo (p.id_mozo) 
+     * y pedidos de mesas asignadas al mozo (m.id_mozo).
+     * Solo excluye pedidos eliminados lógicamente.
+     */
+    public static function allActiveByMozo(int $mozoId): array {
+        try {
+            $db = (new Database)->getConnection();
+            
+            // Primero intentar buscar solo por p.id_mozo (más directo)
+            $stmt = $db->prepare("
+                SELECT p.*,
+                       m.numero as numero_mesa,
+                       m.ubicacion as ubicacion_mesa,
+                       u.nombre as mozo_nombre,
+                       u.apellido as mozo_apellido,
+                       CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                       p.fecha_hora as fecha_creacion
+                FROM pedidos p
+                LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+                LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+                WHERE p.id_mozo = ?
+                AND p.deleted_at IS NULL
+                ORDER BY p.fecha_hora DESC
+            ");
+            $stmt->execute([$mozoId]);
+            $resultByMozo = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Luego buscar por mesas asignadas al mozo
+            $stmt = $db->prepare("
+                SELECT p.*,
+                       m.numero as numero_mesa,
+                       m.ubicacion as ubicacion_mesa,
+                       u.nombre as mozo_nombre,
+                       u.apellido as mozo_apellido,
+                       CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                       p.fecha_hora as fecha_creacion
+                FROM pedidos p
+                INNER JOIN mesas m ON p.id_mesa = m.id_mesa
+                LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+                WHERE m.id_mozo = ?
+                AND p.deleted_at IS NULL
+                AND (p.id_mozo IS NULL OR p.id_mozo != ?)
+                ORDER BY p.fecha_hora DESC
+            ");
+            $stmt->execute([$mozoId, $mozoId]);
+            $resultByMesa = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Combinar resultados y eliminar duplicados
+            $result = $resultByMozo;
+            $pedidoIds = array_column($resultByMozo, 'id_pedido');
+            foreach ($resultByMesa as $pedido) {
+                if (!in_array($pedido['id_pedido'], $pedidoIds)) {
+                    $result[] = $pedido;
+                }
+            }
+            
+            return $result;
+        } catch (\Exception $e) {
+            error_log("Error en allActiveByMozo: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return [];
+        }
     }
 
     /**

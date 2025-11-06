@@ -83,13 +83,24 @@ function obtenerIconoEstado($estado) {
 // El procesamiento de cambio de estado ahora se maneja via AJAX en el controlador
 
 // Cargar pedidos según el rol
-if ($rol === 'mozo') {
-    // Los mozos solo ven pedidos del día actual de sus mesas asignadas
-    $mozoId = $_SESSION['user']['id_usuario'];
-    $pedidos = Pedido::todayByMesoAssigned($mozoId);
-} else {
-    // Los administradores ven todos los pedidos
-    $pedidos = Pedido::all();
+$pedidos = [];
+try {
+    if ($rol === 'mozo') {
+        // Los mozos ven todos sus pedidos (incluyendo cerrados)
+        $mozoId = $_SESSION['user']['id_usuario'];
+        $pedidos = Pedido::allActiveByMozo($mozoId);
+    } else {
+        // Los administradores ven todos los pedidos
+        $pedidos = Pedido::all();
+    }
+    
+    // Asegurar que $pedidos sea un array
+    if (!is_array($pedidos)) {
+        $pedidos = [];
+    }
+} catch (\Exception $e) {
+    error_log("Error al cargar pedidos: " . $e->getMessage());
+    $pedidos = [];
 }
 
 // Incluir header DESPUÉS de procesar POST
@@ -486,7 +497,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Vista de tabla para pedidos activos -->
-<?php if ($rol === 'administrador'): ?>
+<?php if (in_array($rol, ['administrador', 'mozo'])): ?>
 <div class="table-responsive" id="pedidos-activos">
 <table class="table">
   <thead>
@@ -511,12 +522,24 @@ require_once __DIR__ . '/../includes/header.php';
       </tr>
     <?php else: ?>
       <?php foreach ($pedidos as $pedido): ?>
+      <?php 
+      // Validar que el pedido tenga los campos necesarios
+      if (!isset($pedido['id_pedido']) || !isset($pedido['estado'])) {
+          continue; // Saltar este pedido si no tiene campos esenciales
+      }
+      ?>
+        <?php 
+        // Validar que el pedido tenga los campos necesarios
+        if (!isset($pedido['id_pedido']) || !isset($pedido['estado'])) {
+            continue; // Saltar este pedido si no tiene campos esenciales
+        }
+        ?>
         <tr class="pedido-row" 
-            data-estado="<?= htmlspecialchars($pedido['estado']) ?>"
+            data-estado="<?= htmlspecialchars($pedido['estado'] ?? 'pendiente') ?>"
             data-mesa="<?= htmlspecialchars($pedido['numero_mesa'] ?? 'takeaway') ?>"
             data-mozo="<?= htmlspecialchars($pedido['nombre_mozo_completo'] ?? '') ?>"
-            data-fecha="<?= date('Y-m-d', strtotime($pedido['fecha_hora'] ?? $pedido['fecha_creacion'])) ?>"
-            data-total="<?= $pedido['total'] ?>">
+            data-fecha="<?= !empty($pedido['fecha_creacion']) ? date('Y-m-d', strtotime($pedido['fecha_creacion'])) : (!empty($pedido['fecha_hora']) ? date('Y-m-d', strtotime($pedido['fecha_hora'])) : date('Y-m-d')) ?>"
+            data-total="<?= $pedido['total'] ?? 0 ?>">
           <td><?= htmlspecialchars($pedido['id_pedido']) ?></td>
           <td><?= htmlspecialchars($pedido['numero_mesa'] ?? 'N/A') ?></td>
           <td><?= htmlspecialchars($pedido['nombre_mozo_completo'] ?? 'N/A') ?></td>
@@ -637,12 +660,18 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
   <?php else: ?>
     <?php foreach ($pedidos as $pedido): ?>
+      <?php 
+      // Validar que el pedido tenga los campos necesarios
+      if (!isset($pedido['id_pedido']) || !isset($pedido['estado'])) {
+          continue; // Saltar este pedido si no tiene campos esenciales
+      }
+      ?>
       <div class="mobile-card"
-           data-estado="<?= htmlspecialchars($pedido['estado']) ?>"
+           data-estado="<?= htmlspecialchars($pedido['estado'] ?? 'pendiente') ?>"
            data-mesa="<?= htmlspecialchars($pedido['numero_mesa'] ?? 'takeaway') ?>"
            data-mozo="<?= htmlspecialchars($pedido['nombre_mozo_completo'] ?? '') ?>"
-           data-fecha="<?= date('Y-m-d', strtotime($pedido['fecha_hora'] ?? $pedido['fecha_creacion'])) ?>"
-           data-total="<?= $pedido['total'] ?>">
+           data-fecha="<?= !empty($pedido['fecha_creacion']) ? date('Y-m-d', strtotime($pedido['fecha_creacion'])) : (!empty($pedido['fecha_hora']) ? date('Y-m-d', strtotime($pedido['fecha_hora'])) : date('Y-m-d')) ?>"
+           data-total="<?= $pedido['total'] ?? 0 ?>">
         <div class="mobile-card-header">
           <div class="mobile-card-number">
             Pedido #<?= htmlspecialchars($pedido['id_pedido']) ?>
