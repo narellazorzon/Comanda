@@ -290,7 +290,45 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     font-style: italic;
 }
 
+/* Estilos para tablets */
+@media (max-width: 992px) and (min-width: 769px) {
+    .row .col-md-6 {
+        margin-bottom: 1.5rem;
+    }
+    
+    .card .card-body {
+        height: 320px !important;
+    }
+    
+    .row .card .card-header h5 {
+        font-size: 1.3rem !important;
+    }
+}
+
 @media (max-width: 768px) {
+    /* Ajustar header en móviles */
+    .report-header {
+        padding: 1.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.8em;
+        margin: 0 0 8px 0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .report-header p {
+        font-size: 0.95em;
+        line-height: 1.4;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.85em !important;
+        margin-top: 8px !important;
+    }
+    
     .filtros {
         flex-direction: column;
         align-items: stretch;
@@ -305,62 +343,137 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     }
 
     /* Responsive para tabla de ranking */
-    .table-responsive {
+    .ranking-card {
         margin: 0 -15px;
-        padding: 0 15px;
+        border-radius: 0;
+        border-left: none !important;
+        border-right: none !important;
+    }
+    
+    .ranking-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin: 0 !important;
+        background: #fff;
+        position: relative;
+    }
+    
+    .ranking-table-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .ranking-table-container::-webkit-scrollbar-track {
+        background: rgba(144, 104, 76, 0.1);
+    }
+    
+    .ranking-table-container::-webkit-scrollbar-thumb {
+        background: var(--secondary);
+        border-radius: 4px;
+    }
+    
+    .ranking-table-container::-webkit-scrollbar-thumb:hover {
+        background: #8b5e46;
+    }
+
+    .mozos-table {
+        min-width: 700px;
+        margin-bottom: 0;
     }
 
     .mozos-table table {
         font-size: 0.875rem;
+        width: 100%;
     }
 
     .mozos-table th,
     .mozos-table td {
-        padding: 8px 10px;
+        padding: 10px 8px;
         white-space: nowrap;
     }
 
     .mozos-table th:first-child,
     .mozos-table td:first-child {
-        padding-left: 15px;
+        padding-left: 12px;
+        position: sticky;
+        left: 0;
+        background: var(--secondary);
+        z-index: 10;
+    }
+    
+    .mozos-table td:first-child {
+        background: white;
+    }
+    
+    .mozos-table tr:hover td:first-child {
+        background: rgba(144, 104, 76, 0.05);
     }
 
     .mozos-table th:last-child,
     .mozos-table td:last-child {
-        padding-right: 15px;
+        padding-right: 12px;
     }
 
     /* Ajustar columnas para móviles */
+    .mozos-table th:nth-child(1),
+    .mozos-table td:nth-child(1) { /* # */
+        min-width: 50px;
+        max-width: 50px;
+    }
+    
+    .mozos-table th:nth-child(2),
+    .mozos-table td:nth-child(2) { /* Mozo */
+        min-width: 120px;
+        max-width: 150px;
+    }
+    
+    .mozos-table th:nth-child(3),
+    .mozos-table td:nth-child(3) { /* Pedidos */
+        min-width: 70px;
+    }
+
     .mozos-table th:nth-child(4),
     .mozos-table td:nth-child(4) { /* Total Vendido */
-        min-width: 100px;
+        min-width: 110px;
     }
 
     .mozos-table th:nth-child(5),
     .mozos-table td:nth-child(5) { /* Total Propinas */
-        min-width: 100px;
+        min-width: 110px;
     }
 
     .mozos-table th:nth-child(6),
     .mozos-table td:nth-child(6) { /* Propina Promedio */
-        min-width: 100px;
+        min-width: 110px;
+    }
+    
+    .mozos-table th:nth-child(7),
+    .mozos-table td:nth-child(7) { /* Tasa Propina */
+        min-width: 90px;
     }
 
     .mozos-table th:nth-child(8),
     .mozos-table td:nth-child(8) { /* Rendimiento */
-        min-width: 120px;
+        min-width: 130px;
     }
 
     .rank-badge {
         font-size: 0.75rem;
-        padding: 2px 6px;
+        padding: 3px 8px;
+        display: inline-block;
     }
 
     .mozo-name {
-        max-width: 120px;
+        max-width: 140px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        display: inline-block;
+    }
+    
+    /* Badges más compactos en móviles */
+    .badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
     }
 
     .progress {
@@ -374,6 +487,25 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 @media (max-width: 576px) {
+    /* Ajustar header en móviles muy pequeños */
+    .report-header {
+        padding: 1.2rem 0.8rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.5em;
+        margin: 0 0 6px 0;
+    }
+    
+    .report-header p {
+        font-size: 0.9em;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.8em !important;
+        margin-top: 6px !important;
+    }
+    
     .mozos-table {
         font-size: 0.8rem;
     }
@@ -393,6 +525,67 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     .mozos-table td:nth-child(8) { /* Rendimiento */
         display: none;
     }
+    
+    /* Ajustar anchos mínimos en móviles muy pequeños */
+    .mozos-table {
+        min-width: 550px !important;
+    }
+    
+    .mozos-table th:nth-child(1),
+    .mozos-table td:nth-child(1) {
+        min-width: 45px;
+        max-width: 45px;
+        padding-left: 8px;
+    }
+    
+    .mozos-table th:nth-child(2),
+    .mozos-table td:nth-child(2) {
+        min-width: 100px;
+        max-width: 120px;
+    }
+    
+    .mozos-table th:nth-child(3),
+    .mozos-table td:nth-child(3) {
+        min-width: 60px;
+    }
+    
+    .mozos-table th:nth-child(4),
+    .mozos-table td:nth-child(4) {
+        min-width: 90px;
+    }
+    
+    .mozos-table th:nth-child(5),
+    .mozos-table td:nth-child(5) {
+        min-width: 90px;
+    }
+    
+    .mozos-table th:nth-child(7),
+    .mozos-table td:nth-child(7) {
+        min-width: 80px;
+    }
+    
+    .mozo-name {
+        max-width: 100px;
+    }
+    
+    .rank-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+        padding: 3px 6px;
+    }
+    
+    .progress {
+        height: 14px;
+    }
+    
+    .progress-bar {
+        font-size: 0.65rem;
+        line-height: 14px;
+    }
 
     .table-responsive {
         overflow-x: scroll;
@@ -403,9 +596,35 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     .card-body {
         padding: 0.75rem;
     }
+    
+    /* Ajustar contenedores de gráficos en móviles */
+    .row .col-md-6 {
+        margin-bottom: 1rem;
+        width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .row .col-md-6:last-child {
+        margin-bottom: 0;
+    }
+    
+    /* Contenedores de gráficos */
+    .card .card-body {
+        position: relative;
+        height: 280px !important;
+        min-height: 250px;
+        padding: 1rem;
+    }
 
     canvas {
-        max-height: 250px !important;
+        max-width: 100% !important;
+        height: 100% !important;
+    }
+    
+    /* Ajustar títulos de gráficos en móviles */
+    .row .card .card-header h5 {
+        font-size: 1.2rem !important;
     }
 
     /* Ajustar botones en móviles */
@@ -455,41 +674,13 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
         font-size: 1.4em;
     }
 
-    /* Asegurar visibilidad del ranking */
-    .ranking-card {
-        margin: 0 -15px;
-        border-radius: 0;
-        border-left: none !important;
-        border-right: none !important;
-    }
-
-    .ranking-table-container {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        margin: 0 !important;
-        background: #fff;
-    }
-
+    /* Mejorar scrollbar en móviles */
     .ranking-table-container::-webkit-scrollbar {
-        height: 6px;
+        height: 8px;
     }
-
-    .ranking-table-container::-webkit-scrollbar-track {
-        background: rgba(144, 104, 76, 0.1);
-    }
-
-    .ranking-table-container::-webkit-scrollbar-thumb {
-        background: var(--secondary);
-        border-radius: 3px;
-    }
-
-    .ranking-table-container::-webkit-scrollbar-thumb:hover {
-        background: #8b5e46;
-    }
-
+    
     .mozos-table {
-        min-width: 600px !important;
-        margin-bottom: 0 !important;
+        min-width: 700px !important;
     }
 
     /* Ajustar tarjetas en móvil */
@@ -735,8 +926,8 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                 <div class="card-header">
                                     <h5 class="mb-0" style="font-size: 1.4rem !important; font-weight: 600 !important; color: var(--secondary) !important;">📈 Propinas por Mozo</h5>
                                 </div>
-                                <div class="card-body">
-                                    <canvas id="chartPropinas" height="300"></canvas>
+                                <div class="card-body" style="position: relative; height: 300px;">
+                                    <canvas id="chartPropinas"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -745,8 +936,8 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                                 <div class="card-header">
                                     <h5 class="mb-0" style="font-size: 1.4rem !important; font-weight: 600 !important; color: var(--secondary) !important;">📊 Pedidos por Mozo</h5>
                                 </div>
-                                <div class="card-body">
-                                    <canvas id="chartPedidos" height="300"></canvas>
+                                <div class="card-body" style="position: relative; height: 300px;">
+                                    <canvas id="chartPedidos"></canvas>
                                 </div>
                             </div>
                         </div>

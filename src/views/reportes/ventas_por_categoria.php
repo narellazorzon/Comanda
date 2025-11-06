@@ -275,6 +275,29 @@ $stats = $error ? [] : Reporte::estadisticasPeriodo('todos', $fecha_desde, $fech
 }
 
 @media (max-width: 768px) {
+    /* Ajustar header en móviles */
+    .report-header {
+        padding: 1.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.8em;
+        margin: 0 0 8px 0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .report-header p {
+        font-size: 0.95em;
+        line-height: 1.4;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.85em !important;
+        margin-top: 8px !important;
+    }
+    
     .filters-section {
         flex-direction: column;
         align-items: stretch;
@@ -286,6 +309,27 @@ $stats = $error ? [] : Reporte::estadisticasPeriodo('todos', $fecha_desde, $fech
     
     .categorias-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Ajustar header en móviles muy pequeños */
+    .report-header {
+        padding: 1.2rem 0.8rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.5em;
+        margin: 0 0 6px 0;
+    }
+    
+    .report-header p {
+        font-size: 0.9em;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.8em !important;
+        margin-top: 6px !important;
     }
 }
 
