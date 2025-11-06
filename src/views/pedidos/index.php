@@ -637,7 +637,12 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
   <?php else: ?>
     <?php foreach ($pedidos as $pedido): ?>
-      <div class="mobile-card">
+      <div class="mobile-card"
+           data-estado="<?= htmlspecialchars($pedido['estado']) ?>"
+           data-mesa="<?= htmlspecialchars($pedido['numero_mesa'] ?? 'takeaway') ?>"
+           data-mozo="<?= htmlspecialchars($pedido['nombre_mozo_completo'] ?? '') ?>"
+           data-fecha="<?= date('Y-m-d', strtotime($pedido['fecha_hora'] ?? $pedido['fecha_creacion'])) ?>"
+           data-total="<?= $pedido['total'] ?>">
         <div class="mobile-card-header">
           <div class="mobile-card-number">
             Pedido #<?= htmlspecialchars($pedido['id_pedido']) ?>
@@ -857,7 +862,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function getPedidoFecha(element) {
-        const fechaCell = element.querySelector('td:nth-child(6)') || element.querySelector('.mobile-card-item:last-child .mobile-card-value');
+        // Primero intentar obtener del atributo data-fecha (más confiable)
+        if (element.hasAttribute('data-fecha')) {
+            return element.getAttribute('data-fecha');
+        }
+        
+        // Si no tiene data-fecha, intentar parsear del texto de la celda
+        const fechaCell = element.querySelector('td:nth-child(7)') || element.querySelector('.mobile-card-item:last-child .mobile-card-value');
         if (fechaCell) {
             const fechaText = fechaCell.textContent.trim();
             // Convertir formato dd/mm/yyyy a yyyy-mm-dd para comparación
