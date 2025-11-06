@@ -132,12 +132,23 @@ class Pedido {
 
             // Asegurarnos de que el estado se establezca correctamente
             $estado = 'pendiente';
+
+            // Determinar id_mozo desde la mesa si no fue provisto (modo 'stay')
+            $idMozo = $data['id_mozo'] ?? null;
+            if (empty($idMozo) && !empty($data['id_mesa']) && (($data['modo_consumo'] ?? 'stay') === 'stay')) {
+                $stmtMesaMozo = $db->prepare("SELECT id_mozo FROM mesas WHERE id_mesa = ?");
+                $stmtMesaMozo->execute([$data['id_mesa']]);
+                $idMozoMesa = $stmtMesaMozo->fetchColumn();
+                if ($idMozoMesa) {
+                    $idMozo = (int)$idMozoMesa;
+                }
+            }
             $params = [
                 $data['id_mesa'] ?? null,
                 $data['modo_consumo'] ?? 'stay',
                 0.00, // Temporal, se actualizará después
                 $estado,
-                $data['id_mozo'] ?? null,
+                $idMozo,
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $data['cliente_nombre'] ?? null,
