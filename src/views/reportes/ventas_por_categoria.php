@@ -165,7 +165,7 @@ $stats = $error ? [] : Reporte::estadisticasPeriodo('todos', $fecha_desde, $fech
 .stat-card .value {
     font-size: 2em;
     font-weight: bold;
-    color: var(--text);
+    color: var(--secondary);
 }
 
 .categorias-grid {

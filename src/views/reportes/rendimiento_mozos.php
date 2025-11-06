@@ -564,7 +564,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
 <div class="report-container">
     <div class="report-header">
-        <h1>📊 Rendimiento del Personal</h1>
+        <h1>👥 Rendimiento del Personal</h1>
         <p>Análisis de rendimiento y productividad del equipo</p>
         <?php if ($fechaDesde && $fechaHasta): ?>
             <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
