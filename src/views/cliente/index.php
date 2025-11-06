@@ -1266,7 +1266,7 @@ $iconosCategorias = [
     .checkout-form {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 0.75rem;
         padding: 1.5rem;
         background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
         border-radius: 16px;
@@ -1290,18 +1290,20 @@ $iconosCategorias = [
     .form-group {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.4rem;
         position: relative;
+        margin-bottom: 0.5rem;
     }
 
     .form-group label {
         font-weight: 700;
-        color: #2c5530;
-        font-size: 0.95rem;
+        color: var(--secondary);
+        font-size: 0.9rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
         text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        margin-bottom: 0.25rem;
     }
 
     .form-group input,
@@ -1332,13 +1334,13 @@ $iconosCategorias = [
         background: linear-gradient(135deg, #28a745 0%, #20c997 50%, #17a2b8 100%);
         color: white;
         border: none;
-        padding: 1.25rem 2rem;
+        padding: 1rem 2rem;
         border-radius: 12px;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        margin-top: 1rem;
+        margin-top: 0.5rem;
         position: relative;
         overflow: hidden;
         box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
@@ -2659,15 +2661,24 @@ $iconosCategorias = [
 
                 <?php if ($modo_qr !== null): ?>
                   <!-- QR detectado: no mostrar selector -->
-                  <input type="hidden" name="modo_consumo" value="<?= htmlspecialchars($modo_qr) ?>">
-                  <?php if ($modo_qr === 'stay' && $id_mesa_qr): ?>
+                  <?php if ($id_mesa_qr): ?>
+                    <!-- QR de mesa: siempre "en el local", no modificable -->
+                    <input type="hidden" name="modo_consumo" value="stay">
                     <input type="hidden" name="id_mesa" value="<?= (int)$id_mesa_qr ?>">
-                    <div class="alert alert-success" style="background:#f4f9f4;border:1px solid #7ec77b;color:#2e662b;padding:6px 10px;border-radius:6px;margin-bottom:10px;">
-                      ✅ Pedido en <strong>mesa #<?= (int)$id_mesa_qr ?></strong> (desde QR)
+                    <div class="alert alert-success" style="background:#f4f9f4;border:1px solid #7ec77b;color:#2e662b;padding:6px 10px;border-radius:6px;margin-bottom:0.5rem;">
+                      ✅ Pedido en <strong>mesa #<?= (int)$id_mesa_qr ?></strong> (desde QR) - En el local
                     </div>
                   <?php elseif ($modo_qr === 'takeaway'): ?>
-                    <div class="alert alert-info" style="background:#f0f7ff;border:1px solid #72b5f2;color:#1d5c9c;padding:6px 10px;border-radius:6px;margin-bottom:10px;">
+                    <!-- QR de takeaway -->
+                    <input type="hidden" name="modo_consumo" value="takeaway">
+                    <div class="alert alert-info" style="background:#f0f7ff;border:1px solid #72b5f2;color:#1d5c9c;padding:6px 10px;border-radius:6px;margin-bottom:0.5rem;">
                       🛍️ Pedido para llevar
+                    </div>
+                  <?php else: ?>
+                    <!-- QR sin mesa específica: forzar "en el local" -->
+                    <input type="hidden" name="modo_consumo" value="stay">
+                    <div class="alert alert-success" style="background:#f4f9f4;border:1px solid #7ec77b;color:#2e662b;padding:6px 10px;border-radius:6px;margin-bottom:0.5rem;">
+                      ✅ Pedido en el local (desde QR)
                     </div>
                   <?php endif; ?>
                 <?php else: ?>
@@ -2686,10 +2697,10 @@ $iconosCategorias = [
                     <!-- Campo mesa desde QR (visible cuando viene por QR) -->
                     <div id="mesa-qr-field" class="form-group" style="display:none;">
                         <label>Mesa asignada:</label>
-                        <div id="mesa-qr-info" style="background:#e8f5e8;border:2px solid #c8e6c9;padding:1rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <div id="mesa-qr-info" style="background:#e8f5e8;border:2px solid #c8e6c9;padding:0.75rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
                             <span id="mesa-qr-text">✅ Mesa X (desde QR)</span>
-                            <button type="button" id="btn-llamar-mozo-inline" style="background:none;border:1px solid #8b5e34;color:#8b5e34;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;margin-right:0.5rem;">Llamar mozo</button>
-                            <button type="button" id="btn-cambiar-mesa" style="background:none;border:1px solid #28a745;color:#28a745;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;">
+                            <button type="button" id="btn-llamar-mozo-inline" class="btn-llamar-mozo" style="margin-right:0.5rem;">🔔 Llamar Mozo</button>
+                            <button type="button" id="btn-cambiar-mesa" style="display:none;background:none;border:1px solid #28a745;color:#28a745;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;">
                                 Cambiar
                             </button>
                         </div>
@@ -2824,14 +2835,23 @@ $iconosCategorias = [
         
         document.getElementById('numero-mesa').value = mesaFromQR;
         
-        // Establecer modo de consumo como 'stay' (en el local)
+        // Ocultar botón de cambiar mesa cuando viene de QR
+        const btnCambiarMesa = document.getElementById('btn-cambiar-mesa');
+        if (btnCambiarMesa) {
+            btnCambiarMesa.style.display = 'none';
+        }
+        
+        // Establecer modo de consumo como 'stay' (en el local) y asegurarse de que no se pueda cambiar
         // Buscar tanto el select como el input hidden
         const modoConsumoSelect = document.getElementById('modo_consumo');
         const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
         
         if (modoConsumoSelect) {
             modoConsumoSelect.value = 'stay';
+            // Deshabilitar el selector para que no se pueda cambiar
+            modoConsumoSelect.disabled = true;
         } else if (modoConsumoHidden) {
+            // Forzar siempre 'stay' cuando viene de QR con mesa
             modoConsumoHidden.value = 'stay';
         }
     }
@@ -2905,13 +2925,26 @@ $iconosCategorias = [
             return;
         }
 
+        // Obtener ambos botones (header e inline)
         const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
-        const originalText = btnLlamarMozo.innerHTML;
+        const btnLlamarMozoInline = document.getElementById('btn-llamar-mozo-inline');
         
-        // Cambiar estado del botón
-        btnLlamarMozo.classList.add('llamando');
-        btnLlamarMozo.innerHTML = '⏳ Llamando...';
-        btnLlamarMozo.disabled = true;
+        // Determinar qué botón se clickeó o usar el del header por defecto
+        const activeButton = buttonEl || btnLlamarMozo;
+        const originalText = activeButton ? activeButton.innerHTML : '🔔 Llamar Mozo';
+        
+        // Cambiar estado de ambos botones si existen
+        if (btnLlamarMozo) {
+            btnLlamarMozo.classList.add('llamando');
+            btnLlamarMozo.innerHTML = '⏳ Llamando...';
+            btnLlamarMozo.disabled = true;
+        }
+        
+        if (btnLlamarMozoInline) {
+            btnLlamarMozoInline.classList.add('llamando');
+            btnLlamarMozoInline.innerHTML = '⏳ Llamando...';
+            btnLlamarMozoInline.disabled = true;
+        }
 
         try {
             
@@ -2931,20 +2964,42 @@ $iconosCategorias = [
             if (result.success) {
                 showToast('✅ ' + result.message, 'success');
                 
-                // Deshabilitar el botón por 3 minutos (180 segundos)
+                // Cambiar ambos botones a estado "Llamado" (verde)
+                if (btnLlamarMozo) {
+                    btnLlamarMozo.innerHTML = '✅ Llamado';
+                }
+                if (btnLlamarMozoInline) {
+                    btnLlamarMozoInline.innerHTML = '✅ Llamado';
+                }
+                
+                // Deshabilitar los botones por 2 minutos (120 segundos)
                 setTimeout(() => {
-                    btnLlamarMozo.classList.remove('llamando');
-                    btnLlamarMozo.innerHTML = originalText;
-                    btnLlamarMozo.disabled = false;
-                }, 180000); // 3 minutos
+                    if (btnLlamarMozo) {
+                        btnLlamarMozo.classList.remove('llamando');
+                        btnLlamarMozo.innerHTML = '🔔 Llamar Mozo';
+                        btnLlamarMozo.disabled = false;
+                    }
+                    if (btnLlamarMozoInline) {
+                        btnLlamarMozoInline.classList.remove('llamando');
+                        btnLlamarMozoInline.innerHTML = '🔔 Llamar Mozo';
+                        btnLlamarMozoInline.disabled = false;
+                    }
+                }, 120000); // 2 minutos
             } else {
                 // Manejar diferentes tipos de mensajes
                 if (result.type === 'warning') {
                     showToast('⚠️ ' + result.message, 'warning');
-                    // Para advertencias, no lanzar error, solo restaurar botón
-                    btnLlamarMozo.classList.remove('llamando');
-                    btnLlamarMozo.innerHTML = originalText;
-                    btnLlamarMozo.disabled = false;
+                    // Para advertencias, no lanzar error, solo restaurar botones
+                    if (btnLlamarMozo) {
+                        btnLlamarMozo.classList.remove('llamando');
+                        btnLlamarMozo.innerHTML = '🔔 Llamar Mozo';
+                        btnLlamarMozo.disabled = false;
+                    }
+                    if (btnLlamarMozoInline) {
+                        btnLlamarMozoInline.classList.remove('llamando');
+                        btnLlamarMozoInline.innerHTML = '🔔 Llamar Mozo';
+                        btnLlamarMozoInline.disabled = false;
+                    }
                     return; // Salir de la función sin lanzar error
                 } else {
                     showToast('❌ ' + result.message, 'error');
@@ -2953,6 +3008,17 @@ $iconosCategorias = [
             }
         } catch (error) {
             console.error('Error:', error);
+            // Restaurar ambos botones en caso de error
+            if (btnLlamarMozo) {
+                btnLlamarMozo.classList.remove('llamando');
+                btnLlamarMozo.innerHTML = '🔔 Llamar Mozo';
+                btnLlamarMozo.disabled = false;
+            }
+            if (btnLlamarMozoInline) {
+                btnLlamarMozoInline.classList.remove('llamando');
+                btnLlamarMozoInline.innerHTML = '🔔 Llamar Mozo';
+                btnLlamarMozoInline.disabled = false;
+            }
             
             // Solo mostrar error técnico en consola, no al usuario
             if (error.message.includes('Unexpected token')) {
@@ -3351,16 +3417,18 @@ $iconosCategorias = [
             const modoConsumoSelect = document.getElementById('modo_consumo');
             const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
             
-            if (modoConsumoSelect) {
+            // Si viene de QR con mesa, forzar siempre "stay" (en el local)
+            if (isQRMode && mesaFromQR) {
+                modoConsumo = 'stay';
+                mesaFinal = mesaFromQR;
+            } else if (modoConsumoSelect) {
                 modoConsumo = modoConsumoSelect.value;
             } else if (modoConsumoHidden) {
                 modoConsumo = modoConsumoHidden.value;
             }
             
-            if (modoConsumo === 'stay') {
-                if (isQRMode && mesaFromQR) {
-                    mesaFinal = mesaFromQR;
-                } else {
+            if (modoConsumo === 'stay' && !mesaFinal) {
+                if (!isQRMode || !mesaFromQR) {
                     mesaFinal = document.getElementById('numero-mesa').value;
                 }
             }

@@ -404,33 +404,60 @@ class MozoController {
                 exit;
             }
             
-            // Verificar si hay un llamado reciente (menos de 3 minutos)
-            $stmt_reciente = $db->prepare("
-                SELECT id_llamado, hora_solicitud, 
-                       TIMESTAMPDIFF(MINUTE, hora_solicitud, NOW()) as minutos_transcurridos
+            // Verificar cuántos llamados se han hecho en los últimos 2 minutos
+            // Permitir máximo 2 llamados por cada 2 minutos
+            $stmt_contar = $db->prepare("
+                SELECT COUNT(*) as total_llamados,
+                       MIN(hora_solicitud) as primer_llamado
                 FROM llamados_mesa 
-                WHERE id_mesa = ? AND estado = 'pendiente'
-                ORDER BY hora_solicitud DESC 
-                LIMIT 1
+                WHERE id_mesa = ? 
+                AND estado = 'pendiente'
+                AND hora_solicitud >= DATE_SUB(NOW(), INTERVAL 2 MINUTE)
             ");
-            $stmt_reciente->execute([$mesa['id_mesa']]);
-            $llamado_reciente = $stmt_reciente->fetch(\PDO::FETCH_ASSOC);
+            $stmt_contar->execute([$mesa['id_mesa']]);
+            $resultado_contar = $stmt_contar->fetch(\PDO::FETCH_ASSOC);
+            $total_llamados = (int) $resultado_contar['total_llamados'];
             
-            if ($llamado_reciente && $llamado_reciente['minutos_transcurridos'] < 3) {
-                $minutos_restantes = 3 - $llamado_reciente['minutos_transcurridos'];
+            // Si ya hay 2 o más llamados en los últimos 2 minutos, rechazar
+            if ($total_llamados >= 2) {
+                // Calcular cuántos segundos faltan para que pase el período de 2 minutos desde el primer llamado
+                if ($resultado_contar['primer_llamado']) {
+                    $stmt_tiempo = $db->prepare("
+                        SELECT TIMESTAMPDIFF(SECOND, ?, NOW()) as segundos_transcurridos
+                    ");
+                    $stmt_tiempo->execute([$resultado_contar['primer_llamado']]);
+                    $tiempo_result = $stmt_tiempo->fetch(\PDO::FETCH_ASSOC);
+                    $segundos_transcurridos = (int) $tiempo_result['segundos_transcurridos'];
+                    $segundos_restantes = 120 - $segundos_transcurridos;
+                    $minutos_restantes = ceil($segundos_restantes / 60);
+                    
+                    if ($minutos_restantes <= 0) {
+                        $minutos_restantes = 1;
+                    }
+                } else {
+                    $minutos_restantes = 2;
+                }
+                
                 echo json_encode([
                     'success' => false, 
-                    'message' => "Usted ya llamó al mozo hace menos de 3 minutos, por favor aguarde {$minutos_restantes} minuto(s) más",
+                    'message' => "Usted ya realizó 2 llamados. Por favor aguarde {$minutos_restantes} minuto(s) más antes de llamar nuevamente.",
                     'type' => 'warning'
                 ]);
                 exit;
             }
             
-            // Si hay un llamado anterior (más de 3 minutos), eliminarlo
-            if ($llamado_reciente && $llamado_reciente['minutos_transcurridos'] >= 3) {
-                $stmt_eliminar = $db->prepare("UPDATE llamados_mesa SET estado = 'completado', hora_atencion = NOW(), atendido_por = NULL WHERE id_llamado = ?");
-                $stmt_eliminar->execute([$llamado_reciente['id_llamado']]);
-                error_log("LlamarMozo - Llamado anterior marcado como completado: " . $llamado_reciente['id_llamado']);
+            // Limpiar llamados antiguos (más de 2 minutos) para esta mesa
+            $stmt_limpiar = $db->prepare("
+                UPDATE llamados_mesa 
+                SET estado = 'completado', hora_atencion = NOW(), atendido_por = NULL 
+                WHERE id_mesa = ? 
+                AND estado = 'pendiente'
+                AND hora_solicitud < DATE_SUB(NOW(), INTERVAL 2 MINUTE)
+            ");
+            $stmt_limpiar->execute([$mesa['id_mesa']]);
+            $limpiados = $stmt_limpiar->rowCount();
+            if ($limpiados > 0) {
+                error_log("LlamarMozo - Llamados antiguos limpiados: " . $limpiados);
             }
             
             // Crear el nuevo llamado

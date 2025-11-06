@@ -45,6 +45,10 @@ if ($is_edit) {
     $detalles = Pedido::getDetalles($pedido_id);
 }
 
+// Detectar si el pedido viene de QR
+$from_qr = isset($_GET['from_qr']) || isset($_GET['qr']);
+$is_qr_pedido = $from_qr && $pedido && !empty($pedido['id_mesa']);
+
 // Cargar datos necesarios
 $mesas = Mesa::all();
 $items = CartaItem::all();
@@ -1128,26 +1132,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <!-- Campo Mesa (solo para modo stay) -->
       <div class="form-group" id="mesa-group">
         <div class="form-label">Mesa *</div>
-        <div class="custom-select" id="mesa-select" role="combobox" aria-expanded="false" aria-haspopup="listbox">
-          <div class="custom-select-trigger" id="mesa-select-trigger" tabindex="0" role="button" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="mesa-select">
-            <span id="mesa-selected-text">Seleccionar mesa</span>
-            <span class="custom-select-arrow">▼</span>
+        <?php if ($is_qr_pedido): ?>
+          <!-- Pedido desde QR: mostrar mesa como solo lectura -->
+          <?php 
+            $mesa_qr = null;
+            if ($pedido && !empty($pedido['id_mesa'])) {
+              foreach ($mesas as $m) {
+                if ($m['id_mesa'] == $pedido['id_mesa']) {
+                  $mesa_qr = $m;
+                  break;
+                }
+              }
+            }
+          ?>
+          <div style="padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; color: #6c757d;">
+            <strong>Mesa #<?= $mesa_qr ? $mesa_qr['numero'] : ($pedido['id_mesa'] ?? '') ?></strong>
+            <?php if ($mesa_qr): ?>
+              - <?= htmlspecialchars($mesa_qr['ubicacion']) ?>
+            <?php endif; ?>
+            <span style="margin-left: 10px; font-size: 0.9em; color: #28a745;">✓ Desde QR (no modificable)</span>
           </div>
-          <div class="custom-select-options" role="listbox" aria-labelledby="mesa-select">
-            <div class="custom-select-option" data-value="" data-mozo="" role="option" tabindex="0">Seleccionar mesa</div>
-            <?php foreach ($mesas as $mesa): ?>
-              <div class="custom-select-option" 
-                   data-value="<?= $mesa['id_mesa'] ?>" 
-                   data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
-                   role="option"
-                   tabindex="0"
-                   <?= (isset($_POST['id_mesa']) && $_POST['id_mesa'] == $mesa['id_mesa']) || ($pedido && $pedido['id_mesa'] == $mesa['id_mesa']) ? 'class="selected"' : '' ?>>
-                Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
-              </div>
-            <?php endforeach; ?>
+          <input type="hidden" name="id_mesa" id="id_mesa" value="<?= $pedido['id_mesa'] ?? '' ?>">
+        <?php else: ?>
+          <!-- Pedido normal: selector de mesa habilitado -->
+          <div class="custom-select" id="mesa-select" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+            <div class="custom-select-trigger" id="mesa-select-trigger" tabindex="0" role="button" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="mesa-select">
+              <span id="mesa-selected-text">Seleccionar mesa</span>
+              <span class="custom-select-arrow">▼</span>
+            </div>
+            <div class="custom-select-options" role="listbox" aria-labelledby="mesa-select">
+              <div class="custom-select-option" data-value="" data-mozo="" role="option" tabindex="0">Seleccionar mesa</div>
+              <?php foreach ($mesas as $mesa): ?>
+                <div class="custom-select-option" 
+                     data-value="<?= $mesa['id_mesa'] ?>" 
+                     data-mozo="<?= htmlspecialchars($mesa['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
+                     role="option"
+                     tabindex="0"
+                     <?= (isset($_POST['id_mesa']) && $_POST['id_mesa'] == $mesa['id_mesa']) || ($pedido && $pedido['id_mesa'] == $mesa['id_mesa']) ? 'class="selected"' : '' ?>>
+                  Mesa #<?= $mesa['numero'] ?> - <?= $mesa['ubicacion'] ?>
+                </div>
+              <?php endforeach; ?>
+            </div>
           </div>
-        </div>
-        <input type="hidden" name="id_mesa" id="id_mesa" value="<?= isset($_POST['id_mesa']) ? $_POST['id_mesa'] : ($pedido['id_mesa'] ?? '') ?>">
+          <input type="hidden" name="id_mesa" id="id_mesa" value="<?= isset($_POST['id_mesa']) ? $_POST['id_mesa'] : ($pedido['id_mesa'] ?? '') ?>">
+        <?php endif; ?>
         <div id="mozo-info" style="margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; display: none;">
           <strong>Mozo asignado:</strong> <span id="mozo-nombre"></span>
         </div>
