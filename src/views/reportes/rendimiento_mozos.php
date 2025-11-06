@@ -734,7 +734,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
 .btn-exportar {
     background: #28a745;
-    color: white;
+    color: white !important;
     border: none;
     padding: 0.75rem 1.5rem;
     border-radius: 4px;
@@ -745,10 +745,14 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     height: fit-content;
     white-space: nowrap;
     flex-shrink: 0;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
 .btn-exportar:hover {
     background: #218838;
+    color: white !important;
 }
 </style>
 
@@ -796,9 +800,11 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                     <button class="apply-btn" onclick="applyFilters()">Aplicar Filtros</button>
                 </div>
                 
-                <button class="btn-exportar" onclick="exportarCSV()">
+                <a href="?route=reportes/rendimiento-personal/exportar-csv&fecha_desde=<?= urlencode($fechaDesde ?? '') ?>&fecha_hasta=<?= urlencode($fechaHasta ?? '') ?>" 
+                   class="btn-exportar" 
+                   style="text-decoration: none; display: inline-block;">
                     📥 Exportar CSV
-                </button>
+                </a>
     </div>
     
     <!-- Tarjetas de estadísticas -->
@@ -1099,34 +1105,6 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
         }
     });
 <?php endif; ?>
-
-// Función para exportar a CSV
-function exportarCSV() {
-    // Crear CSV en cliente
-    let csv = 'Mozo,Pedidos,Total Vendido,Total Propinas,Propina Promedio,Tasa Propina\n';
-    
-    <?php if (!empty($kpis) && $agrupar === 'ninguno'): ?>
-        <?php foreach ($kpis as $kpi): ?>
-            csv += '<?= addslashes($kpi['mozo']) ?>,';
-            csv += '<?= $kpi['pedidos'] ?>,';
-            csv += '<?= $kpi['total_vendido'] ?>,';
-            csv += '<?= $kpi['propina_total'] ?>,';
-            csv += '<?= $kpi['propina_promedio_por_pedido'] ?>,';
-            csv += '<?= number_format($kpi['tasa_propina'] * 100, 2) ?>%\n';
-        <?php endforeach; ?>
-    <?php endif; ?>
-    
-    // Descargar archivo
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'rendimiento_mozos_<?= date('Y-m-d') ?>.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
 
 // Validación y aplicación de filtros (igual que en platos más vendidos)
 function validarFechas() {

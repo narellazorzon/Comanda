@@ -9,7 +9,9 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $route = $_GET['route'] ?? 'cliente';
 $apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion'];
 $noHeaderRoutes = ['login', 'pago', 'pago-confirmacion'];
-if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
+// Rutas de exportación que no deben incluir header
+$exportRoutes = ['reportes/rendimiento-personal/exportar-csv'];
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes) && !in_array($route, $exportRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
@@ -286,6 +288,12 @@ switch ($route) {
         require_once __DIR__ . '/../src/controllers/ReporteController.php';
         $resultado = \App\Controllers\ReporteController::rendimientoMozos();
         include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
+        break;
+
+    case 'reportes/rendimiento-personal/exportar-csv':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/ReporteController.php';
+        \App\Controllers\ReporteController::exportarRendimientoMozosCSV();
         break;
 
     // Rutas de Llamados (personal y administradores)
