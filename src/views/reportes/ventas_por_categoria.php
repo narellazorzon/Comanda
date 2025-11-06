@@ -12,7 +12,6 @@ if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
 use App\Models\Reporte;
 
 // Parámetros de filtro
-$periodo = $_GET['periodo'] ?? 'todos';
 $fecha_desde = $_GET['fecha_desde'] ?? '';
 $fecha_hasta = $_GET['fecha_hasta'] ?? '';
 $error = '';
@@ -26,15 +25,10 @@ if ($fecha_desde && $fecha_hasta) {
     }
 }
 
-// Validar período
-$periodos_validos = ['semana', 'mes', 'año', 'todos'];
-if (!in_array($periodo, $periodos_validos)) {
-    $periodo = 'todos';
-}
-
 // Obtener datos del modelo solo si no hay error
-$categorias = $error ? [] : Reporte::ventasPorCategoria($periodo, $fecha_desde, $fecha_hasta);
-$stats = $error ? [] : Reporte::estadisticasPeriodo($periodo, $fecha_desde, $fecha_hasta);
+// Usamos 'todos' como período por defecto, pero las fechas tienen prioridad en getFiltroFecha
+$categorias = $error ? [] : Reporte::ventasPorCategoria('todos', $fecha_desde, $fecha_hasta);
+$stats = $error ? [] : Reporte::estadisticasPeriodo('todos', $fecha_desde, $fecha_hasta);
 ?>
 
 <style>
@@ -108,12 +102,13 @@ $stats = $error ? [] : Reporte::estadisticasPeriodo($periodo, $fecha_desde, $fec
     color: var(--secondary);
 }
 
-.filter-group select {
+.filter-group select,
+.filter-group input[type="date"] {
     padding: 8px 12px;
     border: 1px solid var(--primary);
     border-radius: 4px;
     font-size: 14px;
-    background: var(--surface);
+    background: white;
     color: var(--text);
 }
 
@@ -321,10 +316,6 @@ $stats = $error ? [] : Reporte::estadisticasPeriodo($periodo, $fecha_desde, $fec
             <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
                 📅 Período: del <?= htmlspecialchars($fecha_desde) ?> al <?= htmlspecialchars($fecha_hasta) ?>
             </p>
-        <?php elseif ($periodo !== 'todos'): ?>
-            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
-                📅 Período: <?= ucfirst($periodo) ?>
-            </p>
         <?php endif; ?>
     </div>
 
@@ -353,16 +344,6 @@ $stats = $error ? [] : Reporte::estadisticasPeriodo($periodo, $fecha_desde, $fec
             <input type="date" name="fecha_hasta" id="fecha_hasta" 
                    value="<?= htmlspecialchars($fecha_hasta) ?>" 
                    onchange="validarFechas()">
-        </div>
-        
-        <div class="filter-group">
-            <label for="periodo">Período:</label>
-            <select name="periodo" id="periodo" onchange="updateFilters()">
-                <option value="todos" <?= $periodo === 'todos' ? 'selected' : '' ?>>Todos los Períodos</option>
-                <option value="semana" <?= $periodo === 'semana' ? 'selected' : '' ?>>Última Semana</option>
-                <option value="mes" <?= $periodo === 'mes' ? 'selected' : '' ?>>Último Mes</option>
-                <option value="año" <?= $periodo === 'año' ? 'selected' : '' ?>>Último Año</option>
-            </select>
         </div>
         
         <button class="apply-btn" onclick="applyFilters()">Aplicar Filtros</button>
@@ -448,7 +429,7 @@ function validarFechas() {
     }
 }
 
-function updateFilters() {
+function applyFilters() {
     // Validar fechas antes de proceder
     if (!validarFechas()) {
         return false;
@@ -456,14 +437,13 @@ function updateFilters() {
     
     const fechaDesde = document.getElementById('fecha_desde').value;
     const fechaHasta = document.getElementById('fecha_hasta').value;
-    const periodo = document.getElementById('periodo').value;
     
     const url = new URL(window.location);
     
     // Limpiar parámetros de período anterior
     url.searchParams.delete('periodo');
     
-    // Agregar nuevos parámetros
+    // Agregar nuevos parámetros de fecha
     if (fechaDesde) {
         url.searchParams.set('fecha_desde', fechaDesde);
     } else {
@@ -476,13 +456,7 @@ function updateFilters() {
         url.searchParams.delete('fecha_hasta');
     }
     
-    url.searchParams.set('periodo', periodo);
-    
     window.location.href = url.toString();
-}
-
-function applyFilters() {
-    updateFilters();
 }
 </script>
 

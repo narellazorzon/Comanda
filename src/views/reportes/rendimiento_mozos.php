@@ -36,35 +36,65 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .report-header {
-    background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--secondary) 0%, #8b5e46 100%);
+    color: var(--text-light);
     padding: 30px;
     border-radius: 10px;
     margin-bottom: 30px;
     text-align: center;
+    box-shadow: 0 4px 15px rgba(161, 134, 111, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.report-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .report-header h1 {
     margin: 0 0 10px 0;
     font-size: 2.5em;
+    color: rgb(238, 224, 191);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
 }
 
 .report-header p {
     margin: 0;
-    opacity: 0.9;
+    opacity: 0.95;
     font-size: 1.1em;
+    position: relative;
+    z-index: 1;
 }
 
-.filters-section {
+.filtros {
     background: var(--surface);
     padding: 1rem;
     border-radius: 6px;
     margin-bottom: 1.5rem;
     display: flex;
-    gap: 1rem;
     align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
+    gap: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.filtros-fechas {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
 }
 
 .filter-group {
@@ -85,7 +115,8 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     font-size: 1rem;
 }
 
-.apply-btn {
+.apply-btn,
+.btn-aplicar {
     background: var(--secondary);
     color: var(--text-light);
     border: none;
@@ -94,9 +125,13 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     cursor: pointer;
     font-size: 1rem;
     transition: background-color 0.2s ease;
+    height: fit-content;
+    white-space: nowrap;
+    margin-left: 2.5rem;
 }
 
-.apply-btn:hover {
+.apply-btn:hover,
+.btn-aplicar:hover {
     background-color: #8b5e46;
 }
 
@@ -137,7 +172,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
 .stat-card h3 {
     margin: 0 0 10px 0;
-    color: #6c757d;
+    color: var(--secondary);
     font-size: 0.9em;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -146,7 +181,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 .stat-card .value {
     font-size: 2em;
     font-weight: bold;
-    color: #495057;
+    color: var(--secondary);
 }
 
 .mozos-table {
@@ -162,7 +197,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .mozos-table th {
-    background: #495057;
+    background: var(--secondary);
     color: white;
     padding: 15px;
     text-align: left;
@@ -171,16 +206,39 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
 .mozos-table td {
     padding: 12px 15px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid rgba(144, 104, 76, 0.2);
 }
 
 .mozos-table tr:hover {
-    background: #f8f9fa;
+    background: rgba(144, 104, 76, 0.05);
 }
 
 .mozo-name {
     font-weight: 600;
-    color: #495057;
+    color: var(--secondary);
+}
+
+.card.mb-4.ranking-card .card-header,
+.ranking-card .card-header {
+    background: var(--background) !important;
+    background-color: var(--background) !important;
+    color: var(--secondary) !important;
+    border-bottom: 1px solid rgba(144, 104, 76, 0.2) !important;
+}
+
+.card.mb-4.ranking-card .card-header h5,
+.ranking-card .card-header h5,
+.ranking-card .card-header h5.mb-0 {
+    color: var(--secondary) !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+}
+
+/* Títulos de gráficos - aumento del 40% */
+.row .col-md-6 .card .card-header h5 {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    color: var(--secondary) !important;
 }
 
 .performance-badge {
@@ -228,12 +286,12 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 .no-data {
     text-align: center;
     padding: 40px;
-    color: #6c757d;
+    color: var(--secondary);
     font-style: italic;
 }
 
 @media (max-width: 768px) {
-    .filters-section {
+    .filtros {
         flex-direction: column;
         align-items: stretch;
     }
@@ -351,12 +409,36 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     }
 
     /* Ajustar botones en móviles */
-    .export-btn {
-        font-size: 0.8rem;
-        padding: 6px 12px;
-        float: none;
+    .btn-exportar {
+        font-size: 0.9rem;
+        padding: 0.6rem 1.2rem;
         width: 100%;
-        margin-top: 10px;
+        margin-top: 0.5rem;
+    }
+    
+    .filtros {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filtros-fechas {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filtros-fechas .filter-group,
+    .filtros-fechas .apply-btn {
+        width: 100%;
+    }
+    
+    .filtros-fechas .apply-btn {
+        margin-left: 0;
+    }
+    
+    .btn-exportar {
+        width: 100%;
+        margin-top: 0.5rem;
     }
 
     /* Títulos más pequeños */
@@ -393,16 +475,16 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     }
 
     .ranking-table-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: rgba(144, 104, 76, 0.1);
     }
 
     .ranking-table-container::-webkit-scrollbar-thumb {
-        background: #888;
+        background: var(--secondary);
         border-radius: 3px;
     }
 
     .ranking-table-container::-webkit-scrollbar-thumb:hover {
-        background: #555;
+        background: #8b5e46;
     }
 
     .mozos-table {
@@ -434,11 +516,11 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
         content: "→ Desliza para ver más";
         display: block;
         text-align: center;
-        color: #6c757d;
+        color: var(--secondary);
         font-size: 0.75rem;
         padding: 8px;
-        background: #f8f9fa;
-        border-top: 1px solid #dee2e6;
+        background: rgba(144, 104, 76, 0.1);
+        border-top: 1px solid rgba(144, 104, 76, 0.3);
     }
 }
 
@@ -459,38 +541,40 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     color: var(--text-light);
 }
 
-.export-btn {
+.btn-exportar {
     background: #28a745;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 0.75rem 1.5rem;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: 600;
-    transition: all 0.3s;
-    float: right;
+    transition: background-color 0.2s ease;
+    height: fit-content;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.export-btn:hover {
+.btn-exportar:hover {
     background: #218838;
-    transform: translateY(-2px);
 }
 </style>
 
 
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h2 mb-0">📊 Rendimiento del Personal</h1>
-                <button class="export-btn" onclick="exportarCSV()">
-                    📥 Exportar CSV
-                </button>
-            </div>
-            
-            <!-- Contenedor de alerta para fechas inválidas -->
-            <div id="alerta-fechas" 
+<div class="report-container">
+    <div class="report-header">
+        <h1>📊 Rendimiento del Personal</h1>
+        <p>Análisis de rendimiento y productividad del equipo</p>
+        <?php if ($fechaDesde && $fechaHasta): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: del <?= htmlspecialchars($fechaDesde) ?> al <?= htmlspecialchars($fechaHasta) ?>
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <!-- Contenedor de alerta para fechas inválidas -->
+    <div id="alerta-fechas" 
                  style="display:<?= $fechasInvalidas ? 'block' : 'none' ?>; 
                         background:#f8d7da; 
                         color:#721c24; 
@@ -499,66 +583,79 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                         padding:10px; 
                         margin-bottom:1rem;">
                 ❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.
-            </div>
+    </div>
 
-            <!-- Filtros -->
-            <div class="filters-section">
-                <div class="filter-group">
-                    <label for="fecha_desde">Fecha Desde:</label>
-                    <input type="date" name="fecha_desde" id="fecha_desde" 
-                           value="<?= htmlspecialchars($fechaDesde ?? '') ?>" 
-                           onchange="validarFechas()">
+    <!-- Filtros -->
+    <div class="filtros">
+                <div class="filtros-fechas">
+                    <div class="filter-group">
+                        <label for="fecha_desde">Fecha Desde:</label>
+                        <input type="date" name="fecha_desde" id="fecha_desde" 
+                               value="<?= htmlspecialchars($fechaDesde ?? '') ?>" 
+                               onchange="validarFechas()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="fecha_hasta">Fecha Hasta:</label>
+                        <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                               value="<?= htmlspecialchars($fechaHasta ?? '') ?>" 
+                               onchange="validarFechas()">
+                    </div>
+                    
+                    <button class="apply-btn" onclick="applyFilters()">Aplicar Filtros</button>
                 </div>
                 
-                <div class="filter-group">
-                    <label for="fecha_hasta">Fecha Hasta:</label>
-                    <input type="date" name="fecha_hasta" id="fecha_hasta" 
-                           value="<?= htmlspecialchars($fechaHasta ?? '') ?>" 
-                           onchange="validarFechas()">
-                </div>
-                
-                <button class="apply-btn" onclick="applyFilters()">Aplicar Filtros</button>
-            </div>
-            
-            <!-- Tarjetas de estadísticas -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <h3>Total Pedidos</h3>
-                        <div class="value"><?= number_format($totalPedidos) ?></div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <h3>Total Propinas</h3>
-                        <div class="value text-success">$<?= number_format($totalPropinas, 2) ?></div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <h3>Total Vendido</h3>
-                        <div class="value">$<?= number_format($totalVendido, 2) ?></div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <h3>Propina Promedio</h3>
-                        <div class="value text-info">$<?= number_format($promedioGeneral, 2) ?></div>
-                    </div>
-                </div>
-            </div>
+                <button class="btn-exportar" onclick="exportarCSV()">
+                    📥 Exportar CSV
+                </button>
+    </div>
+    
+    <!-- Tarjetas de estadísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Pedidos</h3>
+            <div class="value"><?= number_format($totalPedidos) ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Propinas</h3>
+            <div class="value text-success">$<?= number_format($totalPropinas, 2) ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Vendido</h3>
+            <div class="value">$<?= number_format($totalVendido, 2) ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>Propina Promedio</h3>
+            <div class="value text-info">$<?= number_format($promedioGeneral, 2) ?></div>
+        </div>
+    </div>
             
             <?php if (empty($kpis)): ?>
-                <div class="alert alert-warning" role="alert">
-                    No se encontraron datos para el período seleccionado.
+                <div class="alert alert-warning" role="alert" style="background-color: #fff3cd; border: 2px solid #ffc107; padding: 20px; margin: 20px 0;">
+                    <h4 style="margin-top: 0; color: #856404;">⚠️ No se encontraron datos para el período seleccionado</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                        <strong style="color: #856404;">🔍 Debug de fechas:</strong><br><br>
+                        <strong>URL completa:</strong> <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'N/A') ?></code><br><br>
+                        <strong>Parámetros GET recibidos:</strong><br>
+                        - fecha_desde: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($_GET['fecha_desde'] ?? 'NO ENVIADO') ?></code><br>
+                        - fecha_hasta: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($_GET['fecha_hasta'] ?? 'NO ENVIADO') ?></code><br>
+                        - route: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($_GET['route'] ?? 'NO ENVIADO') ?></code><br><br>
+                        <strong>Fechas procesadas en la vista:</strong><br>
+                        - fechaDesde: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($fechaDesde ?? 'N/A') ?></code><br>
+                        - fechaHasta: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($fechaHasta ?? 'N/A') ?></code><br><br>
+                        <strong>Fechas procesadas en el controlador (desde params):</strong><br>
+                        - desde: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($desde ?? 'N/A') ?></code><br>
+                        - hasta: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($hasta ?? 'N/A') ?></code><br><br>
+                        <strong>Total de KPIs encontrados:</strong> <code style="background: #f0f0f0; padding: 2px 5px;"><?= count($kpis) ?></code>
+                    </div>
                 </div>
             <?php else: ?>
                 
                 <?php if ($agrupar === 'ninguno'): ?>
                     <!-- Vista de Ranking -->
                     <div class="card mb-4 ranking-card">
-                        <div class="card-header">
-                            <h5 class="mb-0">🏆 Ranking de Rendimiento</h5>
+                        <div class="card-header" style="background: var(--background) !important; background-color: var(--background) !important; color: var(--secondary) !important;">
+                            <h5 class="mb-0" style="color: var(--secondary) !important; font-size: 1.5rem !important; font-weight: 600 !important;">🏆 Ranking de Rendimiento</h5>
                         </div>
                         <div class="card-body p-0">
                             <div class="ranking-table-container">
@@ -636,7 +733,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5 class="mb-0">📈 Propinas por Mozo</h5>
+                                    <h5 class="mb-0" style="font-size: 1.4rem !important; font-weight: 600 !important; color: var(--secondary) !important;">📈 Propinas por Mozo</h5>
                                 </div>
                                 <div class="card-body">
                                     <canvas id="chartPropinas" height="300"></canvas>
@@ -646,7 +743,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5 class="mb-0">📊 Pedidos por Mozo</h5>
+                                    <h5 class="mb-0" style="font-size: 1.4rem !important; font-weight: 600 !important; color: var(--secondary) !important;">📊 Pedidos por Mozo</h5>
                                 </div>
                                 <div class="card-body">
                                     <canvas id="chartPedidos" height="300"></canvas>
