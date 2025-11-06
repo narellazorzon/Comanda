@@ -2564,6 +2564,21 @@ $iconosCategorias = [
         color: var(--secondary);
         font-size: 0.9rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .propina-btn .propina-porcentaje {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .propina-btn .propina-monto {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        font-weight: 400;
     }
 
     .propina-btn:hover {
@@ -2578,6 +2593,10 @@ $iconosCategorias = [
         color: white;
         border-color: var(--secondary);
         box-shadow: 0 3px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .propina-btn.selected .propina-monto {
+        opacity: 0.9;
     }
 
     .propina-otro {
@@ -3851,6 +3870,13 @@ $iconosCategorias = [
         }, 0);
 
         console.log('Subtotal calculado:', subtotalPedido);
+        
+        // Resetear propina
+        propinaSeleccionada = 0;
+        propinaPorcentaje = 0;
+        
+        // Actualizar montos en los botones de propina
+        actualizarMontosPropina();
 
         // Llenar detalle del pedido
         const detalleDiv = document.getElementById('pago-detalle');
@@ -3942,8 +3968,12 @@ $iconosCategorias = [
 
         // Resetear selección de propina
         propinaSeleccionada = 0;
+        propinaPorcentaje = 0;
         document.querySelectorAll('.propina-btn').forEach(btn => btn.classList.remove('selected'));
         document.querySelectorAll('.propina-btn')[0].classList.add('selected');
+
+        // Actualizar montos en los botones de propina
+        actualizarMontosPropina();
 
         // Actualizar totales
         actualizarTotalPago();
@@ -3999,32 +4029,8 @@ $iconosCategorias = [
 
     // Event listeners para el modal de pago
     document.addEventListener('DOMContentLoaded', function() {
-        // Botones de propina
-        document.querySelectorAll('.propina-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.propina-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
-
-                const propinaValue = this.dataset.propina;
-
-                if (propinaValue === 'otro') {
-                    document.getElementById('propina-otro-container').style.display = 'flex';
-                    document.getElementById('propina-otro').focus();
-                } else {
-                    document.getElementById('propina-otro-container').style.display = 'none';
-
-                    if (propinaValue === '0') {
-                        propinaSeleccionada = 0;
-                        propinaPorcentaje = 0;
-                    } else {
-                        propinaPorcentaje = parseInt(propinaValue);
-                        propinaSeleccionada = subtotalPedido * (propinaPorcentaje / 100);
-                    }
-
-                    actualizarTotalPago();
-                }
-            });
-        });
+        // Los botones de propina ahora usan onclick="seleccionarPropina(this, X)" directamente en el HTML
+        // No necesitamos event listeners adicionales aquí
 
         // Botón aceptar propina personalizada (ID o clase fallback)
         (document.getElementById('btn-aceptar-propina') || document.querySelector('.btn-propina-custom'))?.addEventListener('click', function() {
@@ -4235,6 +4241,21 @@ $iconosCategorias = [
         actualizarTotalPago();
     }
 
+    // Función para actualizar los montos en los botones de propina
+    function actualizarMontosPropina() {
+        const subtotal = subtotalPedido;
+        document.querySelectorAll('.propina-btn[data-porcentaje]').forEach(btn => {
+            const porcentaje = parseInt(btn.getAttribute('data-porcentaje')) || 0;
+            if (porcentaje > 0) {
+                const monto = subtotal * (porcentaje / 100);
+                const montoSpan = btn.querySelector('.propina-monto');
+                if (montoSpan) {
+                    montoSpan.textContent = `$${monto.toFixed(2)}`;
+                }
+            }
+        });
+    }
+
     // Función para seleccionar propina
     function seleccionarPropina(button, percentage) {
         document.querySelectorAll('.propina-btn').forEach(btn => btn.classList.remove('selected'));
@@ -4242,18 +4263,77 @@ $iconosCategorias = [
 
         if (percentage === 'otro') {
             document.getElementById('propina-otro').style.display = 'block';
-            document.getElementById('propina-monto').focus();
+            const montoInput = document.getElementById('propina-monto');
+            if (montoInput) {
+                montoInput.value = '0';
+                montoInput.focus();
+                montoInput.select();
+            }
+            document.getElementById('propina-porcentaje-info').style.display = 'none';
+            propinaSeleccionada = 0;
+            propinaPorcentaje = 0;
         } else {
             document.getElementById('propina-otro').style.display = 'none';
-            propinaSeleccionada = percentage;
+            // percentage es el porcentaje (5, 10, 15, etc.)
+            propinaPorcentaje = percentage;
+            propinaSeleccionada = subtotalPedido * (percentage / 100);
             actualizarTotalPago();
+        }
+    }
+
+    // Función para incrementar propina
+    function incrementarPropina() {
+        const montoInput = document.getElementById('propina-monto');
+        if (montoInput) {
+            const valorActual = parseFloat(montoInput.value) || 0;
+            montoInput.value = valorActual + 1;
+            actualizarPorcentajePropina();
+        }
+    }
+
+    // Función para decrementar propina
+    function decrementarPropina() {
+        const montoInput = document.getElementById('propina-monto');
+        if (montoInput) {
+            const valorActual = parseFloat(montoInput.value) || 0;
+            const nuevoValor = Math.max(0, valorActual - 1);
+            montoInput.value = nuevoValor;
+            actualizarPorcentajePropina();
+        }
+    }
+
+    // Función para actualizar el porcentaje cuando se ingresa un monto fijo
+    function actualizarPorcentajePropina() {
+        const monto = parseFloat(document.getElementById('propina-monto').value) || 0;
+        const subtotal = subtotalPedido;
+        
+        if (monto > 0 && subtotal > 0) {
+            const porcentaje = (monto / subtotal) * 100;
+            document.getElementById('propina-porcentaje-valor').textContent = porcentaje.toFixed(1);
+            document.getElementById('propina-porcentaje-info').style.display = 'block';
+        } else {
+            document.getElementById('propina-porcentaje-info').style.display = 'none';
         }
     }
 
     // Función para aplicar propina personalizada
     function aplicarPropinaCustom() {
         const monto = parseFloat(document.getElementById('propina-monto').value) || 0;
+        if (monto < 0) {
+            showToast('❌ El monto de propina no puede ser negativo', 'error');
+            return;
+        }
+        
+        const subtotal = subtotalPedido;
         propinaSeleccionada = monto;
+        
+        // Calcular el porcentaje equivalente
+        if (subtotal > 0) {
+            propinaPorcentaje = (monto / subtotal) * 100;
+        } else {
+            propinaPorcentaje = 0;
+        }
+        
         actualizarTotalPago();
     }
 
@@ -4262,23 +4342,24 @@ $iconosCategorias = [
         const subtotal = subtotalPedido;
         let propina = 0;
 
-        if (typeof propinaSeleccionada === 'number') {
-            if (propinaSeleccionada <= 1) {
-                // Es un porcentaje
-                propina = subtotal * propinaSeleccionada;
-            } else {
-                // Es un monto fijo
-                propina = propinaSeleccionada;
-            }
+        if (typeof propinaSeleccionada === 'number' && propinaSeleccionada >= 0) {
+            propina = propinaSeleccionada;
         }
 
         const total = subtotal + propina;
 
         // Actualizar UI
-        document.getElementById('pago-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('total-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('total-propina').textContent = `$${propina.toFixed(2)}`;
-        document.getElementById('pago-total-final').textContent = `$${total.toFixed(2)}`;
+        const elSubtotal = document.getElementById('pago-subtotal');
+        if (elSubtotal) elSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+        
+        const elTotalSubtotal = document.getElementById('total-subtotal');
+        if (elTotalSubtotal) elTotalSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+        
+        const elPropina = document.getElementById('total-propina');
+        if (elPropina) elPropina.textContent = `$${propina.toFixed(2)}`;
+        
+        const elTotal = document.getElementById('pago-total-final');
+        if (elTotal) elTotal.textContent = `$${total.toFixed(2)}`;
     }
 
     // Función para procesar pago
@@ -4286,17 +4367,8 @@ $iconosCategorias = [
         const metodoPago = document.querySelector('input[name="metodo-pago"]:checked').value;
         const mesaNumero = isQRMode ? mesaFromQR : document.getElementById('numero-mesa').value;
 
-        // Calcular monto de propina
-        let propinaMonto = 0;
-        if (typeof propinaSeleccionada === 'number') {
-            if (propinaSeleccionada <= 1) {
-                // Es un porcentaje
-                propinaMonto = subtotalPedido * propinaSeleccionada;
-            } else {
-                // Es un monto fijo
-                propinaMonto = propinaSeleccionada;
-            }
-        }
+        // Calcular monto de propina (ya está calculado correctamente en propinaSeleccionada)
+        let propinaMonto = typeof propinaSeleccionada === 'number' && propinaSeleccionada >= 0 ? propinaSeleccionada : 0;
 
         console.log('Processing payment:', {
             pedidoId: pedidoActual,
@@ -4393,15 +4465,41 @@ $iconosCategorias = [
                 <div class="pago-seccion">
                     <h4>💝 ¿Deseas añadir una propina?</h4>
                     <div class="propina-opciones">
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 0)" data-amount="0">Sin propina</button>
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 5)" data-amount="5">5%</button>
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 10)" data-amount="10">10%</button>
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 15)" data-amount="15">15%</button>
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 'otro')">Otro monto</button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 0)" data-amount="0" data-porcentaje="0">
+                            <span class="propina-porcentaje">Sin propina</span>
+                            <span class="propina-monto">$0.00</span>
+                        </button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 5)" data-amount="5" data-porcentaje="5">
+                            <span class="propina-porcentaje">5%</span>
+                            <span class="propina-monto">$0.00</span>
+                        </button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 10)" data-amount="10" data-porcentaje="10">
+                            <span class="propina-porcentaje">10%</span>
+                            <span class="propina-monto">$0.00</span>
+                        </button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 15)" data-amount="15" data-porcentaje="15">
+                            <span class="propina-porcentaje">15%</span>
+                            <span class="propina-monto">$0.00</span>
+                        </button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 'otro')" data-amount="otro">
+                            <span class="propina-porcentaje">Otro monto</span>
+                        </button>
                     </div>
                     <div id="propina-otro" class="propina-otro" style="display: none;">
-                        <input type="number" id="propina-monto" placeholder="Monto de propina" min="0" step="0.01">
-                        <button type="button" class="btn-propina-custom" onclick="aplicarPropinaCustom()">Aplicar</button>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <button type="button" onclick="decrementarPropina()" style="padding: 0.75rem 1rem; background: var(--surface); border: 2px solid rgba(161, 134, 111, 0.3); border-radius: 8px; color: var(--secondary); cursor: pointer; font-size: 1.2rem; font-weight: bold; min-width: 45px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(161, 134, 111, 0.1)'" onmouseout="this.style.background='var(--surface)'">−</button>
+                                <div style="flex: 1; display: flex; flex-direction: column; gap: 0.25rem;">
+                                    <input type="number" id="propina-monto" value="0" min="0" step="1" oninput="actualizarPorcentajePropina()" style="padding: 0.75rem; border: 2px solid rgba(161, 134, 111, 0.3); border-radius: 8px; font-size: 1rem; text-align: center; background: var(--surface); color: var(--secondary); font-weight: 600;">
+                                    <div style="font-size: 0.75rem; color: var(--secondary); text-align: center; opacity: 0.7; font-style: italic;">Pesos argentinos (ARS)</div>
+                                </div>
+                                <button type="button" onclick="incrementarPropina()" style="padding: 0.75rem 1rem; background: var(--surface); border: 2px solid rgba(161, 134, 111, 0.3); border-radius: 8px; color: var(--secondary); cursor: pointer; font-size: 1.2rem; font-weight: bold; min-width: 45px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(161, 134, 111, 0.1)'" onmouseout="this.style.background='var(--surface)'">+</button>
+                            </div>
+                            <div id="propina-porcentaje-info" style="font-size: 0.9rem; color: var(--secondary); font-weight: 500; text-align: center; padding: 0.5rem; background: var(--surface); border-radius: 6px; display: none;">
+                                Equivale a <span id="propina-porcentaje-valor">0</span>% del total
+                            </div>
+                            <button type="button" class="btn-propina-custom" onclick="aplicarPropinaCustom()">Aplicar</button>
+                        </div>
                     </div>
                 </div>
 
