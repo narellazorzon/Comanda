@@ -86,11 +86,11 @@ class Pedido {
             LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
             LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
             WHERE DATE(p.fecha_hora) = CURDATE()
-            AND m.id_mozo = ?
+            AND (p.id_mozo = ? OR m.id_mozo = ?)
             AND p.deleted_at IS NULL
             ORDER BY p.fecha_hora DESC
         ");
-        $stmt->execute([$mozoId]);
+        $stmt->execute([$mozoId, $mozoId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
