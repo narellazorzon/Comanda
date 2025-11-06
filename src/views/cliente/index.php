@@ -822,7 +822,7 @@ $iconosCategorias = [
     }
 
     .cart-panel {
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        background: var(--background);
         width: 95%;
         max-width: 650px;
         border-radius: 20px;
@@ -982,33 +982,28 @@ $iconosCategorias = [
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
-    /* Resumen del carrito mejorado */
+    /* Resumen del carrito mejorado - Diseño moderno */
     .cart-summary {
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-        border: 2px solid rgba(161, 134, 111, 0.1);
-        border-radius: 16px;
-        margin: 1.5rem;
+        background: var(--background);
+        border: none;
+        border-radius: 0;
+        margin: 0;
         overflow: hidden;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        box-shadow: none;
         position: relative;
-    }
-
-    .cart-summary::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 50%, #a1866f 100%);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
 
     .cart-summary-header {
         background: linear-gradient(135deg, #a1866f 0%, #8b5e46 100%);
         color: white;
-        padding: 1.25rem 1.5rem;
+        padding: 1rem 1.5rem;
         position: relative;
         overflow: hidden;
+        flex-shrink: 0;
+        border-radius: 12px 12px 0 0;
     }
 
     .cart-summary-header::before {
@@ -1024,29 +1019,32 @@ $iconosCategorias = [
 
     .cart-summary-header h4 {
         margin: 0;
-        font-size: 1.1rem;
+        font-size: 1rem;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
         font-weight: 600;
         position: relative;
         z-index: 1;
+        letter-spacing: 0.3px;
     }
 
     .cart-summary-header h4::before {
         content: '📋';
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
     }
 
     .cart-items {
-        max-height: 320px;
+        flex: 1;
         overflow-y: auto;
-        padding: 1.5rem;
-        background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+        padding: 1rem 1.5rem;
+        background: var(--background);
         scrollbar-width: thin;
-        scrollbar-color: #a1866f #f1f1f1;
+        scrollbar-color: rgba(161, 134, 111, 0.3) transparent;
         position: relative;
+        min-height: 0;
+        max-height: calc(90vh - 350px);
     }
 
     .cart-items::-webkit-scrollbar {
@@ -1136,46 +1134,71 @@ $iconosCategorias = [
     .cart-item {
         display: flex;
         flex-direction: column;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: var(--surface);
         border-radius: 12px;
-        border: 2px solid rgba(161, 134, 111, 0.1);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
-    }
-
-    .cart-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #a1866f 0%,rgb(212, 104, 46) 50%, #a1866f 100%);
-        transform: scaleX(0);
-        transition: transform 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .cart-item:hover {
-        box-shadow: 0 8px 25px rgba(161, 134, 111, 0.15), 0 4px 12px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
-        border-color: rgba(161, 134, 111, 0.3);
+        box-shadow: 0 4px 12px rgba(161, 134, 111, 0.12);
+        transform: translateY(-1px);
     }
 
-    .cart-item:hover::before {
-        transform: scaleX(1);
+    .cart-item-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        gap: 1rem;
     }
 
     .cart-item-info {
         flex: 1;
+        min-width: 0;
     }
 
     .cart-item-name {
         font-weight: 600;
         color: var(--color-texto);
         margin-bottom: 0.25rem;
+        font-size: 0.95rem;
+    }
+    
+    .cart-item-detail {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(161, 134, 111, 0.1);
+    }
+
+    .cart-item-detail-label {
+        font-size: 0.75rem;
+        color: var(--color-texto-suave);
+        margin-bottom: 0.4rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .cart-item-detail-input {
+        border: 1px solid rgba(161, 134, 111, 0.2) !important;
+        background: #faf8f5 !important;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+        width: 100%;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    .cart-item-detail-input:focus {
+        outline: none;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05), 0 0 0 3px rgba(161, 134, 111, 0.1) !important;
+        border-color: rgba(161, 134, 111, 0.4) !important;
+        background: #fefcf9 !important;
     }
 
     .cart-item-price {
@@ -1187,9 +1210,10 @@ $iconosCategorias = [
         display: flex;
         gap: 0.5rem;
         align-items: center;
-        background: #f8f9fa;
+        background: var(--background);
         border-radius: 24px;
         padding: 0.25rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     .qty button {
@@ -1200,54 +1224,76 @@ $iconosCategorias = [
         border-radius: 50%;
         cursor: pointer;
         font-weight: bold;
+        font-size: 1.1rem;
         color: var(--color-primario);
-        box-shadow: var(--sombra-suave);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
     }
 
     .qty button:hover {
         background: var(--color-primario);
         color: white;
         transform: scale(1.1);
+        box-shadow: 0 3px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .qty button:active {
+        transform: scale(0.95);
     }
 
     .qty span {
-        min-width: 32px;
+        min-width: 36px;
         text-align: center;
         font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--color-texto);
     }
 
     .cart-summary-footer {
-        padding: 1.5rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-top: 3px solid rgba(161, 134, 111, 0.2);
+        padding: 1.25rem 1.5rem;
+        background: var(--surface);
+        border-top: 1px solid rgba(161, 134, 111, 0.15);
         position: relative;
-    }
-
-    .cart-summary-footer::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent 0%, rgba(161, 134, 111, 0.3) 50%, transparent 100%);
+        flex-shrink: 0;
+        margin-top: auto;
+        border-radius: 0 0 12px 12px;
     }
 
     .cart-total-amount {
-        text-align: right;
-        font-weight: 800;
-        font-size: 1.8rem;
-        color: #2c5530;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--secondary);
+        text-shadow: none;
         position: relative;
+        padding: 0.75rem 0;
     }
 
     .cart-total-amount::before {
         content: '💰';
         margin-right: 0.5rem;
+        font-size: 1.4rem;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+    }
+    
+    .cart-total-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--secondary);
+        opacity: 0.8;
+    }
+    
+    .cart-total-value {
         font-size: 1.5rem;
-        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+        font-weight: 700;
+        color: #2c5530;
+        letter-spacing: 0.5px;
     }
 
     .cart-empty {
@@ -1268,9 +1314,11 @@ $iconosCategorias = [
         flex-direction: column;
         gap: 0.75rem;
         padding: 1.5rem;
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        background: var(--background);
         border-radius: 16px;
-        margin: 1.5rem;
+        margin: 1.5rem auto;
+        max-width: 480px;
+        width: 100%;
         border: 2px solid rgba(161, 134, 111, 0.1);
         box-shadow: 0 8px 25px rgba(0,0,0,0.08);
         position: relative;
@@ -1313,7 +1361,7 @@ $iconosCategorias = [
         border-radius: 12px;
         font-size: 1rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        background: #faf8f5;
         box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     }
 
@@ -1322,6 +1370,7 @@ $iconosCategorias = [
         outline: none;
         border-color: #a1866f;
         box-shadow: 0 0 0 4px rgba(161, 134, 111, 0.15), inset 0 2px 4px rgba(0,0,0,0.05);
+        background: #fefcf9;
         transform: translateY(-1px);
     }
 
@@ -1583,21 +1632,47 @@ $iconosCategorias = [
         }
 
         .cart-header {
-            padding: 1rem 1.5rem;
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, rgb(83, 52, 31) 0%, rgb(137, 107, 75) 100%);
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .cart-header h3 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
+        }
+        
+        .cart-header .btn-close {
+            width: 36px;
+            height: 36px;
+            font-size: 1.2rem;
+            min-width: 44px; /* Tamaño mínimo para toque */
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .cart-summary {
-            margin: 1rem;
+            margin: 0.75rem;
             border-radius: 12px;
+            padding: 0.75rem;
+        }
+        
+        .cart-summary-header {
+            padding: 0.5rem 0;
+        }
+        
+        .cart-summary-header h4 {
+            font-size: 0.95rem;
         }
 
         .cart-items {
-            max-height: 50vh;
-            padding: 1rem;
+            max-height: 40vh;
+            padding: 0.75rem;
+            -webkit-overflow-scrolling: touch;
         }
 
         .cart-items::-webkit-scrollbar {
@@ -1615,9 +1690,155 @@ $iconosCategorias = [
         }
 
         .checkout-form {
-            margin: 1rem;
+            margin: 0.75rem auto;
             padding: 1rem;
             border-radius: 12px;
+            gap: 0.5rem;
+            max-width: 100%;
+        }
+        
+        /* Formulario responsive - mejoras para móvil */
+        .checkout-form .form-group {
+            gap: 0.3rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .checkout-form .form-group label {
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .checkout-form .form-group input,
+        .checkout-form .form-group select {
+            padding: 0.9rem 1rem;
+            font-size: 1rem;
+            min-height: 44px; /* Tamaño mínimo recomendado para toque en móvil */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .checkout-form .alert {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+        
+        .checkout-form #mesa-qr-info {
+            padding: 0.6rem !important;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .checkout-form #mesa-qr-info span {
+            font-size: 0.85rem;
+            flex: 1 1 100%;
+        }
+        
+        .checkout-form #btn-llamar-mozo-inline {
+            flex: 1 1 auto;
+            min-width: 120px;
+            font-size: 0.85rem !important;
+            padding: 0.5rem 0.75rem !important;
+        }
+        
+        .checkout-form .btn-confirmar {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            min-height: 50px;
+            margin-top: 0.75rem;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .checkout-form .btn-confirmar:active {
+            transform: scale(0.98);
+        }
+        
+        /* Mejoras de scroll táctil para móvil */
+        .cart-panel {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        
+        .checkout-form {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Mejoras adicionales para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            .checkout-form {
+                margin: 0.5rem auto;
+                padding: 0.75rem;
+                gap: 0.4rem;
+                max-width: 100%;
+            }
+            
+            .checkout-form .form-group {
+                margin-bottom: 0.6rem;
+            }
+            
+            .checkout-form .form-group input,
+            .checkout-form .form-group select {
+                padding: 0.85rem 0.9rem;
+                font-size: 16px; /* Previene zoom en iOS */
+            }
+            
+            .checkout-form .btn-confirmar {
+                padding: 1.1rem 1.25rem;
+                font-size: 1.05rem;
+                min-height: 52px;
+            }
+            
+            .checkout-form #mesa-qr-info {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .checkout-form #mesa-qr-info span {
+                margin-bottom: 0.5rem;
+            }
+            
+            .checkout-form #btn-llamar-mozo-inline {
+                width: 100%;
+                margin-right: 0 !important;
+            }
+            
+            .cart-header {
+                padding: 0.6rem 0.75rem;
+            }
+            
+            .cart-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .cart-summary {
+                margin: 0.5rem;
+                padding: 0.6rem;
+            }
+        }
+        
+        /* Mejoras de accesibilidad táctil para todos los elementos interactivos */
+        @media (max-width: 768px) {
+            .checkout-form input[type="text"],
+            .checkout-form input[type="email"],
+            .checkout-form select {
+                font-size: 16px !important; /* Previene zoom automático en iOS */
+            }
+            
+            .checkout-form .form-group label {
+                font-weight: 600;
+            }
+            
+            /* Asegurar que todos los botones sean fáciles de tocar */
+            .checkout-form button,
+            .checkout-form .btn-llamar-mozo {
+                min-height: 44px;
+                min-width: 44px;
+            }
         }
 
         .cart-item {
@@ -1650,8 +1871,19 @@ $iconosCategorias = [
         }
 
         .cart-item-detail-input {
-            padding: 0.4rem;
+            padding: 0.5rem 0.6rem !important;
             font-size: 0.8rem;
+            border: 1px solid rgba(161, 134, 111, 0.2) !important;
+            background: #faf8f5 !important;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+            border-radius: 8px;
+        }
+        
+        .cart-item-detail-input:focus {
+            outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05), 0 0 0 3px rgba(161, 134, 111, 0.1) !important;
+            border-color: rgba(161, 134, 111, 0.4) !important;
+            background: #fefcf9 !important;
         }
 
         .qty button {
@@ -1666,12 +1898,66 @@ $iconosCategorias = [
         }
 
         .cart-summary {
-            padding: 1rem;
-            margin-top: 1rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .cart-summary-header {
+            padding: 0.75rem 1rem;
         }
 
         .cart-summary-header h4 {
             font-size: 0.9rem;
+        }
+        
+        .cart-items {
+            padding: 0.75rem 1rem;
+            max-height: calc(90vh - 400px);
+        }
+        
+        .cart-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .cart-item-main {
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .cart-item-name {
+            font-size: 0.85rem;
+        }
+        
+        .cart-item-price {
+            font-size: 0.75rem;
+        }
+        
+        .qty {
+            padding: 0.2rem;
+        }
+        
+        .qty button {
+            width: 28px;
+            height: 28px;
+            font-size: 0.9rem;
+        }
+        
+        .cart-summary-footer {
+            padding: 1rem 1.25rem;
+        }
+        
+        .cart-total-amount {
+            font-size: 1.25rem;
+            padding: 0.5rem 0;
+        }
+        
+        .cart-total-label {
+            font-size: 0.9rem;
+        }
+        
+        .cart-total-value {
+            font-size: 1.25rem;
         }
 
         .total-box {
@@ -3112,7 +3398,7 @@ $iconosCategorias = [
                     <small style="color: #999;">Agrega productos para continuar</small>
                 </div>
             `;
-            totalBox.textContent = 'Total: $0.00';
+            totalBox.innerHTML = '<span class="cart-total-label">Total:</span><span class="cart-total-value">$0.00</span>';
         } else {
             list.innerHTML = cart.map(i => `
                 <div class="cart-item">
@@ -3139,7 +3425,7 @@ $iconosCategorias = [
                 </div>
             `).join('');
             const total = cart.reduce((t, i) => t + i.qty * Number(i.precio), 0);
-            totalBox.textContent = `Total: $${total.toFixed(2)}`;
+            totalBox.innerHTML = `<span class="cart-total-label">Total:</span><span class="cart-total-value">$${total.toFixed(2)}</span>`;
         }
         
         setTimeout(validateFormQR, 100);
