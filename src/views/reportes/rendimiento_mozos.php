@@ -9,6 +9,18 @@ $desde = $params['desde'] ?? date('Y-m-01');
 $hasta = $params['hasta'] ?? date('Y-m-d');
 $agrupar = $params['agrupar'] ?? 'ninguno';
 
+// Obtener fechas del GET para los filtros (usando los mismos nombres que platos más vendidos)
+$fechaDesde = !empty($_GET['fecha_desde']) ? $_GET['fecha_desde'] : $desde;
+$fechaHasta = !empty($_GET['fecha_hasta']) ? $_GET['fecha_hasta'] : $hasta;
+
+// Validar fechas
+$fechasInvalidas = false;
+if (!empty($fechaDesde) && !empty($fechaHasta)) {
+    if ($fechaHasta < $fechaDesde) {
+        $fechasInvalidas = true;
+    }
+}
+
 // Calcular totales generales
 $totalPedidos = array_sum(array_column($kpis, 'pedidos'));
 $totalPropinas = array_sum(array_column($kpis, 'propina_total'));
@@ -44,49 +56,48 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .filters-section {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 30px;
+    background: var(--surface);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
     display: flex;
-    gap: 20px;
+    gap: 1rem;
     align-items: center;
     flex-wrap: wrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 0.5rem;
 }
 
 .filter-group label {
-    font-weight: bold;
-    color: #495057;
+    font-weight: 600;
+    color: var(--secondary);
 }
 
-.filter-group select {
-    padding: 8px 12px;
-    border: 1px solid #ced4da;
+.filter-group select, .filter-group input {
+    padding: 0.5rem;
+    border: 1px solid var(--primary);
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 1rem;
 }
 
 .apply-btn {
-    background:var(--secondary);
-    color: white;
+    background: var(--secondary);
+    color: var(--text-light);
     border: none;
-    padding: 10px 20px;
+    padding: 0.75rem 1.5rem;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: background 0.3s;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
 }
 
 .apply-btn:hover {
     background-color: #8b5e46;
-    transform: translateY(-2px);
 }
 
 .clear-btn {
@@ -467,9 +478,6 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 </style>
 
-<!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 
 <div class="container-fluid py-4">
     <div class="row mb-4">
@@ -481,42 +489,35 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                 </button>
             </div>
             
-            <!-- Filtros -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form method="GET" action="" class="row g-3">
-                        <input type="hidden" name="route" value="reportes/rendimiento-personal">
-                        
-                        <div class="col-md-4">
-                            <label for="desde" class="form-label">Desde</label>
-                            <input type="text" class="form-control" id="desde" name="desde"
-                                   value="<?= date('d/m/Y', strtotime($desde)) ?>"
-                                   placeholder="DD/MM/YYYY"
-                                   pattern="\d{2}/\d{2}/\d{4}">
-                            <input type="hidden" id="desde_hidden" name="desde"
-                                   value="<?= htmlspecialchars($desde) ?>">
-                        </div>
+            <!-- Contenedor de alerta para fechas inválidas -->
+            <div id="alerta-fechas" 
+                 style="display:<?= $fechasInvalidas ? 'block' : 'none' ?>; 
+                        background:#f8d7da; 
+                        color:#721c24; 
+                        border:1px solid #f5c6cb; 
+                        border-radius:6px; 
+                        padding:10px; 
+                        margin-bottom:1rem;">
+                ❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.
+            </div>
 
-                        <div class="col-md-4">
-                            <label for="hasta" class="form-label">Hasta</label>
-                            <input type="text" class="form-control" id="hasta" name="hasta"
-                                   value="<?= date('d/m/Y', strtotime($hasta)) ?>"
-                                   placeholder="DD/MM/YYYY"
-                                   pattern="\d{2}/\d{2}/\d{4}">
-                            <input type="hidden" id="hasta_hidden" name="hasta"
-                                   value="<?= htmlspecialchars($hasta) ?>">
-                        </div>
-                        
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="apply-btn me-2">
-                                🔍 Filtrar
-                            </button>
-                            <a href="?route=reportes/rendimiento-personal" class="clear-btn">
-                                🔄 Limpiar
-                            </a>
-                        </div>
-                    </form>
+            <!-- Filtros -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label for="fecha_desde">Fecha Desde:</label>
+                    <input type="date" name="fecha_desde" id="fecha_desde" 
+                           value="<?= htmlspecialchars($fechaDesde ?? '') ?>" 
+                           onchange="validarFechas()">
                 </div>
+                
+                <div class="filter-group">
+                    <label for="fecha_hasta">Fecha Hasta:</label>
+                    <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                           value="<?= htmlspecialchars($fechaHasta ?? '') ?>" 
+                           onchange="validarFechas()">
+                </div>
+                
+                <button class="apply-btn" onclick="applyFilters()">Aplicar Filtros</button>
             </div>
             
             <!-- Tarjetas de estadísticas -->
@@ -730,8 +731,6 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
 <!-- Scripts necesarios -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script>
 <?php if (!empty($kpis) && $agrupar === 'ninguno'): ?>
     // Datos para gráficos de ranking
@@ -841,157 +840,49 @@ function exportarCSV() {
     document.body.removeChild(link);
 }
 
-// Función para convertir fecha de DD/MM/YYYY a YYYY-MM-DD
-function convertDate(dateStr) {
-    if (!dateStr) return '';
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return dateStr;
-    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+// Validación y aplicación de filtros (igual que en platos más vendidos)
+function validarFechas() {
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    const alerta = document.getElementById('alerta-fechas');
+    
+    if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+        alerta.style.display = 'block';
+        alerta.innerText = '❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.';
+        return false;
+    } else {
+        alerta.style.display = 'none';
+        return true;
+    }
 }
 
-// Función para convertir fecha de YYYY-MM-DD a DD/MM/YYYY
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return dateStr;
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+function applyFilters() {
+    // Validar fechas antes de proceder
+    if (!validarFechas()) {
+        return false;
+    }
+    
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    
+    const url = new URL(window.location);
+    
+    // Agregar nuevos parámetros
+    if (fechaDesde) {
+        url.searchParams.set('fecha_desde', fechaDesde);
+    } else {
+        url.searchParams.delete('fecha_desde');
+    }
+    
+    if (fechaHasta) {
+        url.searchParams.set('fecha_hasta', fechaHasta);
+    } else {
+        url.searchParams.delete('fecha_hasta');
+    }
+    
+    // Mantener el parámetro route
+    url.searchParams.set('route', 'reportes/rendimiento-personal');
+    
+    window.location.href = url.toString();
 }
-
-// Validar y convertir fechas al enviar el formulario
-const form = document.querySelector('form');
-if (form) {
-    form.addEventListener('submit', function(e) {
-    const desdeInput = document.getElementById('desde');
-    const hastaInput = document.getElementById('hasta');
-    const desdeHidden = document.getElementById('desde_hidden');
-    const hastaHidden = document.getElementById('hasta_hidden');
-
-    // Validar formato DD/MM/YYYY
-    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-
-    if (!dateRegex.test(desdeInput.value)) {
-        e.preventDefault();
-        alert('El formato de la fecha "Desde" debe ser DD/MM/YYYY');
-        desdeInput.focus();
-        return;
-    }
-
-    if (!dateRegex.test(hastaInput.value)) {
-        e.preventDefault();
-        alert('El formato de la fecha "Hasta" debe ser DD/MM/YYYY');
-        hastaInput.focus();
-        return;
-    }
-
-    // Convertir fechas al formato YYYY-MM-DD para el formulario
-    desdeHidden.value = convertDate(desdeInput.value);
-    hastaHidden.value = convertDate(hastaInput.value);
-});
-}
-
-// Formatear fecha al salir del campo
-const desdeInput = document.getElementById('desde');
-const hastaInput = document.getElementById('hasta');
-
-if (desdeInput) {
-    desdeInput.addEventListener('blur', function() {
-        const value = this.value;
-        if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
-            // Auto-formatear si el usuario ingresa ddmmyyyy
-            const clean = value.replace(/\D/g, '');
-            if (clean.length === 8) {
-                this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
-            }
-        }
-    });
-}
-
-if (hastaInput) {
-    hastaInput.addEventListener('blur', function() {
-    const value = this.value;
-    if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
-        // Auto-formatear si el usuario ingresa ddmmyyyy
-        const clean = value.replace(/\D/g, '');
-        if (clean.length === 8) {
-            this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
-        }
-    }
-});
-}
-
-// Configuración en español para Flatpickr
-const spanishLocale = {
-    weekdays: {
-        shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-        longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-    },
-    months: {
-        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-    },
-    daysInMonth: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-    firstDayOfWeek: 1,
-    ordinal: function(nth) {
-        const s = nth % 100;
-        if (s > 3 && s < 21) return 'º';
-        switch (s % 10) {
-            case 1: return 'º';
-            case 2: return 'º';
-            case 3: return 'º';
-            default: return 'º';
-        }
-    },
-    rangeSeparator: ' a ',
-    weekAbbreviation: 'Sem',
-    scrollTitle: 'Desplázate para incrementar',
-    toggleTitle: 'Haz clic para alternar',
-    amPM: ['AM', 'PM'],
-    yearAriaLabel: 'Año',
-    monthAriaLabel: 'Mes',
-    hourAriaLabel: 'Hora',
-    minuteAriaLabel: 'Minuto',
-    time_24hr: true
-};
-
-// Inicializar Flatpickr para los campos de fecha
-flatpickr("#desde", {
-    locale: spanishLocale,
-    dateFormat: "d/m/Y",
-    altInput: true,
-    altFormat: "d \\de F \\de Y",
-    maxDate: new Date(),
-    onChange: function(selectedDates, dateStr, instance) {
-        // Actualizar el campo hidden cuando cambia la fecha
-        document.getElementById('desde_hidden').value =
-            selectedDates[0] ? selectedDates[0].toISOString().split('T')[0] : '';
-    }
-});
-
-flatpickr("#hasta", {
-    locale: spanishLocale,
-    dateFormat: "d/m/Y",
-    altInput: true,
-    altFormat: "d \\de F \\de Y",
-    maxDate: new Date(),
-    onChange: function(selectedDates, dateStr, instance) {
-        // Actualizar el campo hidden cuando cambia la fecha
-        document.getElementById('hasta_hidden').value =
-            selectedDates[0] ? selectedDates[0].toISOString().split('T')[0] : '';
-    }
-});
-
-// Sincronizar valores iniciales
-document.addEventListener('DOMContentLoaded', function() {
-    const desdeInput = document.getElementById('desde');
-    const hastaInput = document.getElementById('hasta');
-    const desdeHidden = document.getElementById('desde_hidden');
-    const hastaHidden = document.getElementById('hasta_hidden');
-
-    // Establecer valores iniciales en los campos hidden
-    desdeHidden.value = '<?= htmlspecialchars($desde) ?>';
-    hastaHidden.value = '<?= htmlspecialchars($hasta) ?>';
-});
 </script>
