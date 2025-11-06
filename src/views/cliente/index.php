@@ -2140,10 +2140,12 @@ $iconosCategorias = [
     }
 
     .pago-mozo-info {
-        background: linear-gradient(145deg, #e8f5e8 0%, #c8e6c9 100%);
+        background: var(--surface);
         border-radius: 12px;
         padding: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(161, 134, 111, 0.1);
     }
 
     .mozo-datos {
@@ -2210,11 +2212,12 @@ $iconosCategorias = [
     }
 
     .pago-total {
-        background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
-        border: 2px solid rgba(161, 134, 111, 0.1);
+        background: var(--surface);
+        border: 1px solid rgba(161, 134, 111, 0.15);
         border-radius: 12px;
-        padding: 1.5rem;
-        margin: 1.5rem 0;
+        padding: 1.25rem 1.5rem;
+        margin: 1.25rem 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .total-detalle {
@@ -2420,13 +2423,14 @@ $iconosCategorias = [
     }
 
     .modal-pago-contenido {
-        background: white;
-        border-radius: 16px;
-        max-width: 500px;
-        width: 90%;
+        background: var(--background);
+        border-radius: 20px;
+        max-width: 600px;
+        width: 95%;
         max-height: 90vh;
         overflow-y: auto;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 20px 60px rgba(83, 52, 31, 0.3), 0 8px 25px rgba(0,0,0,0.15);
+        border: 2px solid rgba(161, 134, 111, 0.2);
         animation: modalSlideIn 0.3s ease;
     }
 
@@ -2442,18 +2446,26 @@ $iconosCategorias = [
     }
 
     .modal-pago-header {
-        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+        background: linear-gradient(135deg, rgb(83, 52, 31) 0%, rgb(137, 107, 75) 100%);
         color: white;
-        padding: 1.5rem;
-        border-radius: 16px 16px 0 0;
+        padding: 1rem 1.5rem;
+        border-radius: 20px 20px 0 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .modal-pago-header h3 {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .modal-cerrar {
@@ -2471,28 +2483,33 @@ $iconosCategorias = [
     }
 
     .pago-seccion {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
     }
 
     .pago-seccion h4 {
-        color: var(--color-primario);
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
+        color: var(--secondary);
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .pago-detalle {
-        background: #f8f9fa;
-        border-radius: 8px;
+        background: var(--surface);
+        border-radius: 12px;
         padding: 1rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .pago-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #e0e0e0;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(161, 134, 111, 0.1);
     }
 
     .pago-item:last-child {
@@ -2519,10 +2536,12 @@ $iconosCategorias = [
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 0.5rem;
-        padding-top: 0.5rem;
-        border-top: 2px solid var(--color-primario);
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(161, 134, 111, 0.2);
         font-weight: 600;
+        font-size: 1rem;
+        color: var(--secondary);
     }
 
     .propina-opciones {
@@ -2535,30 +2554,30 @@ $iconosCategorias = [
     .propina-btn {
         flex: 1;
         min-width: 100px;
-        padding: 0.6rem 1rem;
-        border: 1px solid var(--color-primario);
-        background: white;
-        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        border: 2px solid rgba(161, 134, 111, 0.3);
+        background: var(--surface);
+        border-radius: 8px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         font-weight: 600;
-        color: var(--color-primario);
+        color: var(--secondary);
         font-size: 0.9rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
     .propina-btn:hover {
-        background: var(--color-primario);
-        color: white;
+        background: rgba(161, 134, 111, 0.1);
+        border-color: rgba(161, 134, 111, 0.5);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+        box-shadow: 0 3px 6px rgba(161, 134, 111, 0.2);
     }
 
     .propina-btn.selected {
-        background: var(--color-primario);
+        background: var(--secondary);
         color: white;
-        border-color: var(--color-primario);
-        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+        border-color: var(--secondary);
+        box-shadow: 0 3px 8px rgba(161, 134, 111, 0.3);
     }
 
     .propina-otro {
@@ -2593,30 +2612,26 @@ $iconosCategorias = [
         box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
     }
 
-    .pago-total {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin: 1.5rem 0;
-    }
-
     .total-calculo {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
-        color: #666;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        color: var(--secondary);
+        font-size: 0.95rem;
+        font-weight: 500;
     }
 
     .total-final {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 1.25rem;
+        font-size: 1.4rem;
         font-weight: 700;
-        color: var(--color-primario);
-        padding-top: 0.5rem;
-        border-top: 2px solid #ddd;
-        margin-top: 0.5rem;
+        color: #2c5530;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(161, 134, 111, 0.2);
+        margin-top: 0.75rem;
     }
 
     .pago-metodos {
@@ -2627,15 +2642,25 @@ $iconosCategorias = [
     .pago-metodo {
         flex: 1;
         padding: 1rem;
-        border: 2px solid #ddd;
-        border-radius: 8px;
+        border: 2px solid rgba(161, 134, 111, 0.3);
+        border-radius: 12px;
         cursor: pointer;
         text-align: center;
         transition: all 0.2s;
+        background: var(--surface);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
     .pago-metodo:hover {
-        border-color: var(--color-primario);
+        border-color: rgba(161, 134, 111, 0.5);
+        box-shadow: 0 3px 6px rgba(161, 134, 111, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    .pago-metodo input[type="radio"]:checked + .pago-metodo-icono + span,
+    .pago-metodo:has(input[type="radio"]:checked) {
+        border-color: var(--secondary);
+        background: rgba(161, 134, 111, 0.1);
     }
 
     .pago-metodo input[type="radio"] {
@@ -2653,16 +2678,18 @@ $iconosCategorias = [
         margin-bottom: 0.5rem;
         padding: 0.5rem;
         border-radius: 50%;
-        background: #f0f0f0;
+        background: var(--background);
         transition: all 0.2s;
     }
 
     .modal-pago-footer {
-        padding: 1.5rem;
-        border-top: 1px solid #e0e0e0;
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid rgba(161, 134, 111, 0.15);
         display: flex;
         gap: 1rem;
         justify-content: flex-end;
+        background: var(--surface);
+        border-radius: 0 0 20px 20px;
     }
 
     .modal-pago-footer .btn-principal,
@@ -4043,15 +4070,15 @@ $iconosCategorias = [
                     // Mostrar modal de confirmación
                     mostrarConfirmacionPago();
                 } else {
-                    throw new Error(result.error || 'Error al procesar el pago');
+                    throw new Error(result.error || 'Error al confirmar el pedido');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showToast('❌ Error al procesar el pago: ' + error.message, 'error');
+                showToast('❌ Error al confirmar el pedido: ' + error.message, 'error');
 
                 // Rehabilitar botón
                 this.disabled = false;
-                this.textContent = 'Confirmar Pago';
+                this.textContent = 'Confirmar Pedido';
             }
         });
 
@@ -4323,12 +4350,12 @@ $iconosCategorias = [
                 // Mostrar confirmación
                 mostrarConfirmacionPago();
             } else {
-                alert('Error al procesar el pago: ' + (result.message || 'Error desconocido'));
+                alert('Error al confirmar el pedido: ' + (result.message || 'Error desconocido'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al procesar el pago: ' + error.message);
+            alert('Error al confirmar el pedido: ' + error.message);
         });
     }
     </script>
@@ -4414,7 +4441,7 @@ $iconosCategorias = [
 
             <div class="modal-pago-footer">
                 <button type="button" class="btn-secundario" onclick="cerrarModalPago()">Cancelar</button>
-                <button type="button" class="btn-principal" onclick="procesarPago()">Confirmar Pago</button>
+                <button type="button" class="btn-principal" onclick="procesarPago()">Confirmar Pedido</button>
             </div>
         </div>
     </div>
@@ -4423,15 +4450,15 @@ $iconosCategorias = [
     <div id="pago-confirmacion-modal" class="modal-pago">
         <div class="modal-pago-contenido">
             <div class="modal-pago-header">
-                <h3>✅ Pago Confirmado</h3>
+                <h3>✅ Pedido Confirmado</h3>
                 <span class="modal-cerrar" onclick="document.getElementById('pago-confirmacion-modal').style.display='none'">&times;</span>
             </div>
 
             <div class="modal-pago-body">
                 <div class="confirmacion-mensaje">
                     <div class="confirmacion-icono">✅</div>
-                    <h4>¡Pago realizado con éxito!</h4>
-                    <p>Tu pedido ha sido confirmado y está siendo preparado</p>
+                    <h4>¡Pedido confirmado con éxito!</h4>
+                    <p>Tu pedido ha sido completado y está siendo preparado. Un mozo se acercará a tu mesa para finalizar el cobro.</p>
                 </div>
 
                 <div id="confirmacion-propina" class="confirmacion-mensaje" style="display: none;">
@@ -4444,7 +4471,7 @@ $iconosCategorias = [
                         <!-- Items del pedido -->
                     </div>
                     <div class="confirmacion-total">
-                        <span>Total Pagado:</span>
+                        <span>Total a Pagar:</span>
                         <span id="confirmacion-total">$0.00</span>
                     </div>
                     <div class="confirmacion-mesa">
