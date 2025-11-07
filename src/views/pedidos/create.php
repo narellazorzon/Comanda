@@ -1357,6 +1357,30 @@ document.addEventListener('DOMContentLoaded', function() {
   const mozoInfo = document.getElementById('mozo-info');
   const mozoNombre = document.getElementById('mozo-nombre');
 
+  // Inicializar el texto y la info de mozo con la opción ya seleccionada
+  // (por POST o por el pedido en edición)
+  (function initSelectedMesa() {
+    let initialOption = customSelect.querySelector('.custom-select-option.selected');
+    if (!initialOption && hiddenInput && hiddenInput.value) {
+      initialOption = customSelect.querySelector(`.custom-select-option[data-value="${hiddenInput.value}"]`);
+    }
+    if (initialOption) {
+      const value = initialOption.getAttribute('data-value');
+      const text = initialOption.textContent;
+      const mozo = initialOption.getAttribute('data-mozo') || '';
+      if (value) {
+        hiddenInput.value = value;
+        selectedText.textContent = text;
+        if (mozo) {
+          mozoNombre.textContent = mozo;
+          mozoInfo.style.display = 'block';
+        } else {
+          mozoInfo.style.display = 'none';
+        }
+      }
+    }
+  })();
+
   // Abrir/cerrar dropdown
   trigger.addEventListener('click', function() {
     const isOpen = customSelect.classList.contains('open');

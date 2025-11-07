@@ -4,7 +4,6 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\Mesa;
-use App\Models\Usuario;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -873,25 +872,24 @@ function showTab(tabName) {
 
 // Función para reactivar mesa (usando el modal existente)
 function confirmarReactivacionMesa(id, numero) {
-  
   ModalConfirmacion.show({
     title: '✅ Reactivar Mesa',
     message: '¿Estás seguro de que quieres reactivar esta mesa?',
     itemName: `Mesa #${numero}`,
-    note: 'La mesa volverá a aparecer en las listas y estará disponible para asignar mozos y recibir pedidos.',
+    note: 'La mesa volverá a las listas activas y quedará libre, disponible para asignar un mozo más adelante.',
     confirmText: '✅ Reactivar',
-    cancelText: '❌ Cancelar',
+    cancelText: '🚫 Cancelar',
     onConfirm: () => {
       // Crear un formulario temporal para enviar la solicitud de reactivación
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = window.location.origin + window.location.pathname + '?route=mesas/reactivate';
-      
+
       const input = document.createElement('input');
       input.type = 'hidden';
       input.name = 'id';
       input.value = id;
-      
+
       form.appendChild(input);
       document.body.appendChild(form);
       form.submit();

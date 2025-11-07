@@ -51,7 +51,8 @@ $mesas = Mesa::all();
 $items = CartaItem::all();
 
 // Si estamos en modo POST, validar la mesa directamente aquí
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $modo_consumo === 'stay') {
+$__posted_modo = $_POST['modo_consumo'] ?? 'stay';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $__posted_modo === 'stay') {
     $id_mesa = (int) ($_POST['id_mesa'] ?? 0);
 
     if ($id_mesa > 0) {
@@ -574,6 +575,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <select name="id_mesa" id="id_mesa" required onchange="showMozoInfo()">
           <option value="">Seleccionar mesa</option>
+          <?php
+          // Incluir la mesa actual aunque no esté libre (para que aparezca al editar)
+          if (!empty($pedido['id_mesa'])) {
+              $mesaActual = \App\Models\Mesa::find((int)$pedido['id_mesa']);
+              if ($mesaActual && ($mesaActual['estado'] ?? '') !== 'libre') {
+                  ?>
+                  <option value="<?= $mesaActual['id_mesa'] ?>"
+                          data-mozo="<?= htmlspecialchars($mesaActual['mozo_nombre_completo'] ?? 'Sin asignar') ?>"
+                          data-estado="<?= $mesaActual['estado'] ?>" selected>
+                    Mesa #<?= $mesaActual['numero'] ?> - <?= $mesaActual['ubicacion'] ?> (Actual)
+                  </option>
+                  <?php
+              }
+          }
+          ?>
           <?php 
           // Filtrar mesas: solo mostrar las libres
           $mesasDisponibles = array_filter($mesas, function($mesa) {
