@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\Mesa;
+use App\Models\Usuario;
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
@@ -88,6 +89,9 @@ if ($rol === 'mozo') {
     $mesasActivas = Mesa::all();
 }
 $mesasInactivas = Mesa::allInactive();
+
+// Obtener lista de mozos únicos para el filtro
+$mozos = Usuario::getMozosActivos();
 ?>
 
 <!-- Header de gestión -->
@@ -137,6 +141,20 @@ $mesasInactivas = Mesa::allInactive();
     </div>
   </div>
   
+  <!-- Filtro por mozo -->
+    <div class="filter-group">
+      <label for="mozoFilter">👤 Filtrar por mozo:</label>
+      <select id="mozoFilter" class="mozo-filter-select">
+        <option value="">Todos los mozos</option>
+        <option value="sin-asignar">Sin asignar</option>
+        <?php foreach ($mozos as $mozo): ?>
+          <option value="<?= htmlspecialchars(strtolower($mozo['nombre_completo'])) ?>">
+            <?= htmlspecialchars($mozo['nombre_completo']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+  
   </div>
 </div>
 
@@ -173,7 +191,7 @@ $mesasInactivas = Mesa::allInactive();
       // Verificar si esta mesa está asignada al mozo logueado
       $esMesaAsignada = ($rol === 'mozo' && $m['id_mozo'] == $_SESSION['user']['id_usuario']);
       ?>
-      <tr <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
+      <tr class="mesa-row" data-numero="<?= htmlspecialchars($m['numero']) ?>" data-estado="<?= htmlspecialchars($m['estado']) ?>" data-ubicacion="<?= htmlspecialchars(strtolower($m['ubicacion'] ?? '')) ?>" data-mozo="<?= !empty($m['mozo_nombre_completo']) ? htmlspecialchars(strtolower($m['mozo_nombre_completo'])) : 'sin-asignar' ?>" <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
         <td>
           <?= htmlspecialchars($m['numero']) ?>
           <?php if ($esMesaAsignada): ?>
@@ -282,7 +300,7 @@ $mesasInactivas = Mesa::allInactive();
   </thead>
   <tbody>
     <?php foreach ($mesasInactivas as $m): ?>
-      <tr>
+      <tr class="mesa-row" data-numero="<?= htmlspecialchars($m['numero']) ?>" data-estado="inactiva" data-ubicacion="<?= htmlspecialchars(strtolower($m['ubicacion'] ?? '')) ?>" data-mozo="<?= !empty($m['mozo_nombre_completo']) ? htmlspecialchars(strtolower($m['mozo_nombre_completo'])) : 'sin-asignar' ?>">
         <td><?= htmlspecialchars($m['numero']) ?></td>
         <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
         <td>
@@ -317,7 +335,7 @@ $mesasInactivas = Mesa::allInactive();
     // Verificar si esta mesa está asignada al mozo logueado
     $esMesaAsignada = ($rol === 'mozo' && $m['id_mozo'] == $_SESSION['user']['id_usuario']);
     ?>
-    <div class="mobile-card mesa-activa" <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
+    <div class="mobile-card mesa-activa mesa-row" data-numero="<?= htmlspecialchars($m['numero']) ?>" data-estado="<?= htmlspecialchars($m['estado']) ?>" data-ubicacion="<?= htmlspecialchars(strtolower($m['ubicacion'] ?? '')) ?>" data-mozo="<?= !empty($m['mozo_nombre_completo']) ? htmlspecialchars(strtolower($m['mozo_nombre_completo'])) : 'sin-asignar' ?>" <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
       <div class="mobile-card-header">
         <div class="mobile-card-number">
           Mesa <?= htmlspecialchars($m['numero']) ?>
@@ -427,7 +445,7 @@ $mesasInactivas = Mesa::allInactive();
   
   <!-- Tarjetas móviles para mesas inactivas (ocultas por defecto) -->
   <?php foreach ($mesasInactivas as $m): ?>
-    <div class="mobile-card mesa-inactiva" style="display: none;">
+    <div class="mobile-card mesa-inactiva mesa-row" data-numero="<?= htmlspecialchars($m['numero']) ?>" data-estado="inactiva" data-ubicacion="<?= htmlspecialchars(strtolower($m['ubicacion'] ?? '')) ?>" data-mozo="<?= !empty($m['mozo_nombre_completo']) ? htmlspecialchars(strtolower($m['mozo_nombre_completo'])) : 'sin-asignar' ?>" style="display: none;">
       <div class="mobile-card-header">
         <div class="mobile-card-number">Mesa <?= htmlspecialchars($m['numero']) ?></div>
         <?php if ($rol === 'administrador'): ?>
@@ -478,6 +496,7 @@ $mesasInactivas = Mesa::allInactive();
 // Variables globales
     let currentSearchTerm = '';
     let currentStatusFilter = 'all';
+    let currentMozoFilter = '';
     
 // Función para obtener el estado de una mesa desde la tabla
     function getMesaStatus(row) {
@@ -514,21 +533,24 @@ $mesasInactivas = Mesa::allInactive();
     function filterMesas() {
         const searchTerm = currentSearchTerm.toLowerCase().trim();
         const statusFilter = currentStatusFilter;
+        const mozoFilter = currentMozoFilter.toLowerCase().trim();
         let visibleCount = 0;
         
         // Filtrar filas de la tabla
-    const tableRows = document.querySelectorAll('.table tbody tr');
+    const tableRows = document.querySelectorAll('.table tbody tr.mesa-row');
     tableRows.forEach((row) => {
             const firstCell = row.querySelector('td:first-child');
         if (!firstCell) return;
             
             const mesaNumber = firstCell.textContent.toLowerCase();
             const mesaStatus = getMesaStatus(row);
+            const mesaMozo = row.dataset.mozo ? row.dataset.mozo.toLowerCase() : 'sin-asignar';
             
             const matchesSearch = searchTerm === '' || mesaNumber.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || mesaStatus === statusFilter;
+            const matchesMozo = mozoFilter === '' || mesaMozo === mozoFilter;
             
-            if (matchesSearch && matchesStatus) {
+            if (matchesSearch && matchesStatus && matchesMozo) {
                 row.style.display = '';
                 visibleCount++;
             } else {
@@ -537,16 +559,18 @@ $mesasInactivas = Mesa::allInactive();
         });
         
         // Filtrar tarjetas móviles
-    const mobileCards = document.querySelectorAll('.mobile-card');
+    const mobileCards = document.querySelectorAll('.mobile-card.mesa-row');
     mobileCards.forEach((card) => {
             const numberElement = card.querySelector('.mobile-card-number');
         if (!numberElement) return;
             
             const mesaNumber = numberElement.textContent.toLowerCase();
             const mesaStatus = getMesaStatusFromCard(card);
+            const mesaMozo = card.dataset.mozo ? card.dataset.mozo.toLowerCase() : 'sin-asignar';
             
             const matchesSearch = searchTerm === '' || mesaNumber.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || mesaStatus === statusFilter;
+            const matchesMozo = mozoFilter === '' || mesaMozo === mozoFilter;
             
         // Verificar si la tarjeta debe mostrarse según la pestaña activa
         const activeTab = document.querySelector('.tab-button.active');
@@ -560,7 +584,7 @@ $mesasInactivas = Mesa::allInactive();
             shouldShow = true;
         }
         
-        if (matchesSearch && matchesStatus && shouldShow) {
+        if (matchesSearch && matchesStatus && matchesMozo && shouldShow) {
                 card.style.display = '';
                 visibleCount++;
             } else {
@@ -591,6 +615,18 @@ function initFilters() {
     clearButton.addEventListener('click', function() {
         searchInput.value = '';
         currentSearchTerm = '';
+        // Limpiar filtro de mozo también
+        if (mozoFilter) {
+            mozoFilter.value = '';
+            currentMozoFilter = '';
+        }
+        // Resetear filtro de estado
+        statusButtons.forEach(btn => btn.classList.remove('active'));
+        const allButton = document.querySelector('.status-filter-btn[data-status="all"]');
+        if (allButton) {
+            allButton.classList.add('active');
+            currentStatusFilter = 'all';
+        }
         filterMesas();
         searchInput.focus();
     });
@@ -611,6 +647,15 @@ function initFilters() {
                 currentStatusFilter = this.dataset.status;
                 filterMesas();
             });
+        });
+    }
+    
+    // Event listener para el filtro de mozo
+    const mozoFilter = document.getElementById('mozoFilter');
+    if (mozoFilter) {
+        mozoFilter.addEventListener('change', function() {
+            currentMozoFilter = this.value;
+            filterMesas();
         });
     }
     
@@ -1274,6 +1319,27 @@ function limpiarFiltrosMesas() {
 
 .search-input-group button:hover {
     background:rgb(137, 122, 100);
+}
+
+.mozo-filter-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.mozo-filter-select:hover {
+    border-color: rgb(144, 104, 76);
+}
+
+.mozo-filter-select:focus {
+    outline: none;
+    border-color: rgb(144, 104, 76);
+    box-shadow: 0 0 0 2px rgba(144, 104, 76, 0.2);
 }
 
 .status-filters {
