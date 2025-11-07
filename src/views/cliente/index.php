@@ -2365,11 +2365,9 @@ $iconosCategorias = [
         margin-bottom: 1.5rem;
     }
 
-    .confirmacion-total {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 2px solid #e9ecef;
-    }
+    .confirmacion-resumen { margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #e9ecef; }
+    .confirmacion-row { display: flex; justify-content: space-between; padding: 6px 0; }
+    .confirmacion-row.total { border-top: 2px solid var(--color-primario); margin-top: 6px; padding-top: 10px; font-weight: 700; color: var(--color-secundario); }
 
     /* Responsive para modales de pago */
     @media (max-width: 768px) {
@@ -2819,6 +2817,41 @@ $iconosCategorias = [
         .confirmacion-acciones {
             flex-direction: column;
         }
+    }
+
+    /* Encabezado solo para impresión */
+    .print-header {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .print-header .print-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--color-primario);
+        line-height: 1.2;
+    }
+
+    .print-header .print-subtitle {
+        color: var(--color-texto-suave);
+        font-size: 0.9rem;
+    }
+
+    /* Estilos de impresión: mostrar solo el recibo del modal */
+    @media print {
+        @page { size: auto; margin: 12mm; }
+        body { background: #ffffff !important; }
+        body * { visibility: hidden; }
+        #pago-confirmacion-modal, #pago-confirmacion-modal * { visibility: visible; }
+        #pago-confirmacion-modal { position: static !important; display: block !important; background: none !important; padding: 0 !important; margin: 0 !important; }
+        .modal-pago-contenido { box-shadow: none !important; width: 100% !important; max-width: 800px !important; margin: 0 auto !important; border-radius: 0 !important; }
+        .modal-pago-header { background: none !important; color: #000 !important; padding: 0 0 8px 0 !important; border-bottom: 1px solid #ddd !important; }
+        .modal-cerrar, .confirmacion-acciones, .modal-pago-footer { display: none !important; }
+        .print-header { display: flex !important; }
+        .print-header img { height: 40px; width: auto; }
+        .confirmacion-detalles, .pago-detalle, .pago-item { background: none !important; box-shadow: none !important; border: 0 !important; }
     }
     </style>
 </head>
@@ -3855,6 +3888,11 @@ $iconosCategorias = [
         }
 
         pedidoActual = pedidoId;
+        // Persistir en el DOM para que impresión pueda tomar el número
+        const confirmModal = document.getElementById('pago-confirmacion-modal');
+        if (confirmModal) {
+            confirmModal.setAttribute('data-pedido-id', String(pedidoId));
+        }
 
         // Verificar que el carrito tenga items
         if (!carrito || carrito.length === 0) {
@@ -4132,16 +4170,30 @@ $iconosCategorias = [
         const confirmacionDiv = document.getElementById('confirmacion-pedido');
         confirmacionDiv.innerHTML = pedidoItems.map(item => item.outerHTML).join('');
 
-        // Actualizar totales
-        document.getElementById('confirmacion-total').textContent =
-            document.getElementById('pago-total-final').textContent;
+        // Actualizar totales (subtotal, propina y total)
+        const subtotalTxt = document.getElementById('pago-subtotal').textContent || '$0.00';
+        const totalTxt = document.getElementById('pago-total-final').textContent || '$0.00';
+        document.getElementById('confirmacion-subtotal').textContent = subtotalTxt;
+        document.getElementById('confirmacion-total').textContent = totalTxt;
+
+        // Calcular propina como diferencia entre total y subtotal
+        const num = (s) => parseFloat(String(s).replace(/[^0-9.\-]/g,'')) || 0;
+        const propinaMontoCalc = Math.max(0, num(totalTxt) - num(subtotalTxt));
+        const propinaRow = document.getElementById('confirmacion-propina-row');
+        const propinaMontoEl = document.getElementById('confirmacion-propina-monto');
+        if (propinaMontoCalc > 0.001) {
+            propinaRow.style.display = 'flex';
+            propinaMontoEl.textContent = `$${propinaMontoCalc.toFixed(2)}`;
+        } else {
+            propinaRow.style.display = 'none';
+        }
 
         // Mostrar mesa
         const mesaNumero = isQRMode ? mesaFromQR : document.getElementById('numero-mesa').value;
         document.getElementById('confirmacion-mesa').textContent = mesaNumero ? `Mesa ${mesaNumero}` : 'Take Away';
 
         // Mostrar mensaje de propina si corresponde
-        if (propinaSeleccionada > 0) {
+        if (propinaMontoCalc > 0) {
             document.getElementById('confirmacion-propina').style.display = 'block';
         } else {
             document.getElementById('confirmacion-propina').style.display = 'none';
@@ -4194,10 +4246,7 @@ $iconosCategorias = [
             // Remove existing event listener to avoid duplicates
             btnImprimirRecibo.replaceWith(btnImprimirRecibo.cloneNode(true));
             // Add new event listener
-            document.getElementById('btn-imprimir-recibo').addEventListener('click', function() {
-                console.log('Imprimir recibo clicked');
-                window.print();
-            });
+            document.getElementById('btn-imprimir-recibo').addEventListener('click', imprimirRecibo);
         } else {
             console.error('btn-imprimir-recibo not found');
         }
@@ -4427,8 +4476,119 @@ $iconosCategorias = [
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al confirmar el pedido: ' + error.message);
+            alert('Error al procesar el pago: ' + error.message);
         });
+    }
+
+    // Ventana de impresión dedicada para evitar múltiples páginas
+    function imprimirRecibo() {
+        try {
+            const baseUrl = '<?= $base_url ?>';
+            const itemsHTML = document.getElementById('confirmacion-pedido')?.innerHTML || '';
+            const total = document.getElementById('confirmacion-total')?.textContent || '';
+            const mesa = document.getElementById('confirmacion-mesa')?.textContent || '';
+            const fecha = new Date().toLocaleString();
+
+            // Tomar número de pedido de forma robusta
+            const pedidoIdFromState = (typeof window.pedidoActual !== 'undefined' && window.pedidoActual)
+                ? window.pedidoActual
+                : (document.getElementById('pago-confirmacion-modal')?.getAttribute('data-pedido-id') || '');
+            const pedidoIdStr = String(pedidoIdFromState || '').replace(/[^0-9]/g,'');
+            const pedidoIdPadded = pedidoIdStr ? pedidoIdStr.padStart(6,'0') : '';
+
+            // Calcular propina con el mismo criterio del modal
+            let propinaMonto = 0;
+            if (typeof propinaSeleccionada === 'number') {
+                if (propinaSeleccionada <= 1) {
+                    propinaMonto = (subtotalPedido || 0) * propinaSeleccionada;
+                } else {
+                    propinaMonto = propinaSeleccionada;
+                }
+            }
+
+            // Si tenemos ID del pedido, usar la vista dedicada para asegurar el nombre del PDF
+            if (pedidoIdStr) {
+                const url = `${baseUrl}/index.php?route=recibo-print&pedido=${pedidoIdStr}`;
+                window.open(url, '_blank', 'width=760,height=900');
+                return;
+            }
+
+            const css = `
+              :root{--prim:#a1866f;--sec:#8b5e46;--text:#3f3f3f;--muted:#6c757d;}
+              @page{size:auto;margin:12mm;}
+              body{font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:#fff;}
+              .receipt{max-width:720px;margin:0 auto;}
+              .brand{text-align:center;margin-bottom:8px}
+              .brand img{height:42px}
+              .brand h1{margin:6px 0 0;font-size:18px;color:var(--prim)}
+              .meta{color:var(--muted);font-size:12px;text-align:center;margin-bottom:10px}
+              .pago-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed #ddd}
+              .pago-item-info{display:flex;align-items:center;gap:6px}
+              .pago-item-cantidad{font-weight:600;color:var(--prim)}
+              .pago-item-precio{font-weight:700;color:var(--sec)}
+              .tot{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:2px solid var(--prim);font-weight:700}
+              .pago-item,.row{page-break-inside:avoid}
+              .section-title{margin:8px 0 4px;font-weight:700;color:#111}
+              .divider{border-top:1px dashed #ddd;margin:8px 0}
+              .totals .row{display:flex;justify-content:space-between;padding:4px 0}
+              .footer{margin-top:14px;text-align:center;color:var(--muted);font-size:12px}
+            `;
+
+            const html = `
+              <div class="receipt">
+                <div class="brand">
+                  <img src="${baseUrl}/assets/img/logo.png" alt="Comanda">
+                  <h1>Comanda</h1>
+                  <div class="meta">${mesa ? mesa + ' • ' : ''}${fecha}</div>
+                </div>
+                <div class="items">${itemsHTML}</div>
+                <div class="tot"><span>Total</span><span>${total}</span></div>
+              </div>
+            `;
+
+            const w = window.open('', 'PRINT', 'width=760,height=900');
+            const docTitle = `comanda_recibo_recibo`;
+            w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+docTitle+'</title><style>'+css+'</style></head><body>'+html+'</body></html>');
+            try { w.document.title = docTitle; } catch(_e) {}
+            w.document.close(); w.focus();
+            w.onload = function(){
+                try {
+                    const doc = w.document;
+                    const meta = doc.querySelector('.meta');
+                    if (meta) meta.innerHTML = `<strong>Pedido #${pedidoIdPadded}</strong>${mesa ? ' - ' + mesa : ''} - ${fecha}`;
+
+                    const itemsWrap = doc.querySelector('.items');
+                    if (itemsWrap) {
+                        const title = doc.createElement('div');
+                        title.className = 'section-title';
+                        title.textContent = 'Detalle del pedido';
+                        itemsWrap.parentNode.insertBefore(title, itemsWrap);
+
+                        const divider = doc.createElement('div');
+                        divider.className = 'divider';
+                        itemsWrap.parentNode.insertBefore(divider, itemsWrap.nextSibling);
+                    }
+
+                    const totalsEl = doc.createElement('div');
+                    totalsEl.className = 'totals';
+                    totalsEl.innerHTML = `<div class="row"><span>Subtotal</span><span>$${(subtotalPedido||0).toFixed(2)}</span></div>` + (propinaMonto>0 ? `<div class="row"><span>Propina</span><span>$${propinaMonto.toFixed(2)}</span></div>` : '');
+                    const totalRow = doc.querySelector('.tot');
+                    if (totalRow && totalRow.parentNode) {
+                        totalRow.parentNode.insertBefore(totalsEl, totalRow);
+                        const footer = doc.createElement('div');
+                        footer.className = 'footer';
+                        footer.textContent = '¡Gracias por tu preferencia!';
+                        totalRow.parentNode.insertBefore(footer, totalRow.nextSibling);
+                    }
+                } catch (err) { console.error('print DOM build failed', err); }
+                w.print();
+                w.onafterprint = () => w.close();
+                setTimeout(()=>{ try{w.close()}catch(e){} }, 3000);
+            };
+        } catch (e) {
+            console.error('Error al imprimir recibo:', e);
+            window.print();
+        }
     }
     </script>
 
@@ -4441,6 +4601,14 @@ $iconosCategorias = [
             </div>
 
             <div class="modal-pago-body">
+                <!-- Encabezado visible solo en impresión -->
+                <div class="print-header">
+                    <img src="<?= $base_url ?>/assets/img/logo.png" alt="Comanda">
+                    <div>
+                        <div class="print-title">Comanda</div>
+                        <div class="print-subtitle">Confirmación de Pago</div>
+                    </div>
+                </div>
                 <!-- Resumen del Pedido -->
                 <div class="pago-seccion">
                     <h4>📋 Resumen del Pedido</h4>
@@ -4568,9 +4736,20 @@ $iconosCategorias = [
                     <div id="confirmacion-pedido">
                         <!-- Items del pedido -->
                     </div>
-                    <div class="confirmacion-total">
-                        <span>Total a Pagar:</span>
-                        <span id="confirmacion-total">$0.00</span>
+                    <!-- Resumen de montos -->
+                    <div class="confirmacion-resumen">
+                        <div class="confirmacion-row">
+                            <span>Subtotal:</span>
+                            <span id="confirmacion-subtotal">$0.00</span>
+                        </div>
+                        <div class="confirmacion-row" id="confirmacion-propina-row" style="display:none;">
+                            <span>Propina:</span>
+                            <span id="confirmacion-propina-monto">$0.00</span>
+                        </div>
+                        <div class="confirmacion-row total" id="confirmacion-total-row">
+                            <span>Total Pagado:</span>
+                            <span id="confirmacion-total">$0.00</span>
+                        </div>
                     </div>
                     <div class="confirmacion-mesa">
                         <span id="confirmacion-mesa">Mesa 1</span>

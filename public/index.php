@@ -8,10 +8,15 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Incluir header para todas las páginas (excepto login, cliente y rutas de API)
 $route = $_GET['route'] ?? 'cliente';
 $apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion'];
+<<<<<<< HEAD
 $noHeaderRoutes = ['login', 'pago', 'pago-confirmacion'];
 // Rutas de exportación que no deben incluir header
 $exportRoutes = ['reportes/rendimiento-personal/exportar-csv'];
 if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes) && !in_array($route, $exportRoutes)) {
+=======
+$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion', 'recibo-print'];
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
+>>>>>>> origin/develop
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
@@ -330,6 +335,11 @@ switch ($route) {
     case 'pago-confirmacion':
         require_once __DIR__ . '/../src/controllers/ClienteController.php';
         \App\Controllers\ClienteController::confirmacion();
+        break;
+
+    // Ruta de impresión dedicada del recibo
+    case 'recibo-print':
+        include __DIR__ . '/../src/views/cliente/recibo_print.php';
         break;
 
     // Ruta del generador de QRs offline (solo administrador)
