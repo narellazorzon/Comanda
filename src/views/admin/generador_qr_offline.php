@@ -61,6 +61,26 @@ $takeawayPresets = [
   </button>
 
   <div id="filtersContent" class="filters-content" style="display: none;">
+    <!-- Filtro de búsqueda de mesas -->
+    <div class="filter-group">
+      <label for="mesa-search">🔍 Buscar por número:</label>
+      <div class="search-input-group">
+        <input type="text" id="mesa-search" placeholder="Número de mesa..." />
+        <button id="clearSearch" type="button">Limpiar</button>
+      </div>
+    </div>
+    
+    <!-- Filtro por estado -->
+    <div class="filter-group">
+      <label>📊 Filtrar por estado:</label>
+      <div class="status-filters">
+        <button class="status-filter-btn active" data-status="all" onclick="filtrarPorEstado('all', this)">Todas</button>
+        <button class="status-filter-btn" data-status="libre" onclick="filtrarPorEstado('libre', this)">Libre</button>
+        <button class="status-filter-btn" data-status="ocupada" onclick="filtrarPorEstado('ocupada', this)">Ocupada</button>
+        <button class="status-filter-btn" data-status="reservada" onclick="filtrarPorEstado('reservada', this)">Reservada</button>
+      </div>
+    </div>
+
     <!-- Resumen de QR -->
     <div class="filter-group">
       <label>📊 Resumen:</label>
@@ -147,7 +167,7 @@ $takeawayPresets = [
         $pedidosActivos = (int) ($mesa['pedidos_activos'] ?? 0);
         $mesaUrl = $baseUrl . '/index.php?route=cliente&qr=' . rawurlencode((string) $mesaNumero);
       ?>
-      <tr data-mesa-number="<?php echo htmlspecialchars((string) $mesaNumero); ?>" data-ubicacion="<?php echo htmlspecialchars($ubicacion); ?>" data-mozo="<?php echo htmlspecialchars((string) $mozo); ?>">
+      <tr data-mesa-number="<?php echo htmlspecialchars((string) $mesaNumero); ?>" data-ubicacion="<?php echo htmlspecialchars($ubicacion); ?>" data-mozo="<?php echo htmlspecialchars((string) $mozo); ?>" data-estado="<?php echo htmlspecialchars(strtolower($estado)); ?>" class="mesa-row">
         <td>
           <strong>Mesa <?php echo htmlspecialchars((string) $mesaNumero); ?></strong>
           <?php if ($capacidad): ?>
@@ -212,7 +232,7 @@ $takeawayPresets = [
       $mozo = $mesa['mozo_nombre_completo'] ?? null;
       $pedidosActivos = (int) ($mesa['pedidos_activos'] ?? 0);
     ?>
-    <div class="mobile-card" data-mesa-number="<?php echo htmlspecialchars((string) $mesaNumero); ?>" data-ubicacion="<?php echo htmlspecialchars($ubicacion); ?>" data-mozo="<?php echo htmlspecialchars((string) $mozo); ?>">
+    <div class="mobile-card mesa-row" data-mesa-number="<?php echo htmlspecialchars((string) $mesaNumero); ?>" data-ubicacion="<?php echo htmlspecialchars($ubicacion); ?>" data-mozo="<?php echo htmlspecialchars((string) $mozo); ?>" data-estado="<?php echo htmlspecialchars(strtolower($estado)); ?>">
       <div class="mobile-card-header">
         <div class="mobile-card-number">
           <strong>Mesa <?php echo htmlspecialchars((string) $mesaNumero); ?></strong>
@@ -568,6 +588,90 @@ $takeawayPresets = [
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   margin-bottom: 1rem;
   overflow: hidden;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.search-input-group input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.search-input-group input:focus {
+  outline: none;
+  border-color: rgb(144, 104, 76);
+  box-shadow: 0 0 0 3px rgba(144, 104, 76, 0.1);
+}
+
+.search-input-group button {
+  padding: 0.5rem 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.3s ease;
+}
+
+.search-input-group button:hover {
+  background: rgb(137, 122, 100);
+}
+
+.status-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.status-filter-btn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.status-filter-btn.active {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.status-filter-btn[data-status="all"] {
+  background: #6c757d;
+  color: white;
+}
+
+.status-filter-btn[data-status="libre"] {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-filter-btn[data-status="ocupada"] {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-filter-btn[data-status="reservada"] {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.mesa-row {
+  transition: all 0.3s ease;
+}
+
+.mesa-row.hidden {
+  display: none !important;
 }
 
 .toggle-filters-btn {
@@ -1312,6 +1416,34 @@ $takeawayPresets = [
   .qr-config-grid {
     grid-template-columns: 1fr;
   }
+  
+  .filter-group {
+    margin-bottom: 0.8rem;
+  }
+  
+  .filter-group label {
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .search-input-group input {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+  
+  .search-input-group button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .status-filters {
+    gap: 0.3rem;
+  }
+  
+  .status-filter-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
 
   .tabs {
     flex-direction: column;
@@ -1395,6 +1527,25 @@ document.addEventListener('DOMContentLoaded', function() {
     generarQRTakeaway();
     takeawayInitialized = true;
   }, 400);
+  
+  // Inicializar filtros
+  const searchInput = document.getElementById('mesa-search');
+  const clearButton = document.getElementById('clearSearch');
+  
+  if (searchInput && clearButton) {
+    // Event listener para el input de búsqueda
+    searchInput.addEventListener('input', function() {
+      filtrarMesas();
+    });
+    
+    // Event listener para el botón limpiar
+    clearButton.addEventListener('click', function() {
+      searchInput.value = '';
+      currentSearchTerm = '';
+      filtrarMesas();
+      searchInput.focus();
+    });
+  }
 });
 
 function setupEventListeners() {
@@ -2102,6 +2253,64 @@ function closeNotification(closeButton) {
       }
     }, 400);
   }
+}
+
+// Funciones de filtrado de mesas
+let currentSearchTerm = '';
+let currentStatusFilter = 'all';
+
+function filtrarMesas() {
+  const searchTerm = document.getElementById('mesa-search').value.toLowerCase().trim();
+  currentSearchTerm = searchTerm;
+  
+  const rows = document.querySelectorAll('.mesa-row');
+  
+  rows.forEach(function(row) {
+    const mesaNumber = (row.dataset.mesaNumber || '').toLowerCase();
+    const rowEstado = (row.dataset.estado || '').toLowerCase();
+    
+    // Filtro por búsqueda
+    const matchesSearch = !searchTerm || mesaNumber.includes(searchTerm);
+    
+    // Filtro por estado
+    const matchesStatus = currentStatusFilter === 'all' || rowEstado === currentStatusFilter.toLowerCase();
+    
+    if (matchesSearch && matchesStatus) {
+      row.classList.remove('hidden');
+    } else {
+      row.classList.add('hidden');
+    }
+  });
+  
+  updateFilteredCount();
+}
+
+function filtrarPorEstado(estado, button) {
+  // Remover clase active de todos los botones
+  document.querySelectorAll('.status-filter-btn').forEach(function(btn) {
+    btn.classList.remove('active');
+  });
+  
+  // Agregar clase active al botón clickeado
+  if (button) {
+    button.classList.add('active');
+  }
+  
+  // Actualizar filtro de estado
+  currentStatusFilter = estado;
+  
+  // Aplicar filtros
+  filtrarMesas();
+}
+
+
+function updateFilteredCount() {
+  const visibleRows = document.querySelectorAll('.mesa-row:not(.hidden)');
+  const totalRows = document.querySelectorAll('.mesa-row');
+  
+  // Opcional: mostrar contador de resultados filtrados
+  // Puedes agregar un elemento en el HTML para mostrar esto
+  console.log('Mesas visibles: ' + visibleRows.length + ' de ' + totalRows.length);
 }
 //]]>
 </script>
