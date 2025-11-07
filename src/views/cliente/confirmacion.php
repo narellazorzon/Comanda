@@ -18,6 +18,7 @@ if (!$pedidoId) {
 
 // Obtener información del pedido
 $pedido = Pedido::findWithDetails($pedidoId);
+$detallesPedido = \App\Models\Pedido::getDetalles($pedidoId);
 if (!$pedido) {
     header('Location: ' . url('cliente'));
     exit;
@@ -254,6 +255,21 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
             opacity: 0;
         }
     }
+
+    /* Cabecera y reglas de impresión para recibo */
+    .print-header { display: none; align-items: center; gap: 12px; margin: 0 0 12px 0; }
+    .print-header .print-title { font-weight: 700; font-size: 1.1rem; color: var(--color-primario); }
+    .print-header .print-subtitle { color: var(--color-texto-suave); font-size: 0.9rem; }
+
+    @media print {
+        @page { size: auto; margin: 12mm; }
+        body { background: #fff !important; padding: 0 !important; }
+        .confirmation-card { box-shadow: none !important; max-width: 100% !important; }
+        .confirmation-header { background: none !important; color: #000 !important; padding: 0 0 8px 0 !important; border-bottom: 1px solid #ddd !important; }
+        .success-icon, .action-buttons, .receipt-note { display: none !important; }
+        .print-header { display: flex !important; }
+        .print-header img { height: 40px; width: auto; }
+    }
     </style>
 </head>
 <body>
@@ -265,6 +281,14 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
         </div>
 
         <div class="confirmation-body">
+            <!-- Encabezado visible solo en impresión -->
+            <div class="print-header">
+                <img src="<?= getBaseUrl() ?>/assets/img/logo.png" alt="Comanda">
+                <div>
+                    <div class="print-title">Comanda</div>
+                    <div class="print-subtitle">Confirmación de Pago</div>
+                </div>
+            </div>
             <!-- Información del pedido -->
             <div class="order-info">
                 <div class="info-row">
@@ -322,7 +346,7 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
                 <a href="<?= url('cliente') . (isset($_SESSION['mesa_qr']) ? '?mesa=' . $_SESSION['mesa_qr'] : '') ?>" class="btn btn-secondary">
                     Nuevo Pedido
                 </a>
-                <button onclick="window.print()" class="btn btn-primary">
+                <button onclick="imprimirRecibo()" class="btn btn-primary">
                     Imprimir Recibo
                 </button>
             </div>
@@ -357,6 +381,102 @@ $totalFinal = $pedido['total'] + ($propina ? $propina['monto'] : 0);
 
     // Ejecutar confeti al cargar la página
     window.addEventListener('load', createConfetti);
+    </script>
+
+    <script>
+    function imprimirRecibo() {
+        try {
+            const baseUrl = '<?= getBaseUrl() ?>';
+            const numero = '<?= str_pad($pedidoId, 6, '0', STR_PAD_LEFT) ?>';
+            const mesa = '<?= $pedido['numero_mesa'] ? htmlspecialchars($pedido['numero_mesa']) : '' ?>';
+            const subtotal = '<?= number_format($pedido['total'], 2) ?>';
+            const propina = '<?= ($propina && $propina['monto'] > 0) ? number_format($propina['monto'], 2) : '' ?>';
+            const total = '<?= number_format($totalFinal, 2) ?>';
+            const fecha = new Date().toLocaleString();
+
+            const css = `
+              :root{--prim:#a1866f;--sec:#8b5e46;--text:#3f3f3f;--muted:#6c757d;}
+              @page{size:auto;margin:12mm;}
+              body{font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:#fff;}
+              .receipt{max-width:720px;margin:0 auto;}
+              .brand{text-align:center;margin-bottom:8px}
+              .brand img{height:42px}
+              .brand h1{margin:6px 0 0;font-size:18px;color:var(--prim)}
+              .meta{color:var(--muted);font-size:12px;text-align:center;margin-bottom:12px}
+              .pago-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed #ddd}
+              .pago-item-info{display:flex;align-items:center;gap:6px}
+              .pago-item-cantidad{font-weight:600;color:var(--prim)}
+              .pago-item-precio{font-weight:700;color:var(--sec)}
+              .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #ddd}
+              .section-title{margin:8px 0 4px;font-weight:700;color:#111}
+              .divider{border-top:1px dashed #ddd;margin:8px 0}
+              .tot{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:2px solid var(--prim);font-weight:700}
+            `;
+
+            const html = `
+              <div class=\"receipt\">\n\
+                <div class=\"brand\">\n\
+                  <img src=\"${baseUrl}/assets/img/logo.png\" alt=\"Comanda\">\n\
+                  <h1>Comanda</h1>\n\
+                  <div class=\"meta\">Pedido #${numero}${mesa ? ' • Mesa ' + mesa : ''} • ${fecha}</div>\n\
+                </div>\n\
+                <div class=\"row\"><span>Subtotal</span><span>$${subtotal}</span></div>\n\
+                ${propina ? `<div class=\"row\"><span>Propina</span><span>$${propina}</span></div>` : ''}\n\
+                <div class=\"tot\"><span>Total</span><span>$${total}</span></div>\n\
+              </div>
+            `;
+
+            const w = window.open('', 'PRINT', 'width=760,height=900');
+            const docTitle = `comanda_recibo_${numero}`;
+            w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+docTitle+'</title><style>'+css+'</style></head><body>'+html+'</body></html>');
+            try { w.document.title = docTitle; } catch(_e) {}
+            w.document.close(); w.focus();
+            w.onload = function(){
+                try {
+                    const doc = w.document;
+                    const meta = doc.querySelector('.meta');
+                    if (meta) meta.textContent = `Pedido #${numero}${mesa ? ' - Mesa ' + mesa : ''} - ${fecha}`;
+
+                    const firstRow = doc.querySelector('.row, .tot');
+                    if (firstRow && firstRow.parentNode) {
+                        const title = doc.createElement('div');
+                        title.className = 'section-title';
+                        title.textContent = 'Detalle del pedido';
+                        firstRow.parentNode.insertBefore(title, firstRow);
+
+                        const itemsWrap = doc.createElement('div');
+                        itemsWrap.className = 'items';
+                        const items = <?= json_encode($detallesPedido, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?> || [];
+                        itemsWrap.innerHTML = (items || []).map(it => {
+                            const qty = parseInt(it.cantidad || 1);
+                            const nombre = (it.item_nombre || '').toString();
+                            const precioUnit = parseFloat(it.precio_unitario || 0) || 0;
+                            const lineTotal = (qty * precioUnit).toFixed(2);
+                            return `
+                                <div class="pago-item">
+                                  <div class="pago-item-info">
+                                    <span class="pago-item-cantidad">${qty}x</span>
+                                    <span class="pago-item-nombre">${nombre}</span>
+                                  </div>
+                                  <span class="pago-item-precio">$${lineTotal}</span>
+                                </div>`;
+                        }).join('');
+                        firstRow.parentNode.insertBefore(itemsWrap, firstRow);
+
+                        const divider = doc.createElement('div');
+                        divider.className = 'divider';
+                        firstRow.parentNode.insertBefore(divider, firstRow);
+                    }
+                } catch (err) { console.error('print DOM build failed', err); }
+                w.print();
+                w.onafterprint = () => w.close();
+                setTimeout(()=>{ try{w.close()}catch(e){} }, 3000);
+            };
+        } catch (e) {
+            console.error('Error al imprimir recibo:', e);
+            window.print();
+        }
+    }
     </script>
 </body>
 </html>
