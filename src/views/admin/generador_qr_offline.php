@@ -674,6 +674,17 @@ $takeawayPresets = [
   display: none !important;
 }
 
+/* Ocultar botones de descargar QR */
+button[onclick*="descargarQR"],
+button[onclick*="descargarQRTakeaway"],
+button[onclick*="descargarSeleccionados"],
+.btn-action[onclick*="descargarQR"],
+.btn-modern[onclick*="descargarQR"],
+.btn-modern[onclick*="descargarQRTakeaway"],
+.header-btn[onclick*="descargarSeleccionados"] {
+  display: none !important;
+}
+
 .toggle-filters-btn {
   display: block;
   width: 100%;
