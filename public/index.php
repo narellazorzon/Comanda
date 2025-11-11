@@ -8,15 +8,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Incluir header para todas las páginas (excepto login, cliente y rutas de API)
 $route = $_GET['route'] ?? 'cliente';
 $apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion'];
-<<<<<<< HEAD
-$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion'];
+$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion', 'recibo-print'];
 // Rutas de exportación que no deben incluir header
 $exportRoutes = ['reportes/rendimiento-personal/exportar-csv'];
 if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes) && !in_array($route, $exportRoutes)) {
-=======
-$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion', 'recibo-print'];
-if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
->>>>>>> origin/develop
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
@@ -364,7 +359,7 @@ switch ($route) {
 }
 
 // Incluir footer para todas las páginas (excepto login, cliente y rutas de API)
-if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes)) {
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes) && !in_array($route, $exportRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>
