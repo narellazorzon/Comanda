@@ -510,15 +510,13 @@ require_once __DIR__ . '/../includes/header.php';
       <th>Método de Pago</th>
       <th>Fecha</th>
       <th>Cambiar Estado</th>
-      <?php if ($rol === 'administrador'): ?>
-        <th>Acciones</th>
-      <?php endif; ?>
+      <th>Acciones</th>
     </tr>
   </thead>
   <tbody>
     <?php if (empty($pedidos)): ?>
       <tr>
-        <td colspan="<?= $rol === 'administrador' ? '9' : '8' ?>" class="no-pedidos-message">No hay pedidos registrados.</td>
+        <td colspan="9" class="no-pedidos-message">No hay pedidos registrados.</td>
       </tr>
     <?php else: ?>
       <?php foreach ($pedidos as $pedido): ?>
@@ -621,11 +619,11 @@ require_once __DIR__ . '/../includes/header.php';
               <?php endif; ?>
             </div>
           </td>
-          <?php if ($rol === 'administrador'): ?>
-            <td class="action-cell">
-              <a href="#" class="btn-action info" title="Ver información del pedido" onclick="mostrarInfoPedido(<?= $pedido['id_pedido'] ?>)">
-                ℹ️
-              </a>
+          <td class="action-cell">
+            <a href="#" class="btn-action info" title="Ver información del pedido" onclick="mostrarInfoPedido(<?= $pedido['id_pedido'] ?>)">
+              ℹ️
+            </a>
+            <?php if ($rol === 'administrador'): ?>
               <?php if ($pedido['estado'] !== 'cerrado'): ?>
               <a href="<?= url('pedidos/edit', ['id' => $pedido['id_pedido']]) ?>" class="btn-action" title="Editar pedido">
                 ✏️
@@ -641,8 +639,8 @@ require_once __DIR__ . '/../includes/header.php';
                   ❌
                 </span>
               <?php endif; ?>
-            </td>
-          <?php endif; ?>
+            <?php endif; ?>
+          </td>
         </tr>
       <?php endforeach; ?>
     <?php endif; ?>
