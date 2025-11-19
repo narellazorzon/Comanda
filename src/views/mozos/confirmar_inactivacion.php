@@ -172,7 +172,7 @@ $mozos_activos = array_filter($mozos_activos, function($m) use ($id_mozo) {
       </button>
 
       <!-- Botón Cancelar -->
-      <a href="<?= url('mozos/edit', ['id' => $id_mozo]) ?>" style="
+      <a href="<?= url('mozos') ?>" style="
           background: linear-gradient(135deg, #8b5e46 0%, #6b442f 100%);
           color: white;
           border: none;

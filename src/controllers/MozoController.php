@@ -244,24 +244,12 @@ class MozoController {
             exit;
         }
         
-        // Primero inactivar el mozo (cambiar estado a inactivo)
-        $data = [
-            'nombre' => $usuario['nombre'],
-            'apellido' => $usuario['apellido'],
-            'email' => $usuario['email'],
-            'estado' => 'inactivo'
-        ];
-        
-        if (!Usuario::update($id, $data)) {
-            header('Location: ' . url('mozos', ['error' => 'Error al inactivar el mozo']));
-            exit;
-        }
-        
-        // Verificar si el mozo tiene mesas asignadas DESPUÉS de inactivarlo
+        // Verificar si el mozo tiene mesas asignadas ANTES de inactivarlo
         $mesas_asignadas = Mesa::countMesasByMozo($id);
         
         if ($mesas_asignadas > 0) {
             // Redirigir a pantalla de confirmación de inactivación con los datos del mozo
+            // El mozo sigue ACTIVO en este punto
             $query_params = [
                 'confirmar_inactivacion' => '1',
                 'id_mozo' => $id,
@@ -275,8 +263,19 @@ class MozoController {
             exit;
         }
         
-        // Si no tiene mesas asignadas, mostrar mensaje de éxito
-        header('Location: ' . url('mozos', ['success' => 'Mozo inactivado exitosamente']));
+        // Si no tiene mesas asignadas, proceder a inactivar
+        $data = [
+            'nombre' => $usuario['nombre'],
+            'apellido' => $usuario['apellido'],
+            'email' => $usuario['email'],
+            'estado' => 'inactivo'
+        ];
+        
+        if (Usuario::update($id, $data)) {
+            header('Location: ' . url('mozos', ['success' => 'Mozo inactivado exitosamente']));
+        } else {
+            header('Location: ' . url('mozos', ['error' => 'Error al inactivar el mozo']));
+        }
         exit;
     }
 
