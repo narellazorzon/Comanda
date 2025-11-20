@@ -111,6 +111,21 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
             </a>
         </div>
     </div>
+
+    <!-- Widget QRs -->
+    <div class="widget">
+        <div class="widget-header">
+            <div class="widget-icon qrs-bg">
+                <div class="widget-symbol">📱</div>
+            </div>
+            <h3 class="widget-title">Códigos QR</h3>
+        </div>
+        <div class="widget-actions">
+            <a href="<?= $base_url ?>/index.php?route=admin/qr-offline" class="widget-btn primary">
+                <span class="btn-text">Gestionar QRs</span>
+            </a>
+        </div>
+    </div>
     <?php endif; ?>
 
     <?php if ($_SESSION['user']['rol'] === 'mozo'): ?>
@@ -306,12 +321,12 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 }
 
 .widget-btn.primary {
-    background: var(--secondary);
+    background: linear-gradient(135deg, var(--secondary) 0%, rgb(92, 64, 51) 100%);
     color: white;
 }
 
 .widget-btn.primary:hover {
-    background: #8b5e46;
+    background: linear-gradient(135deg, rgb(120, 85, 60) 0%, rgb(75, 50, 40) 100%);
     transform: translateX(4px);
 }
 
@@ -462,6 +477,10 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 }
 
 .llamados-bg {
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
+}
+
+.qrs-bg {
     background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
 }
 </style>

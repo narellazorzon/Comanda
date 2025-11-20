@@ -12,17 +12,23 @@ if (empty($_SESSION['user']) || $_SESSION['user']['rol'] !== 'administrador') {
 use App\Models\Reporte;
 
 // Parámetros de filtro
-$periodo = $_GET['periodo'] ?? 'todos';
+$fecha_desde = $_GET['fecha_desde'] ?? '';
+$fecha_hasta = $_GET['fecha_hasta'] ?? '';
+$error = '';
 
-// Validar período
-$periodos_validos = ['semana', 'mes', 'año', 'todos'];
-if (!in_array($periodo, $periodos_validos)) {
-    $periodo = 'todos';
+// Validar rango de fechas
+if ($fecha_desde && $fecha_hasta) {
+    $desde_ts = strtotime($fecha_desde);
+    $hasta_ts = strtotime($fecha_hasta);
+    if ($hasta_ts < $desde_ts) {
+        $error = '⚠️ Fechas inválidas: la fecha "Hasta" no puede ser anterior a la fecha "Desde".';
+    }
 }
 
-// Obtener datos usando el modelo Reporte
-$categorias = Reporte::ventasPorCategoria($periodo);
-$stats = Reporte::estadisticasPeriodo($periodo);
+// Obtener datos del modelo solo si no hay error
+// Usamos 'todos' como período por defecto, pero las fechas tienen prioridad en getFiltroFecha
+$categorias = $error ? [] : Reporte::ventasPorCategoria('todos', $fecha_desde, $fecha_hasta);
+$stats = $error ? [] : Reporte::estadisticasPeriodo('todos', $fecha_desde, $fecha_hasta);
 ?>
 
 <style>
@@ -96,12 +102,13 @@ $stats = Reporte::estadisticasPeriodo($periodo);
     color: var(--secondary);
 }
 
-.filter-group select {
+.filter-group select,
+.filter-group input[type="date"] {
     padding: 8px 12px;
     border: 1px solid var(--primary);
     border-radius: 4px;
     font-size: 14px;
-    background: var(--surface);
+    background: white;
     color: var(--text);
 }
 
@@ -158,7 +165,7 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 .stat-card .value {
     font-size: 2em;
     font-weight: bold;
-    color: var(--text);
+    color: var(--secondary);
 }
 
 .categorias-grid {
@@ -268,6 +275,29 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 }
 
 @media (max-width: 768px) {
+    /* Ajustar header en móviles */
+    .report-header {
+        padding: 1.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.8em;
+        margin: 0 0 8px 0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .report-header p {
+        font-size: 0.95em;
+        line-height: 1.4;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.85em !important;
+        margin-top: 8px !important;
+    }
+    
     .filters-section {
         flex-direction: column;
         align-items: stretch;
@@ -279,6 +309,27 @@ $stats = Reporte::estadisticasPeriodo($periodo);
     
     .categorias-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Ajustar header en móviles muy pequeños */
+    .report-header {
+        padding: 1.2rem 0.8rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.5em;
+        margin: 0 0 6px 0;
+    }
+    
+    .report-header p {
+        font-size: 0.9em;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.8em !important;
+        margin-top: 6px !important;
     }
 }
 
@@ -305,17 +356,38 @@ $stats = Reporte::estadisticasPeriodo($periodo);
     <div class="report-header">
         <h1>📊 Ventas por Categoría</h1>
         <p>Análisis de rendimiento por categoría de productos</p>
+        <?php if ($fecha_desde && $fecha_hasta): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: del <?= htmlspecialchars($fecha_desde) ?> al <?= htmlspecialchars($fecha_hasta) ?>
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <!-- Contenedor de alerta para fechas inválidas -->
+    <div id="alerta-fechas" 
+         style="display:<?= $error ? 'block' : 'none' ?>; 
+                background:#f8d7da; 
+                color:#721c24; 
+                border:1px solid #f5c6cb; 
+                border-radius:6px; 
+                padding:10px; 
+                margin-bottom:1rem;">
+        <?= htmlspecialchars($error) ?>
     </div>
 
     <div class="filters-section">
         <div class="filter-group">
-            <label for="periodo">Período:</label>
-            <select name="periodo" id="periodo" onchange="updateFilters()">
-                <option value="todos" <?= $periodo === 'todos' ? 'selected' : '' ?>>Todos los Períodos</option>
-                <option value="semana" <?= $periodo === 'semana' ? 'selected' : '' ?>>Última Semana</option>
-                <option value="mes" <?= $periodo === 'mes' ? 'selected' : '' ?>>Último Mes</option>
-                <option value="año" <?= $periodo === 'año' ? 'selected' : '' ?>>Último Año</option>
-            </select>
+            <label for="fecha_desde">Fecha Desde:</label>
+            <input type="date" name="fecha_desde" id="fecha_desde" 
+                   value="<?= htmlspecialchars($fecha_desde) ?>" 
+                   onchange="validarFechas()">
+        </div>
+        
+        <div class="filter-group">
+            <label for="fecha_hasta">Fecha Hasta:</label>
+            <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                   value="<?= htmlspecialchars($fecha_hasta) ?>" 
+                   onchange="validarFechas()">
         </div>
         
         <button class="apply-btn" onclick="applyFilters()">Aplicar Filtros</button>
@@ -386,17 +458,49 @@ $stats = Reporte::estadisticasPeriodo($periodo);
 </div>
 
 <script>
-function updateFilters() {
-    const periodo = document.getElementById('periodo').value;
+function validarFechas() {
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    const alerta = document.getElementById('alerta-fechas');
     
-    const url = new URL(window.location);
-    url.searchParams.set('periodo', periodo);
-    
-    window.location.href = url.toString();
+    if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+        alerta.style.display = 'block';
+        alerta.innerText = '⚠️ Fechas inválidas: la fecha "Hasta" no puede ser anterior a la fecha "Desde".';
+        return false;
+    } else {
+        alerta.style.display = 'none';
+        return true;
+    }
 }
 
 function applyFilters() {
-    updateFilters();
+    // Validar fechas antes de proceder
+    if (!validarFechas()) {
+        return false;
+    }
+    
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    
+    const url = new URL(window.location);
+    
+    // Limpiar parámetros de período anterior
+    url.searchParams.delete('periodo');
+    
+    // Agregar nuevos parámetros de fecha
+    if (fechaDesde) {
+        url.searchParams.set('fecha_desde', fechaDesde);
+    } else {
+        url.searchParams.delete('fecha_desde');
+    }
+    
+    if (fechaHasta) {
+        url.searchParams.set('fecha_hasta', fechaHasta);
+    } else {
+        url.searchParams.delete('fecha_hasta');
+    }
+    
+    window.location.href = url.toString();
 }
 </script>
 

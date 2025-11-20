@@ -18,7 +18,23 @@ $base_path = $is_in_reportes ? '../' : '';
 <nav class="navbar">
   <div class="nav-container">
     <div class="nav-logo">
-      <a href="<?= $base_url ?>/index.php?route=home" style="text-decoration: none; display: block;">
+      <?php
+      // Si está en modo QR (sin rol de usuario), hacer refresh a la carta
+      $modo_qr = $_SESSION['modo_consumo_qr'] ?? null;
+      $id_mesa_qr = $_SESSION['mesa_qr'] ?? null;
+      $is_qr_mode = empty($rol) && ($modo_qr !== null || $id_mesa_qr !== null);
+      
+      if ($is_qr_mode) {
+          // En modo QR, recargar la página actual manteniendo los parámetros
+          $logo_href = "javascript:void(0);";
+          $logo_onclick = "window.location.reload();";
+      } else {
+          // Si no está en modo QR, redirigir a home como antes
+          $logo_href = $base_url . "/index.php?route=home";
+          $logo_onclick = "";
+      }
+      ?>
+      <a href="<?= $logo_href ?>" <?= !empty($logo_onclick) ? 'onclick="' . $logo_onclick . ' return false;"' : '' ?> style="text-decoration: none; display: block;">
         <img src="<?= $base_url ?>/assets/img/logo.png" alt="Comanda" style="height: 60px; width: auto; max-height: 60px;">
       </a>
     </div>
@@ -49,7 +65,14 @@ $base_path = $is_in_reportes ? '../' : '';
       <?php if ($rol): ?>
         <a href="<?= $base_url ?>/index.php?route=logout" class="nav-link logout">🚪 Cerrar sesión</a>
       <?php else: ?>
+        <?php
+        // Ocultar "Iniciar sesión" cuando se está en la vista de cliente/carta
+        $current_route = $_GET['route'] ?? 'cliente';
+        $is_cliente_view = ($current_route === 'cliente' || strpos($_SERVER['PHP_SELF'] ?? '', 'cliente') !== false);
+        if (!$is_cliente_view):
+        ?>
         <a href="<?= $base_url ?>/index.php?route=login" class="nav-link">🔐 Iniciar sesión</a>
+        <?php endif; ?>
       <?php endif; ?>
     </div>
   </div>

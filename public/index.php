@@ -1,42 +1,61 @@
 <?php
 // public/index.php - Punto de entrada principal con routing MVC
-
-// Configurar logging de errores
-ini_set('display_errors', 0);
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/../logs/php-error.log');
-
-// Crear directorio de logs si no existe
-$logDir = __DIR__ . '/../logs';
-if (!is_dir($logDir)) {
-    mkdir($logDir, 0755, true);
-}
-
 session_start();
 
 // Cargar autoload
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../src/config/ClientSession.php';
 
-// Obtener la ruta solicitada primero
+// Incluir header para todas las páginas (excepto login, cliente y rutas de API)
 $route = $_GET['route'] ?? 'cliente';
-<<<<<<< HEAD
-$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'test-pedidos', 'cliente/procesar-pago', 'pago', 'pago-procesar', 'pago-confirmacion'];
-$clienteRoutes = ['cliente', 'cliente-pago', 'cliente-confirmacion'];
-$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion'];
-
-// Si estamos en una ruta de cliente, asegurar contexto de cliente
-if (in_array($route, $clienteRoutes)) {
-    if (!\App\Config\ClientSession::isClientContext()) {
-        \App\Config\ClientSession::initClientSession();
-    }
-}
-
-// Incluir header para todas las páginas (excepto login, rutas de API y páginas del cliente)
-if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes) && !in_array($route, $noHeaderRoutes)) {
+$apiRoutes = ['cliente-pedido', 'llamar-mozo', 'pedidos/info', 'pedidos/update-estado', 'pago', 'pago-procesar', 'pago-confirmacion'];
+$noHeaderRoutes = ['login', 'pago', 'pago-confirmacion', 'recibo-print'];
+// Rutas de exportación que no deben incluir header
+$exportRoutes = ['reportes/rendimiento-personal/exportar-csv'];
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes) && !in_array($route, $exportRoutes)) {
     include __DIR__ . '/../src/views/includes/header.php';
 }
 
+// Obtener la ruta solicitada
+$route = $_GET['route'] ?? 'cliente';
+
+// Manejar archivos estáticos (assets) antes del routing
+if (preg_match('/^assets\//', $route)) {
+    $file = __DIR__ . '/' . $route;
+    if (file_exists($file)) {
+        $ext = pathinfo($file, PATHINFO_EXTENSION);
+        $mime = [
+            'js' => 'application/javascript',
+            'css' => 'text/css',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+            'ico' => 'image/x-icon',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ttf' => 'font/ttf',
+            'eot' => 'application/vnd.ms-fontobject'
+        ][$ext] ?? 'text/plain';
+        
+        header("Content-Type: $mime");
+        
+        // Agregar cache headers para archivos estáticos
+        if (in_array($ext, ['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'woff', 'woff2', 'ttf', 'eot'])) {
+            header('Cache-Control: public, max-age=31536000'); // 1 año
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+        }
+        
+        readfile($file);
+        exit;
+    } else {
+        // Si el archivo no existe, devolver 404
+        http_response_code(404);
+        echo 'File not found';
+        exit;
+    }
+}
 
 // Función para redirigir al login si no está autenticado
 function requireAuth() {
@@ -102,11 +121,6 @@ switch ($route) {
         break;
 
     case 'cliente':
-        // Inicializar contexto de cliente si es necesario
-        require_once __DIR__ . '/../src/config/ClientSession.php';
-        if (!\App\Config\ClientSession::isClientContext()) {
-            \App\Config\ClientSession::initClientSession();
-        }
         include __DIR__ . '/../src/views/cliente/index.php';
         break;
 
@@ -168,27 +182,22 @@ switch ($route) {
         include __DIR__ . '/../src/views/mozos/confirmar_inactivacion.php';
         break;
 
-    case 'mozos/confirmar-eliminacion':
-        requireAdmin();
-        include __DIR__ . '/../src/views/mozos/confirmar_eliminacion.php';
-        break;
-
     case 'mozos/procesar-inactivacion':
         requireAdmin();
         require_once __DIR__ . '/../src/controllers/MozoController.php';
         \App\Controllers\MozoController::procesarInactivacion();
         break;
 
-    case 'mozos/delete':
+    case 'mozos/inactivar':
         requireAdmin();
         require_once __DIR__ . '/../src/controllers/MozoController.php';
-        \App\Controllers\MozoController::delete();
+        \App\Controllers\MozoController::inactivar();
         break;
 
-    case 'mozos/procesar-eliminacion':
+    case 'mozos/activar':
         requireAdmin();
         require_once __DIR__ . '/../src/controllers/MozoController.php';
-        \App\Controllers\MozoController::procesarEliminacion();
+        \App\Controllers\MozoController::activar();
         break;
 
     // Rutas de Carta
@@ -239,7 +248,7 @@ switch ($route) {
         break;
 
     case 'pedidos/info':
-        requireMozoOrAdmin();
+        // Permitir acceso sin autenticación para obtener info del mozo desde cliente
         \App\Controllers\PedidoController::info();
         break;
 
@@ -277,13 +286,26 @@ switch ($route) {
     case 'reportes/rendimiento-personal':
         requireAdmin();
         require_once __DIR__ . '/../src/controllers/ReporteController.php';
-        \App\Controllers\ReporteController::rendimientoMozos();
+        $resultado = \App\Controllers\ReporteController::rendimientoMozos();
+        include __DIR__ . '/../src/views/reportes/rendimiento_mozos.php';
+        break;
+
+    case 'reportes/rendimiento-personal/exportar-csv':
+        requireAdmin();
+        require_once __DIR__ . '/../src/controllers/ReporteController.php';
+        \App\Controllers\ReporteController::exportarRendimientoMozosCSV();
         break;
 
     // Rutas de Llamados (personal y administradores)
     case 'llamados':
         requireMozoOrAdmin();
         include __DIR__ . '/../src/views/llamados/index.php';
+        break;
+
+    case 'llamado_atender':
+        requireMozoOrAdmin();
+        require_once __DIR__ . '/../src/controllers/LlamadoController.php';
+        \App\Controllers\LlamadoController::atender();
         break;
 
     // Ruta para llamar personal desde cliente
@@ -298,35 +320,21 @@ switch ($route) {
         \App\Controllers\ClienteController::crearPedido();
         break;
 
-    // Rutas de pago del cliente
-    case 'cliente-pago':
-        require_once __DIR__ . '/../src/config/ClientSession.php';
+    // Ruta para procesar pago
+    case 'pago-procesar':
         require_once __DIR__ . '/../src/controllers/ClienteController.php';
-        // Asegurar contexto de cliente
-        if (!\App\Config\ClientSession::isClientContext()) {
-            \App\Config\ClientSession::initClientSession();
-        }
-        \App\Controllers\ClienteController::pago();
-        break;
-
-    case 'cliente/procesar-pago':
-        require_once __DIR__ . '/../src/config/ClientSession.php';
-        require_once __DIR__ . '/../src/controllers/ClienteController.php';
-        // Asegurar contexto de cliente
-        if (!\App\Config\ClientSession::isClientContext()) {
-            \App\Config\ClientSession::initClientSession();
-        }
         \App\Controllers\ClienteController::procesarPago();
         break;
 
-    case 'cliente-confirmacion':
-        require_once __DIR__ . '/../src/config/ClientSession.php';
+    // Ruta para mostrar confirmación de pago
+    case 'pago-confirmacion':
         require_once __DIR__ . '/../src/controllers/ClienteController.php';
-        // Asegurar contexto de cliente
-        if (!\App\Config\ClientSession::isClientContext()) {
-            \App\Config\ClientSession::initClientSession();
-        }
         \App\Controllers\ClienteController::confirmacion();
+        break;
+
+    // Ruta de impresión dedicada del recibo
+    case 'recibo-print':
+        include __DIR__ . '/../src/views/cliente/recibo_print.php';
         break;
 
     // Ruta del generador de QRs offline (solo administrador)
@@ -340,30 +348,18 @@ switch ($route) {
         break;
 
     default:
-        // Verificar si estamos en contexto de cliente
-        if (isset($_SESSION['contexto']) && $_SESSION['contexto'] === 'cliente') {
-            // Mantener al cliente en su contexto
-            $mesa = $_SESSION['mesa_qr'] ?? null;
-            $url = 'index.php?route=cliente';
-            if ($mesa) {
-                $url .= '&mesa=' . $mesa;
-            }
-            header('Location: ' . $url);
-            exit;
-        }
-
         // Si no está logueado, mostrar la vista pública del cliente
         if (empty($_SESSION['user'])) {
             header('Location: index.php?route=cliente');
             exit;
         }
-        // Si está logueado como administrador/mozo, mostrar el home
+        // Si está logueado, mostrar el home
         header('Location: index.php?route=home');
         exit;
 }
 
-// Incluir footer para todas las páginas (excepto login, rutas de API, páginas del cliente y rutas sin header)
-if ($route !== 'login' && !in_array($route, $apiRoutes) && !in_array($route, $clienteRoutes) && !in_array($route, $noHeaderRoutes)) {
+// Incluir footer para todas las páginas (excepto login, cliente y rutas de API)
+if (!in_array($route, $noHeaderRoutes) && !in_array($route, $apiRoutes) && !in_array($route, $exportRoutes)) {
     include __DIR__ . '/../src/views/includes/footer.php';
 }
 ?>

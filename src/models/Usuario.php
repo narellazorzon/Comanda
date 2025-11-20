@@ -1,28 +1,38 @@
 <?php
 namespace App\Models;
 
+use App\Config\Database;
 use PDO;
 
-class Usuario extends BaseModel {
+class Usuario {
     public static function findByEmail(string $email): ?array {
-        return self::fetchOne("SELECT * FROM usuarios WHERE email = ?", [$email]);
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE email = ?");
+        $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public static function allByRole(string $rol): array {
-        return self::fetchAll("SELECT * FROM usuarios WHERE rol = ?", [$rol]);
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE rol = ? AND estado != 'eliminado'");
+        $stmt->execute([$rol]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Obtiene todos los mozos activos para asignación a mesas.
      */
     public static function getMozosActivos(): array {
-        return self::fetchAll("
-            SELECT id_usuario, nombre, apellido,
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT id_usuario, nombre, apellido, 
                    CONCAT(nombre, ' ', apellido) as nombre_completo
-            FROM usuarios
+            FROM usuarios 
             WHERE rol = 'mozo' AND estado = 'activo'
             ORDER BY nombre, apellido
         ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -34,7 +44,7 @@ class Usuario extends BaseModel {
             SELECT id_usuario, nombre, apellido, email, estado,
                    CONCAT(nombre, ' ', apellido) as nombre_completo
             FROM usuarios 
-            WHERE rol = ?
+            WHERE rol = ? AND estado != 'eliminado'
             ORDER BY nombre, apellido
         ");
         $stmt->execute([$rol]);
@@ -42,50 +52,79 @@ class Usuario extends BaseModel {
     }
 
     public static function find(int $id): ?array {
-        return self::fetchOne("SELECT * FROM usuarios WHERE id_usuario = ?", [$id]);
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE id_usuario = ? AND estado != 'eliminado'");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public static function update(int $id, array $data): bool {
-        // Preparar datos para actualización
-        $updateData = [
-            'nombre' => $data['nombre'],
-            'apellido' => $data['apellido'],
-            'email' => $data['email'],
-            'estado' => $data['estado'] ?? 'activo'
-        ];
-
-        // Si viene contraseña, la hasheamos y agregamos
-        if (!empty($data['contrasenia'])) {
-            $updateData['contrasenia'] = password_hash($data['contrasenia'], PASSWORD_DEFAULT);
+        $db = (new Database)->getConnection();
+        
+        // Si viene contraseña, la hasheamos
+        if (isset($data['contrasenia']) && !empty($data['contrasenia'])) {
+            $stmt = $db->prepare("
+                UPDATE usuarios 
+                SET nombre = ?, apellido = ?, email = ?, contrasenia = ?, estado = ?
+                WHERE id_usuario = ?
+            ");
+            return $stmt->execute([
+                $data['nombre'],
+                $data['apellido'],
+                $data['email'],
+                password_hash($data['contrasenia'], PASSWORD_DEFAULT),
+                $data['estado'] ?? 'activo',
+                $id
+            ]);
+        } else {
+            // Actualizar sin cambiar contraseña
+            $stmt = $db->prepare("
+                UPDATE usuarios 
+                SET nombre = ?, apellido = ?, email = ?, estado = ?
+                WHERE id_usuario = ?
+            ");
+            return $stmt->execute([
+                $data['nombre'],
+                $data['apellido'],
+                $data['email'],
+                $data['estado'] ?? 'activo',
+                $id
+            ]);
         }
-
-        return parent::updateTable('usuarios', $updateData, 'id_usuario = :id', ['id' => $id]) > 0;
     }
 
     public static function create(array $data): bool {
-        $insertData = [
-            'nombre' => $data['nombre'],
-            'apellido' => $data['apellido'],
-            'email' => $data['email'],
-            'contrasenia' => $data['contrasenia'],
-            'rol' => $data['rol']
-        ];
-
-        return parent::insert('usuarios', $insertData) > 0;
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            INSERT INTO usuarios (nombre, apellido, email, contrasenia, rol)
+            VALUES (?,?,?,?,?)
+        ");
+        return $stmt->execute([
+            $data['nombre'],
+            $data['apellido'],
+            $data['email'],
+            $data['contrasenia'],
+            $data['rol']
+        ]);
     }
     public static function delete(int $id): bool {
-        return parent::deleteFrom('usuarios', 'id_usuario = :id', ['id' => $id]) > 0;
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("UPDATE usuarios SET estado = 'eliminado', fecha_eliminacion = NOW() WHERE id_usuario = ?");
+        return $stmt->execute([$id]);
     }
 
     public static function emailExists(string $email, int $excludeId = null): bool {
-        $where = "email = :email";
-        $params = ['email' => $email];
-
+        $db = (new Database)->getConnection();
+        $sql = "SELECT COUNT(*) FROM usuarios WHERE email = ? AND estado != 'eliminado'";
+        $params = [$email];
+        
         if ($excludeId !== null) {
-            $where .= " AND id_usuario != :excludeId";
-            $params['excludeId'] = $excludeId;
+            $sql .= " AND id_usuario != ?";
+            $params[] = $excludeId;
         }
-
-        return parent::exists('usuarios', $where, $params);
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn() > 0;
     }
 }

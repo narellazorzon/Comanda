@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <!-- Enlaces adicionales -->
-    <div class="login-footer">
+    <div class="login-footer" style="display: none;">
       <a href="#" class="recovery-link">
         <i class="fas fa-key"></i>
         ¿Olvidaste tu contraseña?

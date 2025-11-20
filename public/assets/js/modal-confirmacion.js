@@ -3,7 +3,11 @@
  * Uso: ModalConfirmacion.show(options)
  */
 
-console.log('Modal de confirmación cargado correctamente');
+// Protección contra redeclaración
+if (typeof ModalConfirmacion !== 'undefined') {
+    console.log('ModalConfirmacion ya está definido, evitando redeclaración');
+} else {
+    console.log('Modal de confirmación cargado correctamente');
 
 class ModalConfirmacion {
     static show(options) {
@@ -236,3 +240,5 @@ window.confirmarBorradoMesa = confirmarBorradoMesa;
 window.confirmarCambioEstadoMesa = confirmarCambioEstadoMesa;
 
 console.log('Funciones del modal asignadas a window');
+
+} // Cierre del bloque else para protección contra redeclaración

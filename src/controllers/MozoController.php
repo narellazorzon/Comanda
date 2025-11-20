@@ -217,9 +217,9 @@ class MozoController {
         exit;
     }
 
-    public static function delete() {
+    public static function inactivar() {
         self::authorize();
-        $id = (int) ($_GET['delete'] ?? 0);
+        $id = (int) ($_GET['id'] ?? $_GET['inactivar'] ?? 0);
         
         if ($id <= 0) {
             header('Location: ' . url('mozos', ['error' => 'ID de usuario inválido']));
@@ -234,17 +234,24 @@ class MozoController {
         }
         
         if ($usuario['rol'] === 'administrador') {
-            header('Location: ' . url('mozos', ['error' => 'No se puede eliminar un usuario administrador']));
+            header('Location: ' . url('mozos', ['error' => 'No se puede inactivar un usuario administrador']));
             exit;
         }
         
-        // Verificar si el mozo tiene mesas asignadas
+        // Si ya está inactivo, no hacer nada
+        if ($usuario['estado'] === 'inactivo') {
+            header('Location: ' . url('mozos', ['error' => 'El mozo ya está inactivo']));
+            exit;
+        }
+        
+        // Verificar si el mozo tiene mesas asignadas ANTES de inactivarlo
         $mesas_asignadas = Mesa::countMesasByMozo($id);
         
         if ($mesas_asignadas > 0) {
-            // Redirigir a pantalla de confirmación con los datos del mozo
+            // Redirigir a pantalla de confirmación de inactivación con los datos del mozo
+            // El mozo sigue ACTIVO en este punto
             $query_params = [
-                'confirmar_eliminacion' => '1',
+                'confirmar_inactivacion' => '1',
                 'id_mozo' => $id,
                 'nombre' => $usuario['nombre'],
                 'apellido' => $usuario['apellido'],
@@ -252,64 +259,78 @@ class MozoController {
                 'mesas_asignadas' => $mesas_asignadas
             ];
             
-            header('Location: ' . url('mozos/confirmar-eliminacion', $query_params));
+            header('Location: ' . url('mozos/confirmar-inactivacion', $query_params));
             exit;
         }
         
-        // Si no tiene mesas asignadas, eliminar directamente
-        if (Usuario::delete($id)) {
-            header('Location: ' . url('mozos', ['success' => 'Mozo eliminado exitosamente']));
+        // Si no tiene mesas asignadas, proceder a inactivar
+        $data = [
+            'nombre' => $usuario['nombre'],
+            'apellido' => $usuario['apellido'],
+            'email' => $usuario['email'],
+            'estado' => 'inactivo'
+        ];
+        
+        if (Usuario::update($id, $data)) {
+            header('Location: ' . url('mozos', ['success' => 'Mozo inactivado exitosamente']));
         } else {
-            header('Location: ' . url('mozos', ['error' => 'Error al eliminar el mozo']));
+            header('Location: ' . url('mozos', ['error' => 'Error al inactivar el mozo']));
         }
         exit;
     }
 
-    public static function procesarEliminacion() {
+    public static function activar() {
         self::authorize();
+        $id = (int) ($_GET['id'] ?? $_GET['activar'] ?? 0);
         
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . url('mozos'));
+        if ($id <= 0) {
+            header('Location: ' . url('mozos', ['error' => 'ID de usuario inválido']));
             exit;
         }
         
-        $id_mozo = (int) ($_POST['id_mozo'] ?? 0);
-        $accion_mesas = $_POST['accion_mesas'] ?? '';
-        $nuevo_mozo = !empty($_POST['nuevo_mozo']) ? (int) $_POST['nuevo_mozo'] : null;
-        
-        $mozo = Usuario::find($id_mozo);
-        if (!$mozo || !in_array($mozo['rol'], ['mozo', 'administrador'])) {
+        // Verificar que el usuario existe y no es administrador
+        $usuario = Usuario::find($id);
+        if (!$usuario) {
             header('Location: ' . url('mozos', ['error' => 'Usuario no encontrado']));
             exit;
         }
         
-        // Procesar las mesas según la acción elegida
-        if ($accion_mesas === 'reasignar' && $nuevo_mozo) {
-            // Reasignar todas las mesas al nuevo mozo
-            $mesas = Mesa::getMesasByMozo($id_mozo);
-            foreach ($mesas as $mesa) {
-                Mesa::asignarMozo($mesa['id_mesa'], $nuevo_mozo);
-            }
-        } elseif ($accion_mesas === 'liberar') {
-            // Liberar todas las mesas (sin mozo asignado)
-            $mesas = Mesa::getMesasByMozo($id_mozo);
+        if ($usuario['rol'] === 'administrador') {
+            header('Location: ' . url('mozos', ['error' => 'No se puede cambiar el estado de un usuario administrador']));
+            exit;
+        }
+        
+        // Si ya está activo, no hacer nada
+        if ($usuario['estado'] === 'activo') {
+            header('Location: ' . url('mozos', ['error' => 'El mozo ya está activo']));
+            exit;
+        }
+        
+        // Verificar si el mozo tiene mesas asignadas y liberarlas automáticamente
+        $mesas_asignadas = Mesa::countMesasByMozo($id);
+        if ($mesas_asignadas > 0) {
+            $mesas = Mesa::getMesasByMozo($id);
             foreach ($mesas as $mesa) {
                 Mesa::asignarMozo($mesa['id_mesa'], null);
             }
         }
         
-        // Eliminar el mozo
-        if (Usuario::delete($id_mozo)) {
-            $mensaje = 'Mozo eliminado exitosamente';
-            if ($accion_mesas === 'reasignar') {
-                $nuevo_mozo_info = Usuario::find($nuevo_mozo);
-                $mensaje .= ' y sus mesas fueron reasignadas a ' . $nuevo_mozo_info['nombre'] . ' ' . $nuevo_mozo_info['apellido'];
-            } elseif ($accion_mesas === 'liberar') {
-                $mensaje .= ' y sus mesas fueron liberadas';
+        // Activar el mozo (cambiar estado a activo)
+        $data = [
+            'nombre' => $usuario['nombre'],
+            'apellido' => $usuario['apellido'],
+            'email' => $usuario['email'],
+            'estado' => 'activo'
+        ];
+        
+        if (Usuario::update($id, $data)) {
+            $mensaje = 'Mozo activado exitosamente';
+            if ($mesas_asignadas > 0) {
+                $mensaje .= ' y sus ' . $mesas_asignadas . ' mesa(s) fueron liberadas automáticamente';
             }
             header('Location: ' . url('mozos', ['success' => $mensaje]));
         } else {
-            header('Location: ' . url('mozos', ['error' => 'Error al eliminar el mozo']));
+            header('Location: ' . url('mozos', ['error' => 'Error al activar el mozo']));
         }
         exit;
     }
@@ -382,33 +403,60 @@ class MozoController {
                 exit;
             }
             
-            // Verificar si hay un llamado reciente (menos de 3 minutos)
-            $stmt_reciente = $db->prepare("
-                SELECT id_llamado, hora_solicitud, 
-                       TIMESTAMPDIFF(MINUTE, hora_solicitud, NOW()) as minutos_transcurridos
+            // Verificar cuántos llamados se han hecho en los últimos 2 minutos
+            // Permitir máximo 2 llamados por cada 2 minutos
+            $stmt_contar = $db->prepare("
+                SELECT COUNT(*) as total_llamados,
+                       MIN(hora_solicitud) as primer_llamado
                 FROM llamados_mesa 
-                WHERE id_mesa = ? AND estado = 'pendiente'
-                ORDER BY hora_solicitud DESC 
-                LIMIT 1
+                WHERE id_mesa = ? 
+                AND estado = 'pendiente'
+                AND hora_solicitud >= DATE_SUB(NOW(), INTERVAL 2 MINUTE)
             ");
-            $stmt_reciente->execute([$mesa['id_mesa']]);
-            $llamado_reciente = $stmt_reciente->fetch(\PDO::FETCH_ASSOC);
+            $stmt_contar->execute([$mesa['id_mesa']]);
+            $resultado_contar = $stmt_contar->fetch(\PDO::FETCH_ASSOC);
+            $total_llamados = (int) $resultado_contar['total_llamados'];
             
-            if ($llamado_reciente && $llamado_reciente['minutos_transcurridos'] < 3) {
-                $minutos_restantes = 3 - $llamado_reciente['minutos_transcurridos'];
+            // Si ya hay 2 o más llamados en los últimos 2 minutos, rechazar
+            if ($total_llamados >= 2) {
+                // Calcular cuántos segundos faltan para que pase el período de 2 minutos desde el primer llamado
+                if ($resultado_contar['primer_llamado']) {
+                    $stmt_tiempo = $db->prepare("
+                        SELECT TIMESTAMPDIFF(SECOND, ?, NOW()) as segundos_transcurridos
+                    ");
+                    $stmt_tiempo->execute([$resultado_contar['primer_llamado']]);
+                    $tiempo_result = $stmt_tiempo->fetch(\PDO::FETCH_ASSOC);
+                    $segundos_transcurridos = (int) $tiempo_result['segundos_transcurridos'];
+                    $segundos_restantes = 120 - $segundos_transcurridos;
+                    $minutos_restantes = ceil($segundos_restantes / 60);
+                    
+                    if ($minutos_restantes <= 0) {
+                        $minutos_restantes = 1;
+                    }
+                } else {
+                    $minutos_restantes = 2;
+                }
+                
                 echo json_encode([
                     'success' => false, 
-                    'message' => "Usted ya llamó al mozo hace menos de 3 minutos, por favor aguarde {$minutos_restantes} minuto(s) más",
+                    'message' => "Usted ya realizó 2 llamados. Por favor aguarde {$minutos_restantes} minuto(s) más antes de llamar nuevamente.",
                     'type' => 'warning'
                 ]);
                 exit;
             }
             
-            // Si hay un llamado anterior (más de 3 minutos), eliminarlo
-            if ($llamado_reciente && $llamado_reciente['minutos_transcurridos'] >= 3) {
-                $stmt_eliminar = $db->prepare("DELETE FROM llamados_mesa WHERE id_llamado = ?");
-                $stmt_eliminar->execute([$llamado_reciente['id_llamado']]);
-                error_log("LlamarMozo - Llamado anterior eliminado: " . $llamado_reciente['id_llamado']);
+            // Limpiar llamados antiguos (más de 2 minutos) para esta mesa
+            $stmt_limpiar = $db->prepare("
+                UPDATE llamados_mesa 
+                SET estado = 'completado', hora_atencion = NOW(), atendido_por = NULL 
+                WHERE id_mesa = ? 
+                AND estado = 'pendiente'
+                AND hora_solicitud < DATE_SUB(NOW(), INTERVAL 2 MINUTE)
+            ");
+            $stmt_limpiar->execute([$mesa['id_mesa']]);
+            $limpiados = $stmt_limpiar->rowCount();
+            if ($limpiados > 0) {
+                error_log("LlamarMozo - Llamados antiguos limpiados: " . $limpiados);
             }
             
             // Crear el nuevo llamado
@@ -439,3 +487,5 @@ class MozoController {
         exit;
     }
 }
+
+

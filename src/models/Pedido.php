@@ -2,50 +2,85 @@
 // src/models/Pedido.php
 namespace App\Models;
 
-use App\Database\QueryBuilder;
 use App\Config\Database;
 use PDO;
-use Exception;
 
-class Pedido extends BaseModel {
+class Pedido {
     /**
      * Devuelve todos los pedidos con información de mesa y mozo, ordenados por fecha desc.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function all(): array {
-        $sql = QueryBuilder::pedidosWithMesaAndMozo();
-        return self::fetchAll($sql);
+        $db = (new Database)->getConnection();
+        return $db->query("
+            SELECT p.*, 
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   p.fecha_hora as fecha_creacion
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            WHERE p.deleted_at IS NULL
+            ORDER BY p.fecha_hora DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Devuelve todos los pedidos del día actual con información de mesa y mozo.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function todayOnly(): array {
-        $sql = QueryBuilder::pedidosWithMesaAndMozo('DATE(p.fecha_hora) = CURDATE()');
-        return self::fetchAll($sql);
+        $db = (new Database)->getConnection();
+        return $db->query("
+            SELECT p.*, 
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   p.fecha_hora as fecha_creacion
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            WHERE DATE(p.fecha_hora) = CURDATE()
+            AND p.deleted_at IS NULL
+            ORDER BY p.fecha_hora DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Devuelve todos los pedidos asignados a un mozo.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function allByMozo(int $mozoId): array {
-<<<<<<< HEAD
-        $sql = QueryBuilder::pedidosWithMesaAndMozo('p.id_mozo = :mozoId');
-        return self::fetchAll($sql, ['mozoId' => $mozoId]);
-=======
         $db = (new Database)->getConnection();
         $stmt = $db->prepare("
-            SELECT *
-            FROM pedidos
-            WHERE id_mozo = ?
-            ORDER BY fecha_hora DESC
+            SELECT p.*,
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   p.fecha_hora as fecha_creacion
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            WHERE p.id_mozo = ?
+            AND p.deleted_at IS NULL
+            ORDER BY p.fecha_hora DESC
         ");
         $stmt->execute([$mozoId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
->>>>>>> develop1
     }
 
     /**
-     * Devuelve los pedidos del día actual para las mesas asignadas a un mozo.
+     * Devuelve los pedidos del día actual para un mozo.
+     * Incluye pedidos asignados directamente al mozo (p.id_mozo) 
+     * y pedidos de mesas asignadas al mozo (m.id_mozo).
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function todayByMesoAssigned(int $mozoId): array {
         $db = (new Database)->getConnection();
@@ -61,19 +96,95 @@ class Pedido extends BaseModel {
             LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
             LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
             WHERE DATE(p.fecha_hora) = CURDATE()
-            AND m.id_mozo = ?
+            AND (p.id_mozo = ? OR m.id_mozo = ?)
+            AND p.deleted_at IS NULL
             ORDER BY p.fecha_hora DESC
         ");
-        $stmt->execute([$mozoId]);
+        $stmt->execute([$mozoId, $mozoId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
+     * Devuelve todos los pedidos para un mozo (incluyendo cerrados).
+     * Incluye pedidos asignados directamente al mozo (p.id_mozo) 
+     * y pedidos de mesas asignadas al mozo (m.id_mozo).
+     * Solo excluye pedidos eliminados lógicamente.
+     */
+    public static function allActiveByMozo(int $mozoId): array {
+        try {
+            $db = (new Database)->getConnection();
+            
+            // Primero intentar buscar solo por p.id_mozo (más directo)
+            $stmt = $db->prepare("
+                SELECT p.*,
+                       m.numero as numero_mesa,
+                       m.ubicacion as ubicacion_mesa,
+                       u.nombre as mozo_nombre,
+                       u.apellido as mozo_apellido,
+                       CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                       p.fecha_hora as fecha_creacion
+                FROM pedidos p
+                LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+                LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+                WHERE p.id_mozo = ?
+                AND p.deleted_at IS NULL
+                ORDER BY p.fecha_hora DESC
+            ");
+            $stmt->execute([$mozoId]);
+            $resultByMozo = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Luego buscar por mesas asignadas al mozo
+            $stmt = $db->prepare("
+                SELECT p.*,
+                       m.numero as numero_mesa,
+                       m.ubicacion as ubicacion_mesa,
+                       u.nombre as mozo_nombre,
+                       u.apellido as mozo_apellido,
+                       CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                       p.fecha_hora as fecha_creacion
+                FROM pedidos p
+                INNER JOIN mesas m ON p.id_mesa = m.id_mesa
+                LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+                WHERE m.id_mozo = ?
+                AND p.deleted_at IS NULL
+                AND (p.id_mozo IS NULL OR p.id_mozo != ?)
+                ORDER BY p.fecha_hora DESC
+            ");
+            $stmt->execute([$mozoId, $mozoId]);
+            $resultByMesa = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Combinar resultados y eliminar duplicados
+            $result = $resultByMozo;
+            $pedidoIds = array_column($resultByMozo, 'id_pedido');
+            foreach ($resultByMesa as $pedido) {
+                if (!in_array($pedido['id_pedido'], $pedidoIds)) {
+                    $result[] = $pedido;
+                }
+            }
+            
+            return $result;
+        } catch (\Exception $e) {
+            error_log("Error en allActiveByMozo: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return [];
+        }
+    }
+
+    /**
      * Devuelve todos los pedidos de una mesa (cliente).
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function allByMesa(int $mesaId): array {
-        $sql = QueryBuilder::pedidosWithMesaAndMozo('p.id_mesa = :mesaId');
-        return self::fetchAll($sql, ['mesaId' => $mesaId]);
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT * 
+            FROM pedidos 
+            WHERE id_mesa = ? 
+            AND deleted_at IS NULL
+            ORDER BY fecha_hora DESC
+        ");
+        $stmt->execute([$mesaId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -97,12 +208,23 @@ class Pedido extends BaseModel {
 
             // Asegurarnos de que el estado se establezca correctamente
             $estado = 'pendiente';
+
+            // Determinar id_mozo desde la mesa si no fue provisto (modo 'stay')
+            $idMozo = $data['id_mozo'] ?? null;
+            if (empty($idMozo) && !empty($data['id_mesa']) && (($data['modo_consumo'] ?? 'stay') === 'stay')) {
+                $stmtMesaMozo = $db->prepare("SELECT id_mozo FROM mesas WHERE id_mesa = ?");
+                $stmtMesaMozo->execute([$data['id_mesa']]);
+                $idMozoMesa = $stmtMesaMozo->fetchColumn();
+                if ($idMozoMesa) {
+                    $idMozo = (int)$idMozoMesa;
+                }
+            }
             $params = [
                 $data['id_mesa'] ?? null,
                 $data['modo_consumo'] ?? 'stay',
                 0.00, // Temporal, se actualizará después
                 $estado,
-                $data['id_mozo'] ?? (isset($_SESSION['user']['id_usuario']) ? $_SESSION['user']['id_usuario'] : null),
+                $idMozo,
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $data['cliente_nombre'] ?? null,
@@ -167,26 +289,16 @@ class Pedido extends BaseModel {
     }
 
     /**
-     * Actualiza el estado de un pedido.
+     * Actualiza el estado de un pedido y libera la mesa si todos los pedidos están cerrados.
      */
     public static function updateEstado(int $id, string $nuevoEstado): bool {
-        return parent::updateTable('pedidos', ['estado' => $nuevoEstado], 'id_pedido = :id', ['id' => $id]) > 0;
-    }
-
-    /**
-     * Elimina un pedido por su ID y libera la mesa si no tiene más pedidos activos.
-     */
-    public static function delete(int $id): bool {
-<<<<<<< HEAD
-        return parent::deleteFrom('pedidos', 'id_pedido = :id', ['id' => $id]) > 0;
-=======
         $db = (new Database)->getConnection();
         
         try {
             $db->beginTransaction();
             
-            // 1. Obtener información del pedido antes de eliminarlo
-            $stmtPedido = $db->prepare("SELECT id_mesa, modo_consumo FROM pedidos WHERE id_pedido = ?");
+            // 1. Obtener información del pedido antes de actualizarlo
+            $stmtPedido = $db->prepare("SELECT id_mesa, modo_consumo FROM pedidos WHERE id_pedido = ? AND deleted_at IS NULL");
             $stmtPedido->execute([$id]);
             $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
             
@@ -195,8 +307,80 @@ class Pedido extends BaseModel {
                 return false;
             }
             
-            // 2. Eliminar el pedido
-            $stmt = $db->prepare("DELETE FROM pedidos WHERE id_pedido = ?");
+            // 2. Actualizar el estado del pedido
+            $stmt = $db->prepare("
+                UPDATE pedidos 
+                SET estado = ? 
+                WHERE id_pedido = ?
+            ");
+            $resultado = $stmt->execute([$nuevoEstado, $id]);
+            
+            if (!$resultado) {
+                $db->rollback();
+                return false;
+            }
+            
+            // 3. Si el pedido se cerró y está asociado a una mesa, verificar si debe liberarse la mesa
+            if ($nuevoEstado === 'cerrado' && $pedido['id_mesa']) {
+                // Contar pedidos activos restantes en la mesa (no cerrados, no cancelados, no eliminados)
+                // Contamos TODOS los pedidos de la mesa, no solo los 'stay'
+                $stmtCount = $db->prepare("
+                    SELECT COUNT(*) 
+                    FROM pedidos 
+                    WHERE id_mesa = ? 
+                    AND estado NOT IN ('cerrado', 'cancelado')
+                    AND deleted_at IS NULL
+                ");
+                $stmtCount->execute([$pedido['id_mesa']]);
+                $pedidosRestantes = (int) $stmtCount->fetchColumn();
+                
+                // Solo liberar la mesa si no hay más pedidos activos
+                // Esto aplica tanto para pedidos 'stay' como 'takeaway' asociados a la mesa
+                if ($pedidosRestantes == 0) {
+                    $stmtMesa = $db->prepare("UPDATE mesas SET estado = 'libre' WHERE id_mesa = ?");
+                    $resultMesa = $stmtMesa->execute([$pedido['id_mesa']]);
+                    
+                    // Verificar si la actualización fue exitosa
+                    if (!$resultMesa) {
+                        error_log("Error al actualizar estado de mesa " . $pedido['id_mesa'] . " a libre");
+                    } elseif ($stmtMesa->rowCount() == 0) {
+                        // Si no se actualizó ninguna fila, podría ser que la mesa ya está libre o no existe
+                        error_log("Advertencia: No se actualizó ninguna fila al intentar liberar mesa " . $pedido['id_mesa']);
+                    }
+                }
+            }
+            
+            $db->commit();
+            return true;
+            
+        } catch (\Exception $e) {
+            $db->rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * Elimina lógicamente un pedido por su ID y libera la mesa si no tiene más pedidos activos.
+     * Implementa borrado lógico marcando deleted_at con timestamp actual.
+     */
+    public static function delete(int $id): bool {
+        $db = (new Database)->getConnection();
+        
+        try {
+            $db->beginTransaction();
+            
+            // 1. Obtener información del pedido antes de eliminarlo
+            $stmtPedido = $db->prepare("SELECT id_mesa, modo_consumo FROM pedidos WHERE id_pedido = ? AND deleted_at IS NULL");
+            $stmtPedido->execute([$id]);
+            $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$pedido) {
+                $db->rollback();
+                return false;
+            }
+            
+            // 2. Marcar como eliminado lógicamente
+            $stmt = $db->prepare("UPDATE pedidos SET deleted_at = NOW() WHERE id_pedido = ?");
             $resultado = $stmt->execute([$id]);
             
             if (!$resultado) {
@@ -206,13 +390,14 @@ class Pedido extends BaseModel {
             
             // 3. Verificar si la mesa tiene más pedidos activos antes de liberarla
             if ($pedido['id_mesa'] && $pedido['modo_consumo'] === 'stay') {
-                // Contar pedidos activos restantes en la mesa
+                // Contar pedidos activos restantes en la mesa (no eliminados)
                 $stmtCount = $db->prepare("
                     SELECT COUNT(*) 
                     FROM pedidos 
                     WHERE id_mesa = ? 
                     AND estado NOT IN ('cerrado', 'cancelado')
                     AND modo_consumo = 'stay'
+                    AND deleted_at IS NULL
                 ");
                 $stmtCount->execute([$pedido['id_mesa']]);
                 $pedidosRestantes = $stmtCount->fetchColumn();
@@ -231,22 +416,52 @@ class Pedido extends BaseModel {
             $db->rollback();
             throw $e;
         }
->>>>>>> develop1
     }
 
     /**
      * Actualiza el total de un pedido.
      */
     public static function updateTotal(int $id, float $total): bool {
-        return parent::updateTable('pedidos', ['total' => $total], 'id_pedido = :id', ['id' => $id]) > 0;
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            UPDATE pedidos 
+            SET total = ? 
+            WHERE id_pedido = ?
+        ");
+        return $stmt->execute([$total, $id]);
+    }
+
+    /**
+     * Actualiza solo la forma de pago de un pedido sin tocar otros campos.
+     */
+    public static function setFormaPago(int $id, ?string $formaPago): bool {
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("UPDATE pedidos SET forma_pago = ? WHERE id_pedido = ?");
+        return $stmt->execute([$formaPago, $id]);
     }
 
     /**
      * Obtiene un pedido por su ID con información completa.
+     * Solo incluye pedidos no eliminados lógicamente.
      */
     public static function find(int $id): ?array {
-        $sql = QueryBuilder::pedidosWithMesaAndMozo('p.id_pedido = :id');
-        return self::fetchOne($sql, ['id' => $id]);
+        $db = (new Database)->getConnection();
+        $stmt = $db->prepare("
+            SELECT p.*, 
+                   m.numero as numero_mesa,
+                   m.ubicacion as ubicacion_mesa,
+                   u.nombre as mozo_nombre,
+                   u.apellido as mozo_apellido,
+                   CONCAT(u.nombre, ' ', u.apellido) as nombre_mozo_completo,
+                   p.fecha_hora as fecha_creacion
+            FROM pedidos p
+            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
+            LEFT JOIN usuarios u ON p.id_mozo = u.id_usuario
+            WHERE p.id_pedido = ?
+            AND p.deleted_at IS NULL
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     /**
@@ -271,59 +486,80 @@ class Pedido extends BaseModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+
     /**
      * Actualiza un pedido existente con nuevos datos.
      */
     public static function update(int $id, array $data): bool {
         $db = (new Database)->getConnection();
-
+        
         try {
             $db->beginTransaction();
-
+            
             // 1. Obtener mesa actual del pedido (siempre necesaria para liberar)
             $stmtActual = $db->prepare("SELECT id_mesa FROM pedidos WHERE id_pedido = ?");
             $stmtActual->execute([$id]);
             $mesaActual = $stmtActual->fetchColumn();
+            
+            // 2. Validar que la mesa esté disponible si se está cambiando
+            if (isset($data['id_mesa']) && $data['id_mesa']) {
+                // Verificar estado actual de la mesa
+                $stmtMesa = $db->prepare("SELECT estado, id_mozo FROM mesas WHERE id_mesa = ?");
+                $stmtMesa->execute([$data['id_mesa']]);
+                $mesaData = $stmtMesa->fetch(PDO::FETCH_ASSOC);
 
-            // 2. Actualizar datos básicos del pedido
+                // Si la mesa no es libre y es diferente a la actual, lanzar error
+                if ($mesaData && $mesaData['estado'] !== 'libre' && $data['id_mesa'] != $mesaActual) {
+                    throw new \Exception("No se puede cambiar a la mesa seleccionada. Estado actual: " . $mesaData['estado']);
+                }
+
+                $idMozo = $mesaData ? $mesaData['id_mozo'] : null;
+            }
+
+            // 3. Actualizar datos básicos del pedido incluyendo el mozo
             $stmt = $db->prepare("
                 UPDATE pedidos
-                SET id_mesa = ?, modo_consumo = ?, forma_pago = ?, observaciones = ?
+                SET id_mesa = ?, id_mozo = ?, modo_consumo = ?, forma_pago = ?, observaciones = ?
+                WHERE id_pedido = ?
             ");
             $stmt->execute([
                 $data['id_mesa'] ?? null,
+                $idMozo,
                 $data['modo_consumo'] ?? 'stay',
                 $data['forma_pago'] ?? null,
                 $data['observaciones'] ?? null,
                 $id
             ]);
+            
+            // 4. Eliminar detalles existentes solo si se envían nuevos items
+            if (!empty($data['items'])) {
+                $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
+                $stmt->execute([$id]);
+            }
 
-            // 2. Eliminar detalles existentes
-            $stmt = $db->prepare("DELETE FROM detalle_pedido WHERE id_pedido = ?");
-            $stmt->execute([$id]);
-
-            // 3. Insertar nuevos detalles y calcular total
+            // 5. Insertar nuevos detalles y calcular total
             $total = 0.00;
             if (!empty($data['items'])) {
                 $stmtItem = $db->prepare("
                     INSERT INTO detalle_pedido (id_pedido, id_item, cantidad, precio_unitario)
                     VALUES (?, ?, ?, ?)
                 ");
-
+                
                 $stmtPrecio = $db->prepare("SELECT precio FROM carta WHERE id_item = ?");
-
+                
                 foreach ($data['items'] as $item) {
                     $cantidad = (int)($item['cantidad'] ?? 1);
                     $idItem = (int)($item['id_item'] ?? 0);
+                    
                     if ($cantidad > 0 && $idItem > 0) {
                         // Obtener precio actual del item
                         $stmtPrecio->execute([$idItem]);
                         $precio = $stmtPrecio->fetchColumn();
-
+                        
                         if ($precio) {
                             $subtotal = $precio * $cantidad;
                             $total += $subtotal;
-
+                            
                             // Guardar detalle
                             $stmtItem->execute([$id, $idItem, $cantidad, $precio]);
                         }
@@ -336,16 +572,6 @@ class Pedido extends BaseModel {
                 $total = $stmtTotal->fetchColumn();
             }
 
-<<<<<<< HEAD
-            // 4. Actualizar el total del pedido
-            $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
-            $stmtUpdate->execute([$total, $id]);
-
-            $db->commit();
-            return true;
-
-        } catch (Exception $e) {
-=======
             // 6. Actualizar el total del pedido
             $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
             $stmtUpdate->execute([$total, $id]);
@@ -363,62 +589,13 @@ class Pedido extends BaseModel {
                 $stmtMesaNueva = $db->prepare("UPDATE mesas SET estado = 'ocupada' WHERE id_mesa = ?");
                 $stmtMesaNueva->execute([$data['id_mesa']]);
             }
-
-            // 4. Actualizar el total del pedido
-            $stmtUpdate = $db->prepare("UPDATE pedidos SET total = ? WHERE id_pedido = ?");
-            $stmtUpdate->execute([$total, $id]);
-
+            
             $db->commit();
             return true;
-
+            
         } catch (\Exception $e) {
             $db->rollback();
             throw $e;
         }
-    }
-
-    /**
-     * Obtiene un pedido con todos sus detalles incluyendo mesa y mozo.
-     */
-    public static function findWithDetails(int $id): ?array {
-        $db = (new Database)->getConnection();
-        $stmt = $db->prepare("
-            SELECT p.*,
-                   m.numero as numero_mesa,
-                   m.ubicacion as ubicacion_mesa,
-                   mz.id_usuario as id_mozo,
-                   CONCAT(mz.nombre, ' ', mz.apellido) as nombre_mozo_completo
-            FROM pedidos p
-            LEFT JOIN mesas m ON p.id_mesa = m.id_mesa
-            LEFT JOIN usuarios mz ON p.id_mozo = mz.id_usuario
-            WHERE p.id_pedido = ?
-        ");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    /**
-     * Calcula el total del pedido con propina.
-     */
-    public static function calcularTotalConPropina(int $idPedido, float $porcentajePropina): array {
-        $pedido = self::findWithDetails($idPedido);
-
-        if (!$pedido) {
-            return [
-                'subtotal' => 0,
-                'propina' => 0,
-                'total' => 0
-            ];
-        }
-
-        $subtotal = (float)$pedido['total'];
-        $propina = $subtotal * ($porcentajePropina / 100);
-        $total = $subtotal + $propina;
-
-        return [
-            'subtotal' => $subtotal,
-            'propina' => round($propina, 2),
-            'total' => round($total, 2)
-        ];
     }
 }

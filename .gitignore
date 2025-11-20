@@ -1,109 +1,29 @@
-# =====================================================
-# Sistema de Gesti贸n de Comandas - .gitignore
-# =====================================================
-
-# Dependencias de Composer
-/vendor/
-composer.lock
-
-# Archivos de configuraci贸n local
-src/config/database.local.php
-config/local.php
-.env
-.env.local
-
-# Logs y archivos temporales
-/logs/
-*.log
-error_log
-access_log
-/tmp/
-/temp/
-/cache/
-
-# Archivos del sistema operativo
-.DS_Store
-Thumbs.db
-desktop.ini
-.Spotlight-V100
-.Trashes
-
-# IDEs y editores
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-*.swp
-*.swo
-*~
-.project
-.settings/
-nbproject/
-
-# Archivos de respaldo
-*.bak
-*.backup
-*.old
-*.orig
-*.~*
-
-# Archivos de base de datos locales
-*.sql.gz
-*.sql.zip
-backup*.sql
-database/backup/
-database/migrations/local/
-
-# Archivos subidos por usuarios (si aplica)
-public/uploads/
-public/assets/uploads/
-uploads/temp/
-
-# Archivos de testing
+# Archivos de desarrollo y testing
 test*.html
 test*.php
-tests/coverage/
-phpunit.xml
-.phpunit.result.cache
 debug*.php
-
-# Archivos de documentaci贸n local
-docs/local/
-*.todo
-TODO.md
-REPORTE_*.md
-SISTEMA_*.md
-DEPLOYMENT_CHECKLIST.md
-
-# Node modules (si se usa alg煤n bundler)
-node_modules/
-package-lock.json
-yarn.lock
-
-# Archivos de construcci贸n
-/build/
-/dist/
-
-# Archivos de configuraci贸n de servidor local
-.htaccess.local
-apache.conf
-nginx.conf
-
-# Archivos de sesi贸n PHP
-sess_*
-
-# Archivos espec铆ficos del proyecto que no deben versionarse
-database/*.local.sql
-src/config/app.local.php
-
-# Ignorar archivos de desarrollo/debug
-debug_*.php
-fix_*.php
-test_*.sql
-add_*.sql
-update_*.sql
-create_*.php
-check_*.php
-quick_*.php
 *.tmp
+*.bak
+backup*.sql
 tatus
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Archivos de configuraci髇 local
+config/local.php
+.env.local
+
+# Composer
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Uploads temporales
+uploads/temp/

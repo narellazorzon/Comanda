@@ -4,12 +4,16 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/helpers.php';
 
 use App\Models\CartaItem;
-use App\Config\ClientSession;
+use App\Controllers\ClienteController;
 
-// Inicializar sesión limpia de cliente
-ClientSession::initClientSession();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $items = CartaItem::all();
+
+// Obtener platos más vendidos por categoría
+$platosMasVendidos = ClienteController::getPlatosMasVendidos();
 
 // Organizar items por categoría
 $itemsPorCategoria = [];
@@ -22,7 +26,7 @@ foreach ($items as $item) {
 }
 
 // Orden preferido de categorías
-$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Aves', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Ensaladas', 'Postres', 'Bebidas'];
+$ordenCategorias = ['Entradas', 'Platos Principales', 'Carnes', 'Pescados', 'Pastas', 'Pizzas', 'Hamburguesas', 'Acompañamientos', 'Ensaladas', 'Postres', 'Bebidas'];
 $categoriasOrdenadas = [];
 
 // Primero agregar las categorías en el orden preferido
@@ -46,7 +50,7 @@ $base_url = $protocol . '://' . $host . dirname($script_name);
 
 // Iconos para cada categoría
 $iconosCategorias = [
-    'Entradas' => '🥘',
+    'Entradas' => '🥗',
     'Platos Principales' => '🍽️',
     'Carnes' => '🥩',
     'Aves' => '🍗',
@@ -54,6 +58,7 @@ $iconosCategorias = [
     'Pastas' => '🍝',
     'Pizzas' => '🍕',
     'Hamburguesas' => '🍔',
+    'Acompañamientos' => '🍟',
     'Ensaladas' => '🥗',
     'Postres' => '🍰',
     'Bebidas' => '🥤',
@@ -141,13 +146,13 @@ $iconosCategorias = [
     }
 
     .menu-filters::-webkit-scrollbar-thumb {
-        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(90deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 3px;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .menu-filters::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(90deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
     
     .menu-filters button {
@@ -195,19 +200,19 @@ $iconosCategorias = [
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb {
-        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(90deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(90deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .categoria-nav-content::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(90deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
 
     .categoria-btn {
@@ -235,7 +240,7 @@ $iconosCategorias = [
     }
 
     .categoria-btn.active {
-        background: rgb(83, 52, 31);
+        background: var(--color-secundario);
         color: white;
     }
 
@@ -336,6 +341,26 @@ $iconosCategorias = [
         display: flex;
         gap: 0.5rem;
         margin-bottom: 0.75rem;
+    }
+    
+    /* Estrella de más vendido */
+    .badge-mas-vendido {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #8b4513;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+        animation: brillo 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes brillo {
+        0% { box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3); }
+        100% { box-shadow: 0 2px 8px rgba(255, 215, 0, 0.6), 0 0 12px rgba(255, 215, 0, 0.4); }
     }
     
     /* Estilos para imagen del producto */
@@ -797,7 +822,7 @@ $iconosCategorias = [
     }
 
     .cart-panel {
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        background: var(--background);
         width: 95%;
         max-width: 650px;
         border-radius: 20px;
@@ -823,19 +848,19 @@ $iconosCategorias = [
     }
 
     .cart-panel::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.3);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .cart-panel::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
     }
 
     .cart-panel::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(180deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
     }
 
     /* Indicador de scroll para el panel completo */
@@ -957,33 +982,28 @@ $iconosCategorias = [
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
-    /* Resumen del carrito mejorado */
+    /* Resumen del carrito mejorado - Diseño moderno */
     .cart-summary {
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-        border: 2px solid rgba(161, 134, 111, 0.1);
-        border-radius: 16px;
-        margin: 1.5rem;
+        background: var(--background);
+        border: none;
+        border-radius: 0;
+        margin: 0;
         overflow: hidden;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        box-shadow: none;
         position: relative;
-    }
-
-    .cart-summary::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #a1866f 0%, #8b5e46 50%, #a1866f 100%);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
 
     .cart-summary-header {
         background: linear-gradient(135deg, #a1866f 0%, #8b5e46 100%);
         color: white;
-        padding: 1.25rem 1.5rem;
+        padding: 1rem 1.5rem;
         position: relative;
         overflow: hidden;
+        flex-shrink: 0;
+        border-radius: 12px 12px 0 0;
     }
 
     .cart-summary-header::before {
@@ -999,29 +1019,32 @@ $iconosCategorias = [
 
     .cart-summary-header h4 {
         margin: 0;
-        font-size: 1.1rem;
+        font-size: 1rem;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
         font-weight: 600;
         position: relative;
         z-index: 1;
+        letter-spacing: 0.3px;
     }
 
     .cart-summary-header h4::before {
         content: '📋';
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
     }
 
     .cart-items {
-        max-height: 320px;
+        flex: 1;
         overflow-y: auto;
-        padding: 1.5rem;
-        background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+        padding: 1rem 1.5rem;
+        background: var(--background);
         scrollbar-width: thin;
-        scrollbar-color: #a1866f #f1f1f1;
+        scrollbar-color: rgba(161, 134, 111, 0.3) transparent;
         position: relative;
+        min-height: 0;
+        max-height: calc(90vh - 350px);
     }
 
     .cart-items::-webkit-scrollbar {
@@ -1036,7 +1059,7 @@ $iconosCategorias = [
     }
 
     .cart-items::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #a1866f 0%, #8b5e46 100%);
+        background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         border-radius: 5px;
         border: 2px solid rgba(255, 255, 255, 0.3);
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1);
@@ -1044,13 +1067,13 @@ $iconosCategorias = [
     }
 
     .cart-items::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #8b5e46 0%, #6d4c3a 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15);
         transform: scaleX(1.1);
     }
 
     .cart-items::-webkit-scrollbar-thumb:active {
-        background: linear-gradient(180deg, #6d4c3a 0%, #5a3f2e 100%);
+        background: linear-gradient(180deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
     }
 
@@ -1111,46 +1134,71 @@ $iconosCategorias = [
     .cart-item {
         display: flex;
         flex-direction: column;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: var(--surface);
         border-radius: 12px;
-        border: 2px solid rgba(161, 134, 111, 0.1);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
-    }
-
-    .cart-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #a1866f 0%,rgb(212, 104, 46) 50%, #a1866f 100%);
-        transform: scaleX(0);
-        transition: transform 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .cart-item:hover {
-        box-shadow: 0 8px 25px rgba(161, 134, 111, 0.15), 0 4px 12px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
-        border-color: rgba(161, 134, 111, 0.3);
+        box-shadow: 0 4px 12px rgba(161, 134, 111, 0.12);
+        transform: translateY(-1px);
     }
 
-    .cart-item:hover::before {
-        transform: scaleX(1);
+    .cart-item-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        gap: 1rem;
     }
 
     .cart-item-info {
         flex: 1;
+        min-width: 0;
     }
 
     .cart-item-name {
         font-weight: 600;
         color: var(--color-texto);
         margin-bottom: 0.25rem;
+        font-size: 0.95rem;
+    }
+    
+    .cart-item-detail {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(161, 134, 111, 0.1);
+    }
+
+    .cart-item-detail-label {
+        font-size: 0.75rem;
+        color: var(--color-texto-suave);
+        margin-bottom: 0.4rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .cart-item-detail-input {
+        border: 1px solid rgba(161, 134, 111, 0.2) !important;
+        background: #faf8f5 !important;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+        width: 100%;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    .cart-item-detail-input:focus {
+        outline: none;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05), 0 0 0 3px rgba(161, 134, 111, 0.1) !important;
+        border-color: rgba(161, 134, 111, 0.4) !important;
+        background: #fefcf9 !important;
     }
 
     .cart-item-price {
@@ -1162,9 +1210,10 @@ $iconosCategorias = [
         display: flex;
         gap: 0.5rem;
         align-items: center;
-        background: #f8f9fa;
+        background: var(--background);
         border-radius: 24px;
         padding: 0.25rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     .qty button {
@@ -1175,54 +1224,76 @@ $iconosCategorias = [
         border-radius: 50%;
         cursor: pointer;
         font-weight: bold;
+        font-size: 1.1rem;
         color: var(--color-primario);
-        box-shadow: var(--sombra-suave);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
     }
 
     .qty button:hover {
         background: var(--color-primario);
         color: white;
         transform: scale(1.1);
+        box-shadow: 0 3px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .qty button:active {
+        transform: scale(0.95);
     }
 
     .qty span {
-        min-width: 32px;
+        min-width: 36px;
         text-align: center;
         font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--color-texto);
     }
 
     .cart-summary-footer {
-        padding: 1.5rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-top: 3px solid rgba(161, 134, 111, 0.2);
+        padding: 1.25rem 1.5rem;
+        background: var(--surface);
+        border-top: 1px solid rgba(161, 134, 111, 0.15);
         position: relative;
-    }
-
-    .cart-summary-footer::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent 0%, rgba(161, 134, 111, 0.3) 50%, transparent 100%);
+        flex-shrink: 0;
+        margin-top: auto;
+        border-radius: 0 0 12px 12px;
     }
 
     .cart-total-amount {
-        text-align: right;
-        font-weight: 800;
-        font-size: 1.8rem;
-        color: #2c5530;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--secondary);
+        text-shadow: none;
         position: relative;
+        padding: 0.75rem 0;
     }
 
     .cart-total-amount::before {
         content: '💰';
         margin-right: 0.5rem;
+        font-size: 1.4rem;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+    }
+    
+    .cart-total-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--secondary);
+        opacity: 0.8;
+    }
+    
+    .cart-total-value {
         font-size: 1.5rem;
-        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+        font-weight: 700;
+        color: #2c5530;
+        letter-spacing: 0.5px;
     }
 
     .cart-empty {
@@ -1241,11 +1312,13 @@ $iconosCategorias = [
     .checkout-form {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 0.75rem;
         padding: 1.5rem;
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        background: var(--background);
         border-radius: 16px;
-        margin: 1.5rem;
+        margin: 1.5rem auto;
+        max-width: 480px;
+        width: 100%;
         border: 2px solid rgba(161, 134, 111, 0.1);
         box-shadow: 0 8px 25px rgba(0,0,0,0.08);
         position: relative;
@@ -1265,18 +1338,20 @@ $iconosCategorias = [
     .form-group {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.4rem;
         position: relative;
+        margin-bottom: 0.5rem;
     }
 
     .form-group label {
         font-weight: 700;
-        color: #2c5530;
-        font-size: 0.95rem;
+        color: var(--secondary);
+        font-size: 0.9rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
         text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        margin-bottom: 0.25rem;
     }
 
     .form-group input,
@@ -1286,7 +1361,7 @@ $iconosCategorias = [
         border-radius: 12px;
         font-size: 1rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        background: #faf8f5;
         box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     }
 
@@ -1295,6 +1370,7 @@ $iconosCategorias = [
         outline: none;
         border-color: #a1866f;
         box-shadow: 0 0 0 4px rgba(161, 134, 111, 0.15), inset 0 2px 4px rgba(0,0,0,0.05);
+        background: #fefcf9;
         transform: translateY(-1px);
     }
 
@@ -1307,13 +1383,13 @@ $iconosCategorias = [
         background: linear-gradient(135deg, #28a745 0%, #20c997 50%, #17a2b8 100%);
         color: white;
         border: none;
-        padding: 1.25rem 2rem;
+        padding: 1rem 2rem;
         border-radius: 12px;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        margin-top: 1rem;
+        margin-top: 0.5rem;
         position: relative;
         overflow: hidden;
         box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
@@ -1556,21 +1632,47 @@ $iconosCategorias = [
         }
 
         .cart-header {
-            padding: 1rem 1.5rem;
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, rgb(83, 52, 31) 0%, rgb(137, 107, 75) 100%);
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .cart-header h3 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
+        }
+        
+        .cart-header .btn-close {
+            width: 36px;
+            height: 36px;
+            font-size: 1.2rem;
+            min-width: 44px; /* Tamaño mínimo para toque */
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .cart-summary {
-            margin: 1rem;
+            margin: 0.75rem;
             border-radius: 12px;
+            padding: 0.75rem;
+        }
+        
+        .cart-summary-header {
+            padding: 0.5rem 0;
+        }
+        
+        .cart-summary-header h4 {
+            font-size: 0.95rem;
         }
 
         .cart-items {
-            max-height: 50vh;
-            padding: 1rem;
+            max-height: 40vh;
+            padding: 0.75rem;
+            -webkit-overflow-scrolling: touch;
         }
 
         .cart-items::-webkit-scrollbar {
@@ -1588,9 +1690,155 @@ $iconosCategorias = [
         }
 
         .checkout-form {
-            margin: 1rem;
+            margin: 0.75rem auto;
             padding: 1rem;
             border-radius: 12px;
+            gap: 0.5rem;
+            max-width: 100%;
+        }
+        
+        /* Formulario responsive - mejoras para móvil */
+        .checkout-form .form-group {
+            gap: 0.3rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .checkout-form .form-group label {
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .checkout-form .form-group input,
+        .checkout-form .form-group select {
+            padding: 0.9rem 1rem;
+            font-size: 1rem;
+            min-height: 44px; /* Tamaño mínimo recomendado para toque en móvil */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .checkout-form .alert {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+        
+        .checkout-form #mesa-qr-info {
+            padding: 0.6rem !important;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .checkout-form #mesa-qr-info span {
+            font-size: 0.85rem;
+            flex: 1 1 100%;
+        }
+        
+        .checkout-form #btn-llamar-mozo-inline {
+            flex: 1 1 auto;
+            min-width: 120px;
+            font-size: 0.85rem !important;
+            padding: 0.5rem 0.75rem !important;
+        }
+        
+        .checkout-form .btn-confirmar {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            min-height: 50px;
+            margin-top: 0.75rem;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .checkout-form .btn-confirmar:active {
+            transform: scale(0.98);
+        }
+        
+        /* Mejoras de scroll táctil para móvil */
+        .cart-panel {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        
+        .checkout-form {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Mejoras adicionales para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            .checkout-form {
+                margin: 0.5rem auto;
+                padding: 0.75rem;
+                gap: 0.4rem;
+                max-width: 100%;
+            }
+            
+            .checkout-form .form-group {
+                margin-bottom: 0.6rem;
+            }
+            
+            .checkout-form .form-group input,
+            .checkout-form .form-group select {
+                padding: 0.85rem 0.9rem;
+                font-size: 16px; /* Previene zoom en iOS */
+            }
+            
+            .checkout-form .btn-confirmar {
+                padding: 1.1rem 1.25rem;
+                font-size: 1.05rem;
+                min-height: 52px;
+            }
+            
+            .checkout-form #mesa-qr-info {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .checkout-form #mesa-qr-info span {
+                margin-bottom: 0.5rem;
+            }
+            
+            .checkout-form #btn-llamar-mozo-inline {
+                width: 100%;
+                margin-right: 0 !important;
+            }
+            
+            .cart-header {
+                padding: 0.6rem 0.75rem;
+            }
+            
+            .cart-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .cart-summary {
+                margin: 0.5rem;
+                padding: 0.6rem;
+            }
+        }
+        
+        /* Mejoras de accesibilidad táctil para todos los elementos interactivos */
+        @media (max-width: 768px) {
+            .checkout-form input[type="text"],
+            .checkout-form input[type="email"],
+            .checkout-form select {
+                font-size: 16px !important; /* Previene zoom automático en iOS */
+            }
+            
+            .checkout-form .form-group label {
+                font-weight: 600;
+            }
+            
+            /* Asegurar que todos los botones sean fáciles de tocar */
+            .checkout-form button,
+            .checkout-form .btn-llamar-mozo {
+                min-height: 44px;
+                min-width: 44px;
+            }
         }
 
         .cart-item {
@@ -1623,8 +1871,19 @@ $iconosCategorias = [
         }
 
         .cart-item-detail-input {
-            padding: 0.4rem;
+            padding: 0.5rem 0.6rem !important;
             font-size: 0.8rem;
+            border: 1px solid rgba(161, 134, 111, 0.2) !important;
+            background: #faf8f5 !important;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+            border-radius: 8px;
+        }
+        
+        .cart-item-detail-input:focus {
+            outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05), 0 0 0 3px rgba(161, 134, 111, 0.1) !important;
+            border-color: rgba(161, 134, 111, 0.4) !important;
+            background: #fefcf9 !important;
         }
 
         .qty button {
@@ -1639,12 +1898,66 @@ $iconosCategorias = [
         }
 
         .cart-summary {
-            padding: 1rem;
-            margin-top: 1rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .cart-summary-header {
+            padding: 0.75rem 1rem;
         }
 
         .cart-summary-header h4 {
             font-size: 0.9rem;
+        }
+        
+        .cart-items {
+            padding: 0.75rem 1rem;
+            max-height: calc(90vh - 400px);
+        }
+        
+        .cart-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .cart-item-main {
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .cart-item-name {
+            font-size: 0.85rem;
+        }
+        
+        .cart-item-price {
+            font-size: 0.75rem;
+        }
+        
+        .qty {
+            padding: 0.2rem;
+        }
+        
+        .qty button {
+            width: 28px;
+            height: 28px;
+            font-size: 0.9rem;
+        }
+        
+        .cart-summary-footer {
+            padding: 1rem 1.25rem;
+        }
+        
+        .cart-total-amount {
+            font-size: 1.25rem;
+            padding: 0.5rem 0;
+        }
+        
+        .cart-total-label {
+            font-size: 0.9rem;
+        }
+        
+        .cart-total-value {
+            font-size: 1.25rem;
         }
 
         .total-box {
@@ -1827,10 +2140,12 @@ $iconosCategorias = [
     }
 
     .pago-mozo-info {
-        background: linear-gradient(145deg, #e8f5e8 0%, #c8e6c9 100%);
+        background: var(--surface);
         border-radius: 12px;
         padding: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(161, 134, 111, 0.1);
     }
 
     .mozo-datos {
@@ -1897,11 +2212,12 @@ $iconosCategorias = [
     }
 
     .pago-total {
-        background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
-        border: 2px solid rgba(161, 134, 111, 0.1);
+        background: var(--surface);
+        border: 1px solid rgba(161, 134, 111, 0.15);
         border-radius: 12px;
-        padding: 1.5rem;
-        margin: 1.5rem 0;
+        padding: 1.25rem 1.5rem;
+        margin: 1.25rem 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .total-detalle {
@@ -2049,11 +2365,9 @@ $iconosCategorias = [
         margin-bottom: 1.5rem;
     }
 
-    .confirmacion-total {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 2px solid #e9ecef;
-    }
+    .confirmacion-resumen { margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #e9ecef; }
+    .confirmacion-row { display: flex; justify-content: space-between; padding: 6px 0; }
+    .confirmacion-row.total { border-top: 2px solid var(--color-primario); margin-top: 6px; padding-top: 10px; font-weight: 700; color: var(--color-secundario); }
 
     /* Responsive para modales de pago */
     @media (max-width: 768px) {
@@ -2107,13 +2421,14 @@ $iconosCategorias = [
     }
 
     .modal-pago-contenido {
-        background: white;
-        border-radius: 16px;
-        max-width: 500px;
-        width: 90%;
+        background: var(--background);
+        border-radius: 20px;
+        max-width: 600px;
+        width: 95%;
         max-height: 90vh;
         overflow-y: auto;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 20px 60px rgba(83, 52, 31, 0.3), 0 8px 25px rgba(0,0,0,0.15);
+        border: 2px solid rgba(161, 134, 111, 0.2);
         animation: modalSlideIn 0.3s ease;
     }
 
@@ -2129,18 +2444,26 @@ $iconosCategorias = [
     }
 
     .modal-pago-header {
-        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+        background: linear-gradient(135deg, rgb(83, 52, 31) 0%, rgb(137, 107, 75) 100%);
         color: white;
-        padding: 1.5rem;
-        border-radius: 16px 16px 0 0;
+        padding: 1rem 1.5rem;
+        border-radius: 20px 20px 0 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .modal-pago-header h3 {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .modal-cerrar {
@@ -2158,28 +2481,33 @@ $iconosCategorias = [
     }
 
     .pago-seccion {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
     }
 
     .pago-seccion h4 {
-        color: var(--color-primario);
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
+        color: var(--secondary);
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .pago-detalle {
-        background: #f8f9fa;
-        border-radius: 8px;
+        background: var(--surface);
+        border-radius: 12px;
         padding: 1rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .pago-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #e0e0e0;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(161, 134, 111, 0.1);
     }
 
     .pago-item:last-child {
@@ -2206,10 +2534,12 @@ $iconosCategorias = [
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 0.5rem;
-        padding-top: 0.5rem;
-        border-top: 2px solid var(--color-primario);
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(161, 134, 111, 0.2);
         font-weight: 600;
+        font-size: 1rem;
+        color: var(--secondary);
     }
 
     .propina-opciones {
@@ -2222,30 +2552,49 @@ $iconosCategorias = [
     .propina-btn {
         flex: 1;
         min-width: 100px;
-        padding: 0.6rem 1rem;
-        border: 1px solid var(--color-primario);
-        background: white;
-        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        border: 2px solid rgba(161, 134, 111, 0.3);
+        background: var(--surface);
+        border-radius: 8px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         font-weight: 600;
-        color: var(--color-primario);
+        color: var(--secondary);
         font-size: 0.9rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .propina-btn .propina-porcentaje {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .propina-btn .propina-monto {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        font-weight: 400;
     }
 
     .propina-btn:hover {
-        background: var(--color-primario);
-        color: white;
+        background: rgba(161, 134, 111, 0.1);
+        border-color: rgba(161, 134, 111, 0.5);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+        box-shadow: 0 3px 6px rgba(161, 134, 111, 0.2);
     }
 
     .propina-btn.selected {
-        background: var(--color-primario);
+        background: var(--secondary);
         color: white;
-        border-color: var(--color-primario);
-        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
+        border-color: var(--secondary);
+        box-shadow: 0 3px 8px rgba(161, 134, 111, 0.3);
+    }
+
+    .propina-btn.selected .propina-monto {
+        opacity: 0.9;
     }
 
     .propina-otro {
@@ -2280,30 +2629,26 @@ $iconosCategorias = [
         box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
     }
 
-    .pago-total {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin: 1.5rem 0;
-    }
-
     .total-calculo {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
-        color: #666;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        color: var(--secondary);
+        font-size: 0.95rem;
+        font-weight: 500;
     }
 
     .total-final {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 1.25rem;
+        font-size: 1.4rem;
         font-weight: 700;
-        color: var(--color-primario);
-        padding-top: 0.5rem;
-        border-top: 2px solid #ddd;
-        margin-top: 0.5rem;
+        color: #2c5530;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(161, 134, 111, 0.2);
+        margin-top: 0.75rem;
     }
 
     .pago-metodos {
@@ -2314,15 +2659,25 @@ $iconosCategorias = [
     .pago-metodo {
         flex: 1;
         padding: 1rem;
-        border: 2px solid #ddd;
-        border-radius: 8px;
+        border: 2px solid rgba(161, 134, 111, 0.3);
+        border-radius: 12px;
         cursor: pointer;
         text-align: center;
         transition: all 0.2s;
+        background: var(--surface);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
     .pago-metodo:hover {
-        border-color: var(--color-primario);
+        border-color: rgba(161, 134, 111, 0.5);
+        box-shadow: 0 3px 6px rgba(161, 134, 111, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    .pago-metodo input[type="radio"]:checked + .pago-metodo-icono + span,
+    .pago-metodo:has(input[type="radio"]:checked) {
+        border-color: var(--secondary);
+        background: rgba(161, 134, 111, 0.1);
     }
 
     .pago-metodo input[type="radio"] {
@@ -2340,16 +2695,18 @@ $iconosCategorias = [
         margin-bottom: 0.5rem;
         padding: 0.5rem;
         border-radius: 50%;
-        background: #f0f0f0;
+        background: var(--background);
         transition: all 0.2s;
     }
 
     .modal-pago-footer {
-        padding: 1.5rem;
-        border-top: 1px solid #e0e0e0;
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid rgba(161, 134, 111, 0.15);
         display: flex;
         gap: 1rem;
         justify-content: flex-end;
+        background: var(--surface);
+        border-radius: 0 0 20px 20px;
     }
 
     .modal-pago-footer .btn-principal,
@@ -2376,14 +2733,14 @@ $iconosCategorias = [
     }
 
     .modal-pago-footer .btn-secundario {
-        background: #6c757d;
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         color: white;
     }
 
     .modal-pago-footer .btn-secundario:hover {
-        background: #5a6268;
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
     }
 
     .confirmacion-acciones {
@@ -2417,14 +2774,14 @@ $iconosCategorias = [
     }
 
     .confirmacion-acciones .btn-secundario {
-        background: #6c757d;
+        background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
         color: white;
     }
 
     .confirmacion-acciones .btn-secundario:hover {
-        background: #5a6268;
+        background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-primario) 100%);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        box-shadow: 0 4px 8px rgba(161, 134, 111, 0.3);
     }
 
     .confirmacion-mesa {
@@ -2461,6 +2818,41 @@ $iconosCategorias = [
             flex-direction: column;
         }
     }
+
+    /* Encabezado solo para impresión */
+    .print-header {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .print-header .print-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--color-primario);
+        line-height: 1.2;
+    }
+
+    .print-header .print-subtitle {
+        color: var(--color-texto-suave);
+        font-size: 0.9rem;
+    }
+
+    /* Estilos de impresión: mostrar solo el recibo del modal */
+    @media print {
+        @page { size: auto; margin: 12mm; }
+        body { background: #ffffff !important; }
+        body * { visibility: hidden; }
+        #pago-confirmacion-modal, #pago-confirmacion-modal * { visibility: visible; }
+        #pago-confirmacion-modal { position: static !important; display: block !important; background: none !important; padding: 0 !important; margin: 0 !important; }
+        .modal-pago-contenido { box-shadow: none !important; width: 100% !important; max-width: 800px !important; margin: 0 auto !important; border-radius: 0 !important; }
+        .modal-pago-header { background: none !important; color: #000 !important; padding: 0 0 8px 0 !important; border-bottom: 1px solid #ddd !important; }
+        .modal-cerrar, .confirmacion-acciones, .modal-pago-footer { display: none !important; }
+        .print-header { display: flex !important; }
+        .print-header img { height: 40px; width: auto; }
+        .confirmacion-detalles, .pago-detalle, .pago-item { background: none !important; box-shadow: none !important; border: 0 !important; }
+    }
     </style>
 </head>
 <body>
@@ -2495,6 +2887,15 @@ $iconosCategorias = [
                             <div class="producto-header">
                                 <h3 class="producto-nombre"><?= htmlspecialchars($item['nombre']) ?></h3>
                                 <div class="producto-badges">
+                                    <?php 
+                                    $categoria = $item['categoria'] ?? 'Otros';
+                                    $esMasVendido = isset($platosMasVendidos[$categoria]) && $platosMasVendidos[$categoria] == $item['id_item'];
+                                    ?>
+                                    
+                                    <?php if ($esMasVendido): ?>
+                                        <span class="badge-mas-vendido">⭐ Más Vendido</span>
+                                    <?php endif; ?>
+                                    
                                     <?php if (!empty($item['disponibilidad'])): ?>
                                         <span class="badge badge-disponible">✓ Disponible</span>
                                     <?php else: ?>
@@ -2527,16 +2928,16 @@ $iconosCategorias = [
                             <div class="producto-footer">
                                 <?php 
                                 $precioOriginal = $item['precio'];
-                                $descuento = $item['descuento'] ?? 0;
-                                $precioConDescuento = $precioOriginal - $descuento;
-                                $tieneDescuento = $descuento > 0;
+                                $descuentoPorcentaje = $item['descuento'] ?? 0;
+                                $precioConDescuento = $precioOriginal - ($precioOriginal * $descuentoPorcentaje / 100);
+                                $tieneDescuento = $descuentoPorcentaje > 0;
                                 ?>
                                 
                                 <?php if ($tieneDescuento): ?>
                                     <div class="precio-container">
                                         <span class="precio-original">$<?= number_format($precioOriginal, 2) ?></span>
                                         <span class="precio-descuento">$<?= number_format($precioConDescuento, 2) ?></span>
-                                        <span class="descuento-badge">-<?= number_format(($descuento / $precioOriginal) * 100, 0) ?>%</span>
+                                        <span class="descuento-badge">-<?= number_format($descuentoPorcentaje, 0) ?>%</span>
                                     </div>
                                 <?php else: ?>
                                     <span class="producto-precio">$<?= number_format($precioOriginal, 2) ?></span>
@@ -2618,22 +3019,53 @@ $iconosCategorias = [
             
             <!-- Formulario de pedido -->
             <form id="checkout-form" class="checkout-form">
-                <div class="form-group">
-                    <label>Modalidad de consumo:</label>
-                    <select id="modo-consumo" name="modo_consumo" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="stay">🪑 Consumir en el local</option>
-                        <option value="takeaway">📦 Para llevar</option>
+                <?php
+                $modo_qr    = $_SESSION['modo_consumo_qr'] ?? null;
+                $id_mesa_qr = $_SESSION['mesa_qr'] ?? null;
+                ?>
+
+                <?php if ($modo_qr !== null): ?>
+                  <!-- QR detectado: no mostrar selector -->
+                  <?php if ($id_mesa_qr): ?>
+                    <!-- QR de mesa: siempre "en el local", no modificable -->
+                    <input type="hidden" name="modo_consumo" value="stay">
+                    <input type="hidden" name="id_mesa" value="<?= (int)$id_mesa_qr ?>">
+                    <div class="alert alert-success" style="background:#f4f9f4;border:1px solid #7ec77b;color:#2e662b;padding:6px 10px;border-radius:6px;margin-bottom:0.5rem;">
+                      ✅ Pedido en <strong>mesa #<?= (int)$id_mesa_qr ?></strong> (desde QR) - En el local
+                    </div>
+                  <?php elseif ($modo_qr === 'takeaway'): ?>
+                    <!-- QR de takeaway -->
+                    <input type="hidden" name="modo_consumo" value="takeaway">
+                    <div class="alert alert-info" style="background:#f0f7ff;border:1px solid #72b5f2;color:#1d5c9c;padding:6px 10px;border-radius:6px;margin-bottom:0.5rem;">
+                      🛍️ Pedido para llevar
+                    </div>
+                  <?php else: ?>
+                    <!-- QR sin mesa específica: forzar "en el local" -->
+                    <input type="hidden" name="modo_consumo" value="stay">
+                    <div class="alert alert-success" style="background:#f4f9f4;border:1px solid #7ec77b;color:#2e662b;padding:6px 10px;border-radius:6px;margin-bottom:0.5rem;">
+                      ✅ Pedido en el local (desde QR)
+                    </div>
+                  <?php endif; ?>
+                <?php else: ?>
+                  <!-- Solo se muestra cuando NO viene desde QR (por ejemplo el admin o menú sin QR) -->
+                  <div class="form-group">
+                    <label for="modo_consumo">Modo de consumo:</label>
+                    <select name="modo_consumo" id="modo_consumo" required>
+                      <option value="">Seleccionar...</option>
+                      <option value="stay">En el local</option>
+                      <option value="takeaway">Para llevar</option>
                     </select>
-                </div>
+                  </div>
+                <?php endif; ?>
                 
                 <div id="mesa-field-container">
                     <!-- Campo mesa desde QR (visible cuando viene por QR) -->
                     <div id="mesa-qr-field" class="form-group" style="display:none;">
                         <label>Mesa asignada:</label>
-                        <div id="mesa-qr-info" style="background:#e8f5e8;border:2px solid #c8e6c9;padding:1rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <div id="mesa-qr-info" style="background:#e8f5e8;border:2px solid #c8e6c9;padding:0.75rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
                             <span id="mesa-qr-text">✅ Mesa X (desde QR)</span>
-                            <button type="button" id="btn-cambiar-mesa" style="background:none;border:1px solid #28a745;color:#28a745;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;">
+                            <button type="button" id="btn-llamar-mozo-inline" class="btn-llamar-mozo" style="margin-right:0.5rem;">🔔 Llamar Mozo</button>
+                            <button type="button" id="btn-cambiar-mesa" style="display:none;background:none;border:1px solid #28a745;color:#28a745;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.875rem;">
                                 Cambiar
                             </button>
                         </div>
@@ -2661,14 +3093,7 @@ $iconosCategorias = [
                     <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
                 </div>
                 
-                <div class="form-group">
-                    <label>Forma de pago:</label>
-                    <select id="forma-pago" name="forma_pago" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="tarjeta">💳 Tarjeta crédito/débito</option>
-                    </select>
-                </div>
+                <!-- Forma de pago se elige en el modal de pago; campo duplicado eliminado -->
                 
                 <button type="submit" id="btn-confirmar" class="btn-confirmar" disabled>
                     Confirmar Pedido
@@ -2774,6 +3199,26 @@ $iconosCategorias = [
         qrText.textContent = `✅ Mesa ${mesaFromQR} (desde QR)`;
         
         document.getElementById('numero-mesa').value = mesaFromQR;
+        
+        // Ocultar botón de cambiar mesa cuando viene de QR
+        const btnCambiarMesa = document.getElementById('btn-cambiar-mesa');
+        if (btnCambiarMesa) {
+            btnCambiarMesa.style.display = 'none';
+        }
+        
+        // Establecer modo de consumo como 'stay' (en el local) y asegurarse de que no se pueda cambiar
+        // Buscar tanto el select como el input hidden
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumoSelect.value = 'stay';
+            // Deshabilitar el selector para que no se pueda cambiar
+            modoConsumoSelect.disabled = true;
+        } else if (modoConsumoHidden) {
+            // Forzar siempre 'stay' cuando viene de QR con mesa
+            modoConsumoHidden.value = 'stay';
+        }
     }
 
     // Configurar modo manual
@@ -2809,9 +3254,14 @@ $iconosCategorias = [
         }
         
         // Establecer modo de consumo como takeaway
-        const modoConsumo = document.getElementById('modo_consumo');
-        if (modoConsumo) {
-            modoConsumo.value = 'takeaway';
+        // Buscar tanto el select como el input hidden
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumoSelect.value = 'takeaway';
+        } else if (modoConsumoHidden) {
+            modoConsumoHidden.value = 'takeaway';
         }
         
         // Ocultar botón de llamar mozo (no aplica para takeaway)
@@ -2830,7 +3280,7 @@ $iconosCategorias = [
     }
 
     // Función para llamar al mozo
-    async function llamarMozo(numeroMesa = null) {
+    async function llamarMozo(numeroMesa = null, buttonEl = null) {
         let mesaParaLlamar = numeroMesa || mesaFromQR;
         
         
@@ -2840,13 +3290,26 @@ $iconosCategorias = [
             return;
         }
 
+        // Obtener ambos botones (header e inline)
         const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
-        const originalText = btnLlamarMozo.innerHTML;
+        const btnLlamarMozoInline = document.getElementById('btn-llamar-mozo-inline');
         
-        // Cambiar estado del botón
-        btnLlamarMozo.classList.add('llamando');
-        btnLlamarMozo.innerHTML = '⏳ Llamando...';
-        btnLlamarMozo.disabled = true;
+        // Determinar qué botón se clickeó o usar el del header por defecto
+        const activeButton = buttonEl || btnLlamarMozo;
+        const originalText = activeButton ? activeButton.innerHTML : '🔔 Llamar Mozo';
+        
+        // Cambiar estado de ambos botones si existen
+        if (btnLlamarMozo) {
+            btnLlamarMozo.classList.add('llamando');
+            btnLlamarMozo.innerHTML = '⏳ Llamando...';
+            btnLlamarMozo.disabled = true;
+        }
+        
+        if (btnLlamarMozoInline) {
+            btnLlamarMozoInline.classList.add('llamando');
+            btnLlamarMozoInline.innerHTML = '⏳ Llamando...';
+            btnLlamarMozoInline.disabled = true;
+        }
 
         try {
             
@@ -2866,20 +3329,42 @@ $iconosCategorias = [
             if (result.success) {
                 showToast('✅ ' + result.message, 'success');
                 
-                // Deshabilitar el botón por 3 minutos (180 segundos)
+                // Cambiar ambos botones a estado "Llamado" (verde)
+                if (btnLlamarMozo) {
+                    btnLlamarMozo.innerHTML = '✅ Llamado';
+                }
+                if (btnLlamarMozoInline) {
+                    btnLlamarMozoInline.innerHTML = '✅ Llamado';
+                }
+                
+                // Deshabilitar los botones por 2 minutos (120 segundos)
                 setTimeout(() => {
-                    btnLlamarMozo.classList.remove('llamando');
-                    btnLlamarMozo.innerHTML = originalText;
-                    btnLlamarMozo.disabled = false;
-                }, 180000); // 3 minutos
+                    if (btnLlamarMozo) {
+                        btnLlamarMozo.classList.remove('llamando');
+                        btnLlamarMozo.innerHTML = '🔔 Llamar Mozo';
+                        btnLlamarMozo.disabled = false;
+                    }
+                    if (btnLlamarMozoInline) {
+                        btnLlamarMozoInline.classList.remove('llamando');
+                        btnLlamarMozoInline.innerHTML = '🔔 Llamar Mozo';
+                        btnLlamarMozoInline.disabled = false;
+                    }
+                }, 120000); // 2 minutos
             } else {
                 // Manejar diferentes tipos de mensajes
                 if (result.type === 'warning') {
                     showToast('⚠️ ' + result.message, 'warning');
-                    // Para advertencias, no lanzar error, solo restaurar botón
-                    btnLlamarMozo.classList.remove('llamando');
-                    btnLlamarMozo.innerHTML = originalText;
-                    btnLlamarMozo.disabled = false;
+                    // Para advertencias, no lanzar error, solo restaurar botones
+                    if (btnLlamarMozo) {
+                        btnLlamarMozo.classList.remove('llamando');
+                        btnLlamarMozo.innerHTML = '🔔 Llamar Mozo';
+                        btnLlamarMozo.disabled = false;
+                    }
+                    if (btnLlamarMozoInline) {
+                        btnLlamarMozoInline.classList.remove('llamando');
+                        btnLlamarMozoInline.innerHTML = '🔔 Llamar Mozo';
+                        btnLlamarMozoInline.disabled = false;
+                    }
                     return; // Salir de la función sin lanzar error
                 } else {
                     showToast('❌ ' + result.message, 'error');
@@ -2888,6 +3373,17 @@ $iconosCategorias = [
             }
         } catch (error) {
             console.error('Error:', error);
+            // Restaurar ambos botones en caso de error
+            if (btnLlamarMozo) {
+                btnLlamarMozo.classList.remove('llamando');
+                btnLlamarMozo.innerHTML = '🔔 Llamar Mozo';
+                btnLlamarMozo.disabled = false;
+            }
+            if (btnLlamarMozoInline) {
+                btnLlamarMozoInline.classList.remove('llamando');
+                btnLlamarMozoInline.innerHTML = '🔔 Llamar Mozo';
+                btnLlamarMozoInline.disabled = false;
+            }
             
             // Solo mostrar error técnico en consola, no al usuario
             if (error.message.includes('Unexpected token')) {
@@ -2981,7 +3477,7 @@ $iconosCategorias = [
                     <small style="color: #999;">Agrega productos para continuar</small>
                 </div>
             `;
-            totalBox.textContent = 'Total: $0.00';
+            totalBox.innerHTML = '<span class="cart-total-label">Total:</span><span class="cart-total-value">$0.00</span>';
         } else {
             list.innerHTML = cart.map(i => `
                 <div class="cart-item">
@@ -3008,7 +3504,7 @@ $iconosCategorias = [
                 </div>
             `).join('');
             const total = cart.reduce((t, i) => t + i.qty * Number(i.precio), 0);
-            totalBox.textContent = `Total: $${total.toFixed(2)}`;
+            totalBox.innerHTML = `<span class="cart-total-label">Total:</span><span class="cart-total-value">$${total.toFixed(2)}</span>`;
         }
         
         setTimeout(validateFormQR, 100);
@@ -3061,15 +3557,24 @@ $iconosCategorias = [
 
     // Validación del formulario para modo QR
     function validateFormQR() {
-        const modoConsumo = document.getElementById('modo-consumo').value;
+        // Obtener modo de consumo (puede ser del selector visible o del campo oculto)
+        let modoConsumo = '';
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+        
+        if (modoConsumoSelect) {
+            modoConsumo = modoConsumoSelect.value;
+        } else if (modoConsumoHidden) {
+            modoConsumo = modoConsumoHidden.value;
+        }
+        
         const nombreCompleto = document.getElementById('nombre-completo').value.trim();
         const email = document.getElementById('email').value.trim();
-        const formaPago = document.getElementById('forma-pago').value;
         
         
         let isValid = true;
         
-        if (!modoConsumo || !nombreCompleto || !email || !formaPago) {
+        if (!modoConsumo || !nombreCompleto || !email) {
             isValid = false;
         }
         
@@ -3173,7 +3678,11 @@ $iconosCategorias = [
         // Botón llamar mozo en el nav
         const btnLlamarMozo = document.getElementById('nav-llamar-mozo');
         if (btnLlamarMozo) {
-            btnLlamarMozo.addEventListener('click', () => llamarMozo());
+            btnLlamarMozo.addEventListener('click', () => llamarMozo(null, btnLlamarMozo));
+        }
+        const btnLlamarMozoInline = document.getElementById('btn-llamar-mozo-inline');
+        if (btnLlamarMozoInline) {
+            btnLlamarMozoInline.addEventListener('click', () => llamarMozo(null, btnLlamarMozoInline));
         }
         
         // Modal de selección de mesa
@@ -3222,8 +3731,10 @@ $iconosCategorias = [
             });
         }
         
-        // Lógica de campos de mesa
-        document.getElementById('modo-consumo').addEventListener('change', function() {
+        // Lógica de campos de mesa (solo si existe el selector)
+        const modoConsumoSelect = document.getElementById('modo_consumo');
+        if (modoConsumoSelect) {
+            modoConsumoSelect.addEventListener('change', function() {
             if (this.value === 'stay') {
                 if (!isQRMode) {
                     document.getElementById('mesa-manual-field').style.display = 'block';
@@ -3236,10 +3747,11 @@ $iconosCategorias = [
                 document.getElementById('numero-mesa').value = '';
             }
             validateFormQR();
-        });
+            });
+        }
         
         // Validación en tiempo real
-        const formFields = ['modo-consumo', 'numero-mesa', 'nombre-completo', 'email', 'forma-pago'];
+        const formFields = ['numero-mesa', 'nombre-completo', 'email'];
         formFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
@@ -3247,6 +3759,12 @@ $iconosCategorias = [
                 field.addEventListener('change', validateFormQR);
             }
         });
+        
+        // Agregar validación para el selector de modo de consumo si existe
+        if (modoConsumoSelect) {
+            modoConsumoSelect.addEventListener('input', validateFormQR);
+            modoConsumoSelect.addEventListener('change', validateFormQR);
+        }
         
         // Envío del formulario
         document.getElementById('checkout-form').addEventListener('submit', async function(e) {
@@ -3258,12 +3776,24 @@ $iconosCategorias = [
             }
             
             let mesaFinal = null;
-            const modoConsumo = document.getElementById('modo-consumo').value;
             
-            if (modoConsumo === 'stay') {
-                if (isQRMode && mesaFromQR) {
-                    mesaFinal = mesaFromQR;
-                } else {
+            // Obtener modo de consumo (puede ser del selector visible o del campo oculto)
+            let modoConsumo = '';
+            const modoConsumoSelect = document.getElementById('modo_consumo');
+            const modoConsumoHidden = document.querySelector('input[name="modo_consumo"][type="hidden"]');
+            
+            // Si viene de QR con mesa, forzar siempre "stay" (en el local)
+            if (isQRMode && mesaFromQR) {
+                modoConsumo = 'stay';
+                mesaFinal = mesaFromQR;
+            } else if (modoConsumoSelect) {
+                modoConsumo = modoConsumoSelect.value;
+            } else if (modoConsumoHidden) {
+                modoConsumo = modoConsumoHidden.value;
+            }
+            
+            if (modoConsumo === 'stay' && !mesaFinal) {
+                if (!isQRMode || !mesaFromQR) {
                     mesaFinal = document.getElementById('numero-mesa').value;
                 }
             }
@@ -3274,7 +3804,6 @@ $iconosCategorias = [
                 cliente_nombre: document.getElementById('nombre-completo').value,
                 cliente_email: document.getElementById('email').value,
                 modo_consumo: modoConsumo,
-                forma_pago: document.getElementById('forma-pago').value,
                 observaciones: '', // No hay campo de observaciones en el formulario del cliente
                 items: cart.map(item => ({
                     id_item: item.id,
@@ -3305,16 +3834,23 @@ $iconosCategorias = [
                 console.log('Respuesta del servidor:', result); // Debug
 
                 if (response.ok && result.success) {
-                    // Mostrar mensaje de éxito
-                    showToast(`✅ ¡Pedido confirmado! Redirigiendo al proceso de pago...`);
+                    console.log('Opening payment modal with cart:', cart);
+                    // Mostrar modal de pago
+                    mostrarModalPago(result.pedido_id, cart);
 
-                    // Limpiar carrito
+                    // Limpiar carrito y cerrar modal del carrito
                     localStorage.removeItem(CART_KEY);
+                    modal.style.display = 'none';
+                    this.reset();
 
-                    // Redirigir a la página de pago después de 1.5 segundos
-                    setTimeout(() => {
-                        window.location.href = `<?= $base_url ?>/index.php?route=cliente-pago&pedido=${result.pedido_id}`;
-                    }, 1500);
+                    if (isQRMode) {
+                        setupQRMode();
+                    } else {
+                        document.getElementById('mesa-manual-field').style.display = 'none';
+                    }
+
+                    updateCartCounter();
+                    validateFormQR();
                 } else {
                     // Mostrar error
                     showToast(`❌ Error: ${result.error || 'No se pudo crear el pedido'}`, 'error');
@@ -3352,6 +3888,11 @@ $iconosCategorias = [
         }
 
         pedidoActual = pedidoId;
+        // Persistir en el DOM para que impresión pueda tomar el número
+        const confirmModal = document.getElementById('pago-confirmacion-modal');
+        if (confirmModal) {
+            confirmModal.setAttribute('data-pedido-id', String(pedidoId));
+        }
 
         // Verificar que el carrito tenga items
         if (!carrito || carrito.length === 0) {
@@ -3367,6 +3908,13 @@ $iconosCategorias = [
         }, 0);
 
         console.log('Subtotal calculado:', subtotalPedido);
+        
+        // Resetear propina
+        propinaSeleccionada = 0;
+        propinaPorcentaje = 0;
+        
+        // Actualizar montos en los botones de propina
+        actualizarMontosPropina();
 
         // Llenar detalle del pedido
         const detalleDiv = document.getElementById('pago-detalle');
@@ -3402,6 +3950,9 @@ $iconosCategorias = [
             // Obtener información del mozo asignado a la mesa
             mozoInfoDiv.innerHTML = '<p>🔄 Buscando información del mozo...</p>';
 
+            console.log('Buscando mozo para mesa:', mesaNumero);
+            console.log('URL de petición:', '<?= $base_url ?>/index.php?route=pedidos/info');
+            
             fetch('<?= $base_url ?>/index.php?route=pedidos/info', {
                 method: 'POST',
                 headers: {
@@ -3409,18 +3960,30 @@ $iconosCategorias = [
                 },
                 body: JSON.stringify({
                     accion: 'obtener_mozo_mesa',
-                    numero_mesa: mesaNumero
+                    numero_mesa: parseInt(mesaNumero)
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Waiter info response:', data);
-                if (data.success && data.mozo) {
+                console.log('Data success:', data.success);
+                console.log('Data mozo:', data.mozo);
+                
+                if (data.success && data.mozo && data.mozo.nombre) {
+                    console.log('Mostrando nombre del mozo:', data.mozo.nombre, data.mozo.apellido);
                     mozoInfoDiv.innerHTML = `
-                        <p><strong>${data.mozo.nombre} ${data.mozo.apellido}</strong></p>
+                        <p><strong>👨‍🍳 ${data.mozo.nombre} ${data.mozo.apellido || ''}</strong></p>
                         <p>Mozo asignado a la Mesa ${mesaNumero}</p>
                     `;
                 } else {
+                    console.log('No se encontró mozo o datos incompletos');
                     mozoInfoDiv.innerHTML = `
                         <p>👨‍🍳 Mozo asignado a la Mesa ${mesaNumero}</p>
                         <p>Te atenderá en breve</p>
@@ -3443,8 +4006,12 @@ $iconosCategorias = [
 
         // Resetear selección de propina
         propinaSeleccionada = 0;
+        propinaPorcentaje = 0;
         document.querySelectorAll('.propina-btn').forEach(btn => btn.classList.remove('selected'));
         document.querySelectorAll('.propina-btn')[0].classList.add('selected');
+
+        // Actualizar montos en los botones de propina
+        actualizarMontosPropina();
 
         // Actualizar totales
         actualizarTotalPago();
@@ -3471,9 +4038,18 @@ $iconosCategorias = [
 
             if (result.success && result.data.mozo) {
                 mozoActual = result.data.mozo;
-                document.getElementById('pago-mozo-info').style.display = 'block';
-                document.getElementById('pago-mozo-nombre').textContent =
-                    `${mozoActual.nombre} ${mozoActual.apellido}`;
+                const infoEl = document.getElementById('pago-mozo-info');
+                if (infoEl) {
+                    infoEl.style.display = 'block';
+                    // Rellenar si existe placeholder dedicado o reemplazar contenido
+                    const nombreEl = document.getElementById('pago-mozo-nombre');
+                    const texto = `${mozoActual.nombre} ${mozoActual.apellido}`;
+                    if (nombreEl) {
+                        nombreEl.textContent = texto;
+                    } else {
+                        infoEl.innerHTML = `<p><strong>${texto}</strong></p><p>Mozo asignado a tu mesa</p>`;
+                    }
+                }
             }
         } catch (error) {
             console.error('Error al obtener mozo:', error);
@@ -3482,43 +4058,22 @@ $iconosCategorias = [
 
     // Función para actualizar el total del pago
     function actualizarTotalPago() {
-        const totalFinal = subtotalPedido + propinaSeleccionada;
-        document.getElementById('pago-propina').textContent = `$${propinaSeleccionada.toFixed(2)}`;
-        document.getElementById('pago-total-final').textContent = `$${totalFinal.toFixed(2)}`;
+        const total = subtotalPedido + (typeof propinaSeleccionada === 'number' ? propinaSeleccionada : 0);
+        const elProp = document.getElementById('total-propina') || document.getElementById('pago-propina');
+        if (elProp) elProp.textContent = `$${(typeof propinaSeleccionada === 'number' ? propinaSeleccionada : 0).toFixed(2)}`;
+        const elTotal = document.getElementById('pago-total-final');
+        if (elTotal) elTotal.textContent = `$${total.toFixed(2)}`;
     }
 
     // Event listeners para el modal de pago
     document.addEventListener('DOMContentLoaded', function() {
-        // Botones de propina
-        document.querySelectorAll('.propina-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.propina-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
+        // Los botones de propina ahora usan onclick="seleccionarPropina(this, X)" directamente en el HTML
+        // No necesitamos event listeners adicionales aquí
 
-                const propinaValue = this.dataset.propina;
-
-                if (propinaValue === 'otro') {
-                    document.getElementById('propina-otro-container').style.display = 'flex';
-                    document.getElementById('propina-otro').focus();
-                } else {
-                    document.getElementById('propina-otro-container').style.display = 'none';
-
-                    if (propinaValue === '0') {
-                        propinaSeleccionada = 0;
-                        propinaPorcentaje = 0;
-                    } else {
-                        propinaPorcentaje = parseInt(propinaValue);
-                        propinaSeleccionada = subtotalPedido * (propinaPorcentaje / 100);
-                    }
-
-                    actualizarTotalPago();
-                }
-            });
-        });
-
-        // Botón aceptar propina personalizada
-        document.getElementById('btn-aceptar-propina').addEventListener('click', function() {
-            const monto = parseFloat(document.getElementById('propina-otro').value) || 0;
+        // Botón aceptar propina personalizada (ID o clase fallback)
+        (document.getElementById('btn-aceptar-propina') || document.querySelector('.btn-propina-custom'))?.addEventListener('click', function() {
+            const inputOtro = document.getElementById('propina-monto') || document.getElementById('propina-otro');
+            const monto = parseFloat(inputOtro ? inputOtro.value : '0') || 0;
             if (monto >= 0) {
                 propinaSeleccionada = monto;
                 propinaPorcentaje = 0;
@@ -3526,8 +4081,9 @@ $iconosCategorias = [
             }
         });
 
-        // Botón confirmar pago
-        document.getElementById('btn-confirmar-pago').addEventListener('click', async function() {
+        // Botón confirmar pago (solo si existe este ID en el DOM)
+        const btnConfirmarPagoEl = document.getElementById('btn-confirmar-pago');
+        if (btnConfirmarPagoEl) btnConfirmarPagoEl.addEventListener('click', async function() {
             const metodoPago = document.querySelector('input[name="metodo-pago"]:checked').value;
 
             // Deshabilitar botón
@@ -3552,31 +4108,30 @@ $iconosCategorias = [
 
                 if (result.success) {
                     // Cerrar modal de pago
-                    document.getElementById('pago-modal').style.display = 'none';
+                    const pm = document.getElementById('pago-modal');
+                    if (pm) pm.style.display = 'none';
 
                     // Mostrar modal de confirmación
                     mostrarConfirmacionPago();
                 } else {
-                    throw new Error(result.error || 'Error al procesar el pago');
+                    throw new Error(result.error || 'Error al confirmar el pedido');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showToast('❌ Error al procesar el pago: ' + error.message, 'error');
+                showToast('❌ Error al confirmar el pedido: ' + error.message, 'error');
 
                 // Rehabilitar botón
                 this.disabled = false;
-                this.textContent = 'Confirmar Pago';
+                this.textContent = 'Confirmar Pedido';
             }
         });
 
-        // Botones de cerrar
-        document.getElementById('btn-close-pago').addEventListener('click', function() {
-            document.getElementById('pago-modal').style.display = 'none';
-        });
-
-        document.getElementById('btn-cancelar-pago').addEventListener('click', function() {
-            document.getElementById('pago-modal').style.display = 'none';
-        });
+        // Botones de cerrar (si existen en el DOM)
+        const modalPagoEl = document.getElementById('pago-modal') || document.getElementById('modalProcesoPago');
+        const closeBtn = document.getElementById('btn-close-pago');
+        const cancelBtn = document.getElementById('btn-cancelar-pago');
+        if (closeBtn) closeBtn.addEventListener('click', function() { if (modalPagoEl) modalPagoEl.style.display = 'none'; });
+        if (cancelBtn) cancelBtn.addEventListener('click', function() { if (modalPagoEl) modalPagoEl.style.display = 'none'; });
 
   
         // Handle payment method selection
@@ -3615,16 +4170,30 @@ $iconosCategorias = [
         const confirmacionDiv = document.getElementById('confirmacion-pedido');
         confirmacionDiv.innerHTML = pedidoItems.map(item => item.outerHTML).join('');
 
-        // Actualizar totales
-        document.getElementById('confirmacion-total').textContent =
-            document.getElementById('pago-total-final').textContent;
+        // Actualizar totales (subtotal, propina y total)
+        const subtotalTxt = document.getElementById('pago-subtotal').textContent || '$0.00';
+        const totalTxt = document.getElementById('pago-total-final').textContent || '$0.00';
+        document.getElementById('confirmacion-subtotal').textContent = subtotalTxt;
+        document.getElementById('confirmacion-total').textContent = totalTxt;
+
+        // Calcular propina como diferencia entre total y subtotal
+        const num = (s) => parseFloat(String(s).replace(/[^0-9.\-]/g,'')) || 0;
+        const propinaMontoCalc = Math.max(0, num(totalTxt) - num(subtotalTxt));
+        const propinaRow = document.getElementById('confirmacion-propina-row');
+        const propinaMontoEl = document.getElementById('confirmacion-propina-monto');
+        if (propinaMontoCalc > 0.001) {
+            propinaRow.style.display = 'flex';
+            propinaMontoEl.textContent = `$${propinaMontoCalc.toFixed(2)}`;
+        } else {
+            propinaRow.style.display = 'none';
+        }
 
         // Mostrar mesa
         const mesaNumero = isQRMode ? mesaFromQR : document.getElementById('numero-mesa').value;
         document.getElementById('confirmacion-mesa').textContent = mesaNumero ? `Mesa ${mesaNumero}` : 'Take Away';
 
         // Mostrar mensaje de propina si corresponde
-        if (propinaSeleccionada > 0) {
+        if (propinaMontoCalc > 0) {
             document.getElementById('confirmacion-propina').style.display = 'block';
         } else {
             document.getElementById('confirmacion-propina').style.display = 'none';
@@ -3677,10 +4246,7 @@ $iconosCategorias = [
             // Remove existing event listener to avoid duplicates
             btnImprimirRecibo.replaceWith(btnImprimirRecibo.cloneNode(true));
             // Add new event listener
-            document.getElementById('btn-imprimir-recibo').addEventListener('click', function() {
-                console.log('Imprimir recibo clicked');
-                window.print();
-            });
+            document.getElementById('btn-imprimir-recibo').addEventListener('click', imprimirRecibo);
         } else {
             console.error('btn-imprimir-recibo not found');
         }
@@ -3724,6 +4290,21 @@ $iconosCategorias = [
         actualizarTotalPago();
     }
 
+    // Función para actualizar los montos en los botones de propina
+    function actualizarMontosPropina() {
+        const subtotal = subtotalPedido;
+        document.querySelectorAll('.propina-btn[data-porcentaje]').forEach(btn => {
+            const porcentaje = parseInt(btn.getAttribute('data-porcentaje')) || 0;
+            if (porcentaje > 0) {
+                const monto = subtotal * (porcentaje / 100);
+                const montoSpan = btn.querySelector('.propina-monto');
+                if (montoSpan) {
+                    montoSpan.textContent = `$${monto.toFixed(2)}`;
+                }
+            }
+        });
+    }
+
     // Función para seleccionar propina
     function seleccionarPropina(button, percentage) {
         document.querySelectorAll('.propina-btn').forEach(btn => btn.classList.remove('selected'));
@@ -3731,18 +4312,77 @@ $iconosCategorias = [
 
         if (percentage === 'otro') {
             document.getElementById('propina-otro').style.display = 'block';
-            document.getElementById('propina-monto').focus();
+            const montoInput = document.getElementById('propina-monto');
+            if (montoInput) {
+                montoInput.value = '0';
+                montoInput.focus();
+                montoInput.select();
+            }
+            document.getElementById('propina-porcentaje-info').style.display = 'none';
+            propinaSeleccionada = 0;
+            propinaPorcentaje = 0;
         } else {
             document.getElementById('propina-otro').style.display = 'none';
-            propinaSeleccionada = percentage;
+            // percentage es el porcentaje (5, 10, 15, etc.)
+            propinaPorcentaje = percentage;
+            propinaSeleccionada = subtotalPedido * (percentage / 100);
             actualizarTotalPago();
+        }
+    }
+
+    // Función para incrementar propina
+    function incrementarPropina() {
+        const montoInput = document.getElementById('propina-monto');
+        if (montoInput) {
+            const valorActual = parseFloat(montoInput.value) || 0;
+            montoInput.value = valorActual + 1;
+            actualizarPorcentajePropina();
+        }
+    }
+
+    // Función para decrementar propina
+    function decrementarPropina() {
+        const montoInput = document.getElementById('propina-monto');
+        if (montoInput) {
+            const valorActual = parseFloat(montoInput.value) || 0;
+            const nuevoValor = Math.max(0, valorActual - 1);
+            montoInput.value = nuevoValor;
+            actualizarPorcentajePropina();
+        }
+    }
+
+    // Función para actualizar el porcentaje cuando se ingresa un monto fijo
+    function actualizarPorcentajePropina() {
+        const monto = parseFloat(document.getElementById('propina-monto').value) || 0;
+        const subtotal = subtotalPedido;
+        
+        if (monto > 0 && subtotal > 0) {
+            const porcentaje = (monto / subtotal) * 100;
+            document.getElementById('propina-porcentaje-valor').textContent = porcentaje.toFixed(1);
+            document.getElementById('propina-porcentaje-info').style.display = 'block';
+        } else {
+            document.getElementById('propina-porcentaje-info').style.display = 'none';
         }
     }
 
     // Función para aplicar propina personalizada
     function aplicarPropinaCustom() {
         const monto = parseFloat(document.getElementById('propina-monto').value) || 0;
+        if (monto < 0) {
+            showToast('❌ El monto de propina no puede ser negativo', 'error');
+            return;
+        }
+        
+        const subtotal = subtotalPedido;
         propinaSeleccionada = monto;
+        
+        // Calcular el porcentaje equivalente
+        if (subtotal > 0) {
+            propinaPorcentaje = (monto / subtotal) * 100;
+        } else {
+            propinaPorcentaje = 0;
+        }
+        
         actualizarTotalPago();
     }
 
@@ -3751,23 +4391,24 @@ $iconosCategorias = [
         const subtotal = subtotalPedido;
         let propina = 0;
 
-        if (typeof propinaSeleccionada === 'number') {
-            if (propinaSeleccionada <= 1) {
-                // Es un porcentaje
-                propina = subtotal * propinaSeleccionada;
-            } else {
-                // Es un monto fijo
-                propina = propinaSeleccionada;
-            }
+        if (typeof propinaSeleccionada === 'number' && propinaSeleccionada >= 0) {
+            propina = propinaSeleccionada;
         }
 
         const total = subtotal + propina;
 
         // Actualizar UI
-        document.getElementById('pago-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('total-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('total-propina').textContent = `$${propina.toFixed(2)}`;
-        document.getElementById('pago-total-final').textContent = `$${total.toFixed(2)}`;
+        const elSubtotal = document.getElementById('pago-subtotal');
+        if (elSubtotal) elSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+        
+        const elTotalSubtotal = document.getElementById('total-subtotal');
+        if (elTotalSubtotal) elTotalSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+        
+        const elPropina = document.getElementById('total-propina');
+        if (elPropina) elPropina.textContent = `$${propina.toFixed(2)}`;
+        
+        const elTotal = document.getElementById('pago-total-final');
+        if (elTotal) elTotal.textContent = `$${total.toFixed(2)}`;
     }
 
     // Función para procesar pago
@@ -3775,17 +4416,8 @@ $iconosCategorias = [
         const metodoPago = document.querySelector('input[name="metodo-pago"]:checked').value;
         const mesaNumero = isQRMode ? mesaFromQR : document.getElementById('numero-mesa').value;
 
-        // Calcular monto de propina
-        let propinaMonto = 0;
-        if (typeof propinaSeleccionada === 'number') {
-            if (propinaSeleccionada <= 1) {
-                // Es un porcentaje
-                propinaMonto = subtotalPedido * propinaSeleccionada;
-            } else {
-                // Es un monto fijo
-                propinaMonto = propinaSeleccionada;
-            }
-        }
+        // Calcular monto de propina (ya está calculado correctamente en propinaSeleccionada)
+        let propinaMonto = typeof propinaSeleccionada === 'number' && propinaSeleccionada >= 0 ? propinaSeleccionada : 0;
 
         console.log('Processing payment:', {
             pedidoId: pedidoActual,
@@ -3812,22 +4444,24 @@ $iconosCategorias = [
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => {
+        .then(async response => {
             console.log('Response status:', response.status);
             console.log('Response content-type:', response.headers.get('content-type'));
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            const text = await response.text();
+            let data;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('Non-JSON response:', text);
+                throw new Error('La respuesta del servidor no es válida');
             }
 
-            return response.text().then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('Non-JSON response:', text);
-                    throw new Error('La respuesta del servidor no es válida');
-                }
-            });
+            if (!response.ok) {
+                const msg = data.message || data.error || `HTTP ${response.status}`;
+                throw new Error(msg);
+            }
+            return data;
         })
         .then(result => {
             console.log('Payment result:', result);
@@ -3837,13 +4471,124 @@ $iconosCategorias = [
                 // Mostrar confirmación
                 mostrarConfirmacionPago();
             } else {
-                alert('Error al procesar el pago: ' + (result.message || 'Error desconocido'));
+                alert('Error al confirmar el pedido: ' + (result.message || 'Error desconocido'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert('Error al procesar el pago: ' + error.message);
         });
+    }
+
+    // Ventana de impresión dedicada para evitar múltiples páginas
+    function imprimirRecibo() {
+        try {
+            const baseUrl = '<?= $base_url ?>';
+            const itemsHTML = document.getElementById('confirmacion-pedido')?.innerHTML || '';
+            const total = document.getElementById('confirmacion-total')?.textContent || '';
+            const mesa = document.getElementById('confirmacion-mesa')?.textContent || '';
+            const fecha = new Date().toLocaleString();
+
+            // Tomar número de pedido de forma robusta
+            const pedidoIdFromState = (typeof window.pedidoActual !== 'undefined' && window.pedidoActual)
+                ? window.pedidoActual
+                : (document.getElementById('pago-confirmacion-modal')?.getAttribute('data-pedido-id') || '');
+            const pedidoIdStr = String(pedidoIdFromState || '').replace(/[^0-9]/g,'');
+            const pedidoIdPadded = pedidoIdStr ? pedidoIdStr.padStart(6,'0') : '';
+
+            // Calcular propina con el mismo criterio del modal
+            let propinaMonto = 0;
+            if (typeof propinaSeleccionada === 'number') {
+                if (propinaSeleccionada <= 1) {
+                    propinaMonto = (subtotalPedido || 0) * propinaSeleccionada;
+                } else {
+                    propinaMonto = propinaSeleccionada;
+                }
+            }
+
+            // Si tenemos ID del pedido, usar la vista dedicada para asegurar el nombre del PDF
+            if (pedidoIdStr) {
+                const url = `${baseUrl}/index.php?route=recibo-print&pedido=${pedidoIdStr}`;
+                window.open(url, '_blank', 'width=760,height=900');
+                return;
+            }
+
+            const css = `
+              :root{--prim:#a1866f;--sec:#8b5e46;--text:#3f3f3f;--muted:#6c757d;}
+              @page{size:auto;margin:12mm;}
+              body{font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:#fff;}
+              .receipt{max-width:720px;margin:0 auto;}
+              .brand{text-align:center;margin-bottom:8px}
+              .brand img{height:42px}
+              .brand h1{margin:6px 0 0;font-size:18px;color:var(--prim)}
+              .meta{color:var(--muted);font-size:12px;text-align:center;margin-bottom:10px}
+              .pago-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed #ddd}
+              .pago-item-info{display:flex;align-items:center;gap:6px}
+              .pago-item-cantidad{font-weight:600;color:var(--prim)}
+              .pago-item-precio{font-weight:700;color:var(--sec)}
+              .tot{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:2px solid var(--prim);font-weight:700}
+              .pago-item,.row{page-break-inside:avoid}
+              .section-title{margin:8px 0 4px;font-weight:700;color:#111}
+              .divider{border-top:1px dashed #ddd;margin:8px 0}
+              .totals .row{display:flex;justify-content:space-between;padding:4px 0}
+              .footer{margin-top:14px;text-align:center;color:var(--muted);font-size:12px}
+            `;
+
+            const html = `
+              <div class="receipt">
+                <div class="brand">
+                  <img src="${baseUrl}/assets/img/logo.png" alt="Comanda">
+                  <h1>Comanda</h1>
+                  <div class="meta">${mesa ? mesa + ' • ' : ''}${fecha}</div>
+                </div>
+                <div class="items">${itemsHTML}</div>
+                <div class="tot"><span>Total</span><span>${total}</span></div>
+              </div>
+            `;
+
+            const w = window.open('', 'PRINT', 'width=760,height=900');
+            const docTitle = `comanda_recibo_recibo`;
+            w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+docTitle+'</title><style>'+css+'</style></head><body>'+html+'</body></html>');
+            try { w.document.title = docTitle; } catch(_e) {}
+            w.document.close(); w.focus();
+            w.onload = function(){
+                try {
+                    const doc = w.document;
+                    const meta = doc.querySelector('.meta');
+                    if (meta) meta.innerHTML = `<strong>Pedido #${pedidoIdPadded}</strong>${mesa ? ' - ' + mesa : ''} - ${fecha}`;
+
+                    const itemsWrap = doc.querySelector('.items');
+                    if (itemsWrap) {
+                        const title = doc.createElement('div');
+                        title.className = 'section-title';
+                        title.textContent = 'Detalle del pedido';
+                        itemsWrap.parentNode.insertBefore(title, itemsWrap);
+
+                        const divider = doc.createElement('div');
+                        divider.className = 'divider';
+                        itemsWrap.parentNode.insertBefore(divider, itemsWrap.nextSibling);
+                    }
+
+                    const totalsEl = doc.createElement('div');
+                    totalsEl.className = 'totals';
+                    totalsEl.innerHTML = `<div class="row"><span>Subtotal</span><span>$${(subtotalPedido||0).toFixed(2)}</span></div>` + (propinaMonto>0 ? `<div class="row"><span>Propina</span><span>$${propinaMonto.toFixed(2)}</span></div>` : '');
+                    const totalRow = doc.querySelector('.tot');
+                    if (totalRow && totalRow.parentNode) {
+                        totalRow.parentNode.insertBefore(totalsEl, totalRow);
+                        const footer = doc.createElement('div');
+                        footer.className = 'footer';
+                        footer.textContent = '¡Gracias por tu preferencia!';
+                        totalRow.parentNode.insertBefore(footer, totalRow.nextSibling);
+                    }
+                } catch (err) { console.error('print DOM build failed', err); }
+                w.print();
+                w.onafterprint = () => w.close();
+                setTimeout(()=>{ try{w.close()}catch(e){} }, 3000);
+            };
+        } catch (e) {
+            console.error('Error al imprimir recibo:', e);
+            window.print();
+        }
     }
     </script>
 
@@ -3856,6 +4601,14 @@ $iconosCategorias = [
             </div>
 
             <div class="modal-pago-body">
+                <!-- Encabezado visible solo en impresión -->
+                <div class="print-header">
+                    <img src="<?= $base_url ?>/assets/img/logo.png" alt="Comanda">
+                    <div>
+                        <div class="print-title">Comanda</div>
+                        <div class="print-subtitle">Confirmación de Pago</div>
+                    </div>
+                </div>
                 <!-- Resumen del Pedido -->
                 <div class="pago-seccion">
                     <h4>📋 Resumen del Pedido</h4>
@@ -3880,15 +4633,41 @@ $iconosCategorias = [
                 <div class="pago-seccion">
                     <h4>💝 ¿Deseas añadir una propina?</h4>
                     <div class="propina-opciones">
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 0)" data-amount="0">Sin propina</button>
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 5)" data-amount="5">5%</button>
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 10)" data-amount="10">10%</button>
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 15)" data-amount="15">15%</button>
-                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 'otro')">Otro monto</button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 0)" data-amount="0" data-porcentaje="0">
+                            <span class="propina-porcentaje">Sin propina</span>
+                            <span class="propina-monto">$0.00</span>
+                        </button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 5)" data-amount="5" data-porcentaje="5">
+                            <span class="propina-porcentaje">5%</span>
+                            <span class="propina-monto">$0.00</span>
+                        </button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 10)" data-amount="10" data-porcentaje="10">
+                            <span class="propina-porcentaje">10%</span>
+                            <span class="propina-monto">$0.00</span>
+                        </button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 15)" data-amount="15" data-porcentaje="15">
+                            <span class="propina-porcentaje">15%</span>
+                            <span class="propina-monto">$0.00</span>
+                        </button>
+                        <button type="button" class="propina-btn" onclick="seleccionarPropina(this, 'otro')" data-amount="otro">
+                            <span class="propina-porcentaje">Otro monto</span>
+                        </button>
                     </div>
                     <div id="propina-otro" class="propina-otro" style="display: none;">
-                        <input type="number" id="propina-monto" placeholder="Monto de propina" min="0" step="0.01">
-                        <button type="button" class="btn-propina-custom" onclick="aplicarPropinaCustom()">Aplicar</button>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <button type="button" onclick="decrementarPropina()" style="padding: 0.75rem 1rem; background: var(--surface); border: 2px solid rgba(161, 134, 111, 0.3); border-radius: 8px; color: var(--secondary); cursor: pointer; font-size: 1.2rem; font-weight: bold; min-width: 45px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(161, 134, 111, 0.1)'" onmouseout="this.style.background='var(--surface)'">−</button>
+                                <div style="flex: 1; display: flex; flex-direction: column; gap: 0.25rem;">
+                                    <input type="number" id="propina-monto" value="0" min="0" step="1" oninput="actualizarPorcentajePropina()" style="padding: 0.75rem; border: 2px solid rgba(161, 134, 111, 0.3); border-radius: 8px; font-size: 1rem; text-align: center; background: var(--surface); color: var(--secondary); font-weight: 600;">
+                                    <div style="font-size: 0.75rem; color: var(--secondary); text-align: center; opacity: 0.7; font-style: italic;">Pesos argentinos (ARS)</div>
+                                </div>
+                                <button type="button" onclick="incrementarPropina()" style="padding: 0.75rem 1rem; background: var(--surface); border: 2px solid rgba(161, 134, 111, 0.3); border-radius: 8px; color: var(--secondary); cursor: pointer; font-size: 1.2rem; font-weight: bold; min-width: 45px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(161, 134, 111, 0.1)'" onmouseout="this.style.background='var(--surface)'">+</button>
+                            </div>
+                            <div id="propina-porcentaje-info" style="font-size: 0.9rem; color: var(--secondary); font-weight: 500; text-align: center; padding: 0.5rem; background: var(--surface); border-radius: 6px; display: none;">
+                                Equivale a <span id="propina-porcentaje-valor">0</span>% del total
+                            </div>
+                            <button type="button" class="btn-propina-custom" onclick="aplicarPropinaCustom()">Aplicar</button>
+                        </div>
                     </div>
                 </div>
 
@@ -3928,7 +4707,7 @@ $iconosCategorias = [
 
             <div class="modal-pago-footer">
                 <button type="button" class="btn-secundario" onclick="cerrarModalPago()">Cancelar</button>
-                <button type="button" class="btn-principal" onclick="procesarPago()">Confirmar Pago</button>
+                <button type="button" class="btn-principal" onclick="procesarPago()">Confirmar Pedido</button>
             </div>
         </div>
     </div>
@@ -3937,15 +4716,15 @@ $iconosCategorias = [
     <div id="pago-confirmacion-modal" class="modal-pago">
         <div class="modal-pago-contenido">
             <div class="modal-pago-header">
-                <h3>✅ Pago Confirmado</h3>
+                <h3>✅ Pedido Confirmado</h3>
                 <span class="modal-cerrar" onclick="document.getElementById('pago-confirmacion-modal').style.display='none'">&times;</span>
             </div>
 
             <div class="modal-pago-body">
                 <div class="confirmacion-mensaje">
                     <div class="confirmacion-icono">✅</div>
-                    <h4>¡Pago realizado con éxito!</h4>
-                    <p>Tu pedido ha sido confirmado y está siendo preparado</p>
+                    <h4>¡Pedido confirmado con éxito!</h4>
+                    <p>Tu pedido ha sido completado y está siendo preparado. Un mozo se acercará a tu mesa para finalizar el cobro.</p>
                 </div>
 
                 <div id="confirmacion-propina" class="confirmacion-mensaje" style="display: none;">
@@ -3957,9 +4736,20 @@ $iconosCategorias = [
                     <div id="confirmacion-pedido">
                         <!-- Items del pedido -->
                     </div>
-                    <div class="confirmacion-total">
-                        <span>Total Pagado:</span>
-                        <span id="confirmacion-total">$0.00</span>
+                    <!-- Resumen de montos -->
+                    <div class="confirmacion-resumen">
+                        <div class="confirmacion-row">
+                            <span>Subtotal:</span>
+                            <span id="confirmacion-subtotal">$0.00</span>
+                        </div>
+                        <div class="confirmacion-row" id="confirmacion-propina-row" style="display:none;">
+                            <span>Propina:</span>
+                            <span id="confirmacion-propina-monto">$0.00</span>
+                        </div>
+                        <div class="confirmacion-row total" id="confirmacion-total-row">
+                            <span>Total Pagado:</span>
+                            <span id="confirmacion-total">$0.00</span>
+                        </div>
                     </div>
                     <div class="confirmacion-mesa">
                         <span id="confirmacion-mesa">Mesa 1</span>

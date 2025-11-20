@@ -7,7 +7,6 @@ use App\Models\Propina;
 use App\Models\Mesa;
 use App\Models\DetallePedido;
 use App\Models\CartaItem;
-use App\Config\ClientSession;
 use Exception;
 
 require_once __DIR__ . '/../config/helpers.php';
@@ -21,24 +20,102 @@ class ClienteController {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        // Asegurar contexto de cliente
-        if (!ClientSession::isClientContext()) {
-            ClientSession::initClientSession();
+
+        $id_mesa = null;
+        $modo_consumo = null;
+
+        // Caso 1: QR de mesa física
+        if (!empty($_GET['qr']) || !empty($_GET['mesa'])) {
+            $valorMesa = (int) ($_GET['qr'] ?? $_GET['mesa']);
+
+            // Intentar buscar por ID
+            $mesa = \App\Models\Mesa::find($valorMesa);
+
+            // Intentar buscar por número si no se encuentra
+            if (!$mesa && method_exists('\App\Models\Mesa', 'findByNumero')) {
+                $mesa = \App\Models\Mesa::findByNumero($valorMesa);
+            }
+
+            // Validar tipo de retorno y asignar correctamente
+            if ($mesa) {
+                if (is_array($mesa)) {
+                    $id_mesa = $mesa['id_mesa'] ?? null;
+                } elseif (is_object($mesa)) {
+                    $id_mesa = $mesa->id_mesa ?? null;
+                }
+
+                if ($id_mesa !== null) {
+                    $modo_consumo = 'stay';
+                    error_log("[QR DETECTADO] Mesa ID: {$id_mesa}, modo_consumo=stay");
+                } else {
+                    error_log("[QR ERROR] Mesa detectada pero sin id válido (valor={$valorMesa})");
+                }
+            } else {
+                error_log("[QR ERROR] Mesa no encontrada (valor={$valorMesa})");
+            }
         }
+        // Caso 2: QR de Take Away
+        elseif (!empty($_GET['takeaway'])) {
+            $id_mesa = 0;
+            $modo_consumo = 'takeaway';
+            error_log("[TAKEAWAY DETECTADO] modo_consumo=takeaway");
+        }
+
+        // Guardar contexto
+        $_SESSION['mesa_qr'] = $id_mesa;
+        $_SESSION['modo_consumo_qr'] = $modo_consumo;
+
         include __DIR__ . '/../views/cliente/index.php';
+    }
+    
+    /**
+     * Obtiene los platos más vendidos por categoría
+     */
+    public static function getPlatosMasVendidos() {
+        try {
+            $database = new \App\Config\Database();
+            $db = $database->getConnection();
+            
+            // Consulta para obtener los platos más vendidos por categoría
+            $sql = "
+                SELECT 
+                    c.id_item,
+                    c.nombre,
+                    c.categoria,
+                    SUM(dp.cantidad) as total_vendido
+                FROM carta c
+                INNER JOIN detalle_pedido dp ON c.id_item = dp.id_item
+                INNER JOIN pedidos p ON dp.id_pedido = p.id_pedido
+                WHERE p.estado = 'cerrado'
+                GROUP BY c.id_item, c.nombre, c.categoria
+                ORDER BY c.categoria, total_vendido DESC
+            ";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute();
+            $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            // Organizar por categoría y tomar el más vendido de cada una
+            $masVendidosPorCategoria = [];
+            foreach ($resultados as $item) {
+                $categoria = $item['categoria'] ?? 'Otros';
+                if (!isset($masVendidosPorCategoria[$categoria])) {
+                    $masVendidosPorCategoria[$categoria] = $item['id_item'];
+                }
+            }
+            
+            return $masVendidosPorCategoria;
+            
+        } catch (Exception $e) {
+            error_log("Error obteniendo platos más vendidos: " . $e->getMessage());
+            return [];
+        }
     }
     
     /**
      * Muestra la vista de proceso de pago con opción de propinas
      */
     public static function pago() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        // Asegurar contexto de cliente
-        if (!ClientSession::isClientContext()) {
-            ClientSession::initClientSession();
-        }
         include __DIR__ . '/../views/cliente/pago.php';
     }
     
@@ -58,11 +135,36 @@ class ClienteController {
         header('Content-Type: application/json');
         
         try {
-            $pedidoId = $_POST['pedido_id'] ?? null;
-            $propinaMonto = floatval($_POST['propina_monto'] ?? 0);
-            $mozoId = $_POST['mozo_id'] ?? null;
-            $metodoPago = $_POST['metodo_pago'] ?? null;
-            $mesa = $_POST['mesa'] ?? null;
+            // Aceptar tanto FormData (application/x-www-form-urlencoded | multipart/form-data)
+            // como JSON (application/json) y claves camelCase o snake_case
+            $inputData = [];
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (stripos($contentType, 'application/json') !== false) {
+                $raw = file_get_contents('php://input');
+                $json = json_decode($raw, true);
+                if (is_array($json)) {
+                    $inputData = $json;
+                }
+            }
+
+            $pedidoId = $_POST['pedido_id']
+                ?? ($inputData['pedido_id'] ?? ($inputData['pedidoId'] ?? null));
+            $propinaMonto = floatval(
+                $_POST['propina_monto']
+                ?? ($inputData['propina_monto'] ?? ($inputData['propinaMonto'] ?? 0))
+            );
+            $mozoId = $_POST['mozo_id'] ?? ($inputData['mozo_id'] ?? ($inputData['mozoId'] ?? null));
+            $metodoPago = $_POST['metodo_pago'] ?? ($inputData['metodo_pago'] ?? ($inputData['metodoPago'] ?? null));
+            $mesa = $_POST['mesa'] ?? ($inputData['mesa'] ?? ($inputData['mesaNumero'] ?? null));
+
+            // Normalizar forma de pago
+            if ($metodoPago) {
+                $metodoPago = strtolower(trim($metodoPago));
+                $validos = ['efectivo','tarjeta','transferencia'];
+                if (!in_array($metodoPago, $validos, true)) {
+                    $metodoPago = null; // ignorar valores no válidos
+                }
+            }
 
             // Debug log
             error_log("Payment processing data: " . json_encode([
@@ -91,16 +193,36 @@ class ClienteController {
                 }
             }
             
-            // Registrar la propina si hay monto
+            // Registrar la propina si hay monto (tolerante si tabla no existe)
             if ($propinaMonto > 0 && $mozoId) {
-                Propina::create([
-                    'id_pedido' => $pedidoId,
-                    'id_mozo' => $mozoId,
-                    'monto' => $propinaMonto
-                ]);
+                try {
+                    Propina::create([
+                        'id_pedido' => $pedidoId,
+                        'id_mozo' => $mozoId,
+                        'monto' => $propinaMonto
+                    ]);
+                } catch (\Exception $pe) {
+                    $msg = $pe->getMessage();
+                    // Si la tabla de propinas no existe en el esquema, continuar sin fallar
+                    if (
+                        stripos($msg, 'Base table or view not found') !== false ||
+                        stripos($msg, "42S02") !== false ||
+                        stripos($msg, "propina") !== false && stripos($msg, "exist") !== false
+                    ) {
+                        error_log('[WARN] Propina no registrada: ' . $msg);
+                    } else {
+                        throw $pe; // otros errores de BD deben propagarse
+                    }
+                }
             }
             
-            // El pedido se mantiene como "pendiente" hasta que el mozo lo gestione
+            // Persistir forma de pago en el pedido si se informó
+            if ($metodoPago) {
+                \App\Models\Pedido::setFormaPago((int)$pedidoId, $metodoPago);
+            }
+            
+            // No cambiamos el estado aquí.
+            // El pedido se crea como 'pendiente' y el mozo lo moverá a 'en_preparacion' al confirmar el pago.
             
             // Guardar información en sesión para confirmación
             $_SESSION['ultimo_pago'] = [
@@ -110,12 +232,6 @@ class ClienteController {
                 'total' => $pedido['total'] + $propinaMonto,
                 'timestamp' => time()
             ];
-
-            // Asegurar contexto de cliente y limpiar cualquier sesión de admin
-            if (isset($_SESSION['user'])) {
-                unset($_SESSION['user']);
-            }
-            $_SESSION['contexto'] = 'cliente';
             
             // Respuesta exitosa
             http_response_code(200);
@@ -141,23 +257,14 @@ class ClienteController {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-
+        
         $pedidoId = $_GET['pedido'] ?? $_SESSION['ultimo_pago']['pedido_id'] ?? null;
-
+        
         if (!$pedidoId) {
             header('Location: ' . url('cliente'));
             exit;
         }
-
-        // Asegurar contexto de cliente y limpiar cualquier sesión de admin
-        if (!ClientSession::isClientContext()) {
-            ClientSession::initClientSession();
-        }
-        // Eliminar cualquier sesión de admin que pueda existir
-        if (isset($_SESSION['user'])) {
-            unset($_SESSION['user']);
-        }
-
+        
         include __DIR__ . '/../views/cliente/confirmacion.php';
     }
     
@@ -183,8 +290,9 @@ class ClienteController {
                 throw new Exception('Datos inválidos');
             }
             
-            $modoConsumo = $data['modo_consumo'] ?? 'stay';
-            $idMesa = $data['id_mesa'] ?? null;
+            // Priorizar el contexto de QR si existe
+            $modoConsumo = $_SESSION['modo_consumo_qr'] ?? ($data['modo_consumo'] ?? 'stay');
+            $idMesa = $_SESSION['mesa_qr'] ?? ($data['id_mesa'] ?? null);
             $nombreCliente = $data['cliente_nombre'] ?? '';
             $emailCliente = $data['cliente_email'] ?? '';
             $formaPago = $data['forma_pago'] ?? '';
@@ -263,20 +371,15 @@ class ClienteController {
      * Muestra el menú QR con mesa predefinida
      */
     public static function menuQR() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        // Asegurar contexto de cliente
-        if (!ClientSession::isClientContext()) {
-            ClientSession::initClientSession();
-        }
-
         $mesa = $_GET['mesa'] ?? null;
+        
         if ($mesa) {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
             $_SESSION['mesa_qr'] = $mesa;
         }
-
+        
         include __DIR__ . '/../views/cliente/index.php';
     }
 }

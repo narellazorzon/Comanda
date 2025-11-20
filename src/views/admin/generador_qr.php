@@ -92,6 +92,30 @@ $total_mesas = 15; // Ajustable según configuración del restaurante
         .btn-regenerar:hover {
             background: #0056b3;
         }
+        
+        /* Estilos para contenedor de botones QR */
+        .qr-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .qr-buttons button,
+        .qr-buttons .btn,
+        .qr-buttons input[type="button"] {
+            width: 320px;
+            min-width: 320px;
+            max-width: 320px;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 20px;
+            font-size: 14px;
+        }
         .qr-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -131,7 +155,7 @@ $total_mesas = 15; // Ajustable según configuración del restaurante
             min-height: 40px;
         }
         .btn-descargar {
-            background: #28a745;
+            background: rgb(144, 104, 76);
             color: white;
             border: none;
             padding: 8px 16px;
@@ -141,11 +165,11 @@ $total_mesas = 15; // Ajustable según configuración del restaurante
             transition: background 0.3s ease;
         }
         .btn-descargar:hover {
-            background: #218838;
+            background: rgb(92, 64, 51);
         }
         .back-btn {
             display: inline-block;
-            background: #6c757d;
+            background: rgb(144, 104, 76);
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 4px;
@@ -206,12 +230,15 @@ $total_mesas = 15; // Ajustable según configuración del restaurante
                     <input type="number" id="total-mesas" value="<?= $total_mesas ?>" min="1" max="50">
                 </div>
             </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div class="qr-buttons">
                 <button onclick="generarTodosQRs()" class="btn-regenerar">
                     🔄 Regenerar todos los QRs
                 </button>
-                <button onclick="descargarTodosQRs()" class="btn-regenerar" style="background: #28a745;">
+                <button onclick="descargarTodosQRs()" class="btn-regenerar" style="background: rgb(144, 104, 76);">
                     💾 Descargar todos los QRs
+                </button>
+                <button onclick="imprimirSeleccionados()" class="btn-regenerar" style="background: #6c757d;">
+                    🖨️ Imprimir seleccionados
                 </button>
             </div>
         </div>

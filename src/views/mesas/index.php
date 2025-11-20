@@ -82,8 +82,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
 }
 
 // 1) Cargamos todas las mesas (activas e inactivas)
-$mesasActivas = Mesa::all();
+// Si es un mozo, mostrar sus mesas asignadas primero
+if ($rol === 'mozo') {
+    $mesasActivas = Mesa::allForMozo($_SESSION['user']['id_usuario']);
+} else {
+    $mesasActivas = Mesa::all();
+}
 $mesasInactivas = Mesa::allInactive();
+
+// Obtener lista de mozos únicos para el filtro
+$mozos = Usuario::getMozosActivos();
 ?>
 
 <!-- Header de gestión -->
@@ -133,6 +141,20 @@ $mesasInactivas = Mesa::allInactive();
     </div>
   </div>
   
+  <!-- Filtro por mozo -->
+    <div class="filter-group">
+      <label for="mozoFilter">👤 Filtrar por mozo:</label>
+      <select id="mozoFilter" class="mozo-filter-select">
+        <option value="">Todos los mozos</option>
+        <option value="sin-asignar">Sin asignar</option>
+        <?php foreach ($mozos as $mozo): ?>
+          <option value="<?= htmlspecialchars(strtolower($mozo['nombre_completo'])) ?>">
+            <?= htmlspecialchars($mozo['nombre_completo']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+  
   </div>
 </div>
 
@@ -153,11 +175,11 @@ $mesasInactivas = Mesa::allInactive();
 <table class="table">
   <thead>
     <tr>
-      <th>Número</th>
+      <th style="width: 20%;">Número</th>
       <th>Ubicación</th>
-      <th>Estado</th>
+      <th style="width: 12%;">Estado</th>
       <th>Mozo Asignado</th>
-      <th>Cambiar Estado</th>
+      <th style="width: 12%;">Cambiar Estado</th>
       <?php if ($rol === 'administrador'): ?>
         <th>Acciones</th>
       <?php endif; ?>
@@ -165,8 +187,19 @@ $mesasInactivas = Mesa::allInactive();
   </thead>
   <tbody>
     <?php foreach ($mesasActivas as $m): ?>
-      <tr>
-        <td><?= htmlspecialchars($m['numero']) ?></td>
+      <?php 
+      // Verificar si esta mesa está asignada al mozo logueado
+      $esMesaAsignada = ($rol === 'mozo' && $m['id_mozo'] == $_SESSION['user']['id_usuario']);
+      ?>
+      <tr class="mesa-row" data-numero="<?= htmlspecialchars($m['numero']) ?>" data-estado="<?= htmlspecialchars($m['estado']) ?>" data-ubicacion="<?= htmlspecialchars(strtolower($m['ubicacion'] ?? '')) ?>" data-mozo="<?= !empty($m['mozo_nombre_completo']) ? htmlspecialchars(strtolower($m['mozo_nombre_completo'])) : 'sin-asignar' ?>" <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
+        <td>
+          <?= htmlspecialchars($m['numero']) ?>
+          <?php if ($esMesaAsignada): ?>
+            <span style="background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; font-weight: bold; margin-left: 8px;">
+              👤 Mi Mesa
+            </span>
+          <?php endif; ?>
+        </td>
         <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
         <td>
           <?php
@@ -267,7 +300,7 @@ $mesasInactivas = Mesa::allInactive();
   </thead>
   <tbody>
     <?php foreach ($mesasInactivas as $m): ?>
-      <tr>
+      <tr class="mesa-row" data-numero="<?= htmlspecialchars($m['numero']) ?>" data-estado="inactiva" data-ubicacion="<?= htmlspecialchars(strtolower($m['ubicacion'] ?? '')) ?>" data-mozo="<?= !empty($m['mozo_nombre_completo']) ? htmlspecialchars(strtolower($m['mozo_nombre_completo'])) : 'sin-asignar' ?>">
         <td><?= htmlspecialchars($m['numero']) ?></td>
         <td><?= htmlspecialchars($m['ubicacion'] ?? '—') ?></td>
         <td>
@@ -298,9 +331,20 @@ $mesasInactivas = Mesa::allInactive();
 <!-- Vista de tarjetas para móviles -->
 <div class="mobile-cards">
   <?php foreach ($mesasActivas as $m): ?>
-    <div class="mobile-card mesa-activa">
+    <?php 
+    // Verificar si esta mesa está asignada al mozo logueado
+    $esMesaAsignada = ($rol === 'mozo' && $m['id_mozo'] == $_SESSION['user']['id_usuario']);
+    ?>
+    <div class="mobile-card mesa-activa mesa-row" data-numero="<?= htmlspecialchars($m['numero']) ?>" data-estado="<?= htmlspecialchars($m['estado']) ?>" data-ubicacion="<?= htmlspecialchars(strtolower($m['ubicacion'] ?? '')) ?>" data-mozo="<?= !empty($m['mozo_nombre_completo']) ? htmlspecialchars(strtolower($m['mozo_nombre_completo'])) : 'sin-asignar' ?>" <?= $esMesaAsignada ? 'style="background-color: #fff8e1; border-left: 4px solid rgb(135, 98, 34);"' : '' ?>>
       <div class="mobile-card-header">
-        <div class="mobile-card-number">Mesa <?= htmlspecialchars($m['numero']) ?></div>
+        <div class="mobile-card-number">
+          Mesa <?= htmlspecialchars($m['numero']) ?>
+          <?php if ($esMesaAsignada): ?>
+            <span style="background: linear-gradient(135deg, rgb(240, 196, 118) 0%, rgb(135, 98, 34) 100%); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; font-weight: bold; margin-left: 8px;">
+              👤 Mi Mesa
+            </span>
+          <?php endif; ?>
+        </div>
         <?php if ($rol === 'administrador'): ?>
           <div class="mobile-card-actions">
             <a href="<?= url('mesas/edit', ['id' => $m['id_mesa']]) ?>" class="btn-action" title="Editar mesa">
@@ -401,7 +445,7 @@ $mesasInactivas = Mesa::allInactive();
   
   <!-- Tarjetas móviles para mesas inactivas (ocultas por defecto) -->
   <?php foreach ($mesasInactivas as $m): ?>
-    <div class="mobile-card mesa-inactiva" style="display: none;">
+    <div class="mobile-card mesa-inactiva mesa-row" data-numero="<?= htmlspecialchars($m['numero']) ?>" data-estado="inactiva" data-ubicacion="<?= htmlspecialchars(strtolower($m['ubicacion'] ?? '')) ?>" data-mozo="<?= !empty($m['mozo_nombre_completo']) ? htmlspecialchars(strtolower($m['mozo_nombre_completo'])) : 'sin-asignar' ?>" style="display: none;">
       <div class="mobile-card-header">
         <div class="mobile-card-number">Mesa <?= htmlspecialchars($m['numero']) ?></div>
         <?php if ($rol === 'administrador'): ?>
@@ -452,6 +496,7 @@ $mesasInactivas = Mesa::allInactive();
 // Variables globales
     let currentSearchTerm = '';
     let currentStatusFilter = 'all';
+    let currentMozoFilter = '';
     
 // Función para obtener el estado de una mesa desde la tabla
     function getMesaStatus(row) {
@@ -488,21 +533,24 @@ $mesasInactivas = Mesa::allInactive();
     function filterMesas() {
         const searchTerm = currentSearchTerm.toLowerCase().trim();
         const statusFilter = currentStatusFilter;
+        const mozoFilter = currentMozoFilter.toLowerCase().trim();
         let visibleCount = 0;
         
         // Filtrar filas de la tabla
-    const tableRows = document.querySelectorAll('.table tbody tr');
+    const tableRows = document.querySelectorAll('.table tbody tr.mesa-row');
     tableRows.forEach((row) => {
             const firstCell = row.querySelector('td:first-child');
         if (!firstCell) return;
             
             const mesaNumber = firstCell.textContent.toLowerCase();
             const mesaStatus = getMesaStatus(row);
+            const mesaMozo = row.dataset.mozo ? row.dataset.mozo.toLowerCase() : 'sin-asignar';
             
             const matchesSearch = searchTerm === '' || mesaNumber.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || mesaStatus === statusFilter;
+            const matchesMozo = mozoFilter === '' || mesaMozo === mozoFilter;
             
-            if (matchesSearch && matchesStatus) {
+            if (matchesSearch && matchesStatus && matchesMozo) {
                 row.style.display = '';
                 visibleCount++;
             } else {
@@ -511,16 +559,18 @@ $mesasInactivas = Mesa::allInactive();
         });
         
         // Filtrar tarjetas móviles
-    const mobileCards = document.querySelectorAll('.mobile-card');
+    const mobileCards = document.querySelectorAll('.mobile-card.mesa-row');
     mobileCards.forEach((card) => {
             const numberElement = card.querySelector('.mobile-card-number');
         if (!numberElement) return;
             
             const mesaNumber = numberElement.textContent.toLowerCase();
             const mesaStatus = getMesaStatusFromCard(card);
+            const mesaMozo = card.dataset.mozo ? card.dataset.mozo.toLowerCase() : 'sin-asignar';
             
             const matchesSearch = searchTerm === '' || mesaNumber.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || mesaStatus === statusFilter;
+            const matchesMozo = mozoFilter === '' || mesaMozo === mozoFilter;
             
         // Verificar si la tarjeta debe mostrarse según la pestaña activa
         const activeTab = document.querySelector('.tab-button.active');
@@ -534,7 +584,7 @@ $mesasInactivas = Mesa::allInactive();
             shouldShow = true;
         }
         
-        if (matchesSearch && matchesStatus && shouldShow) {
+        if (matchesSearch && matchesStatus && matchesMozo && shouldShow) {
                 card.style.display = '';
                 visibleCount++;
             } else {
@@ -565,26 +615,49 @@ function initFilters() {
     clearButton.addEventListener('click', function() {
         searchInput.value = '';
         currentSearchTerm = '';
+        // Limpiar filtro de mozo también
+        if (mozoFilter) {
+            mozoFilter.value = '';
+            currentMozoFilter = '';
+        }
+        // Resetear filtro de estado
+        statusButtons.forEach(btn => btn.classList.remove('active'));
+        const allButton = document.querySelector('.status-filter-btn[data-status="all"]');
+        if (allButton) {
+            allButton.classList.add('active');
+            currentStatusFilter = 'all';
+        }
         filterMesas();
         searchInput.focus();
     });
     
     // Event listeners para los botones de estado
-    statusButtons.forEach((button) => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remover clase active de todos los botones
-            statusButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Agregar clase active al botón clickeado
-            this.classList.add('active');
-            
-            // Actualizar filtro de estado
-            currentStatusFilter = this.dataset.status;
+    if (statusButtons && statusButtons.length > 0) {
+        statusButtons.forEach((button) => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remover clase active de todos los botones
+                statusButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Agregar clase active al botón clickeado
+                this.classList.add('active');
+                
+                // Actualizar filtro de estado
+                currentStatusFilter = this.dataset.status;
+                filterMesas();
+            });
+        });
+    }
+    
+    // Event listener para el filtro de mozo
+    const mozoFilter = document.getElementById('mozoFilter');
+    if (mozoFilter) {
+        mozoFilter.addEventListener('change', function() {
+            currentMozoFilter = this.value;
             filterMesas();
         });
-    });
+    }
     
     // Ejecutar filtro inicial
     filterMesas();
@@ -844,25 +917,24 @@ function showTab(tabName) {
 
 // Función para reactivar mesa (usando el modal existente)
 function confirmarReactivacionMesa(id, numero) {
-  
   ModalConfirmacion.show({
     title: '✅ Reactivar Mesa',
     message: '¿Estás seguro de que quieres reactivar esta mesa?',
     itemName: `Mesa #${numero}`,
-    note: 'La mesa volverá a aparecer en las listas y estará disponible para asignar mozos y recibir pedidos.',
+    note: 'La mesa volverá a las listas activas y quedará libre, disponible para asignar un mozo más adelante.',
     confirmText: '✅ Reactivar',
-    cancelText: '❌ Cancelar',
+    cancelText: '🚫 Cancelar',
     onConfirm: () => {
       // Crear un formulario temporal para enviar la solicitud de reactivación
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = window.location.origin + window.location.pathname + '?route=mesas/reactivate';
-      
+
       const input = document.createElement('input');
       input.type = 'hidden';
       input.name = 'id';
       input.value = id;
-      
+
       form.appendChild(input);
       document.body.appendChild(form);
       form.submit();
@@ -876,6 +948,17 @@ function confirmarReactivacionMesa(id, numero) {
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     initFilters();
+    
+    // Agregar eventos a los filtros
+    const filtroNumero = document.getElementById('filtro-numero');
+    const filtroEstado = document.getElementById('filtro-estado');
+    const filtroUbicacion = document.getElementById('filtro-ubicacion');
+    const filtroMozo = document.getElementById('filtro-mozo');
+
+    if (filtroNumero) filtroNumero.addEventListener('input', aplicarFiltrosMesas);
+    if (filtroEstado) filtroEstado.addEventListener('change', aplicarFiltrosMesas);
+    if (filtroUbicacion) filtroUbicacion.addEventListener('change', aplicarFiltrosMesas);
+    if (filtroMozo) filtroMozo.addEventListener('change', aplicarFiltrosMesas);
 });
 
 // === FUNCIONALIDAD DE FILTROS ===
@@ -973,16 +1056,7 @@ function limpiarFiltrosMesas() {
     }
 }
 
-// Agregar eventos a los filtros
-document.getElementById('filtro-numero').addEventListener('input', aplicarFiltrosMesas);
-document.getElementById('filtro-estado').addEventListener('change', aplicarFiltrosMesas);
-document.getElementById('filtro-ubicacion').addEventListener('change', aplicarFiltrosMesas);
-document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltrosMesas);
 </script>
-
-<!-- Incluir CSS y JS del modal de confirmación -->
-<link rel="stylesheet" href="<?= url('assets/css/modal-confirmacion.css') ?>">
-<script src="<?= url('assets/js/modal-confirmacion.js') ?>"></script>
 
 <style>
 /* Efectos bounce y animaciones globales */
@@ -1135,7 +1209,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .tab-button.active {
-    border-bottom-color: #007bff;
+    border-bottom-color:rgb(255, 166, 0);
     background: #e3f2fd;
   }
   
@@ -1244,7 +1318,28 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 .search-input-group button:hover {
-    background: #5a6268;
+    background:rgb(137, 122, 100);
+}
+
+.mozo-filter-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.mozo-filter-select:hover {
+    border-color: rgb(144, 104, 76);
+}
+
+.mozo-filter-select:focus {
+    outline: none;
+    border-color: rgb(144, 104, 76);
+    box-shadow: 0 0 0 2px rgba(144, 104, 76, 0.2);
 }
 
 .status-filters {
@@ -1289,6 +1384,28 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 
+
+/* Ajustes específicos para columnas de la tabla de mesas */
+.table th:nth-child(1), .table td:nth-child(1) {
+  width: 20% !important;
+  min-width: 120px;
+}
+
+.table th:nth-child(3), .table td:nth-child(3) {
+  width: 12% !important;
+  min-width: 80px;
+}
+
+.table th:nth-child(5), .table td:nth-child(5) {
+  width: 12% !important;
+  min-width: 100px;
+}
+
+/* Asegurar que el badge "Mi Mesa" se vea completo */
+.table td:nth-child(1) {
+  white-space: nowrap;
+  overflow: visible;
+}
 
 /* Responsive para móvil */
 @media (max-width: 768px) {
@@ -1442,9 +1559,9 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 .management-header h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
+  margin: 0 !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
   color: white !important;
   flex: 1;
   min-width: 200px;
@@ -1496,7 +1613,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 1.1rem;
+    font-size: 1.1rem !important;
   }
   
   .header-btn {
@@ -1515,7 +1632,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 0.9rem;
+    font-size: 0.9rem !important;
     text-align: center;
     margin-bottom: 0.5rem;
   }
@@ -1547,7 +1664,7 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
   }
   
   .management-header h1 {
-    font-size: 0.8rem;
+    font-size: 0.8rem !important;
   }
   
   .header-btn {
@@ -1790,3 +1907,5 @@ document.getElementById('filtro-mozo').addEventListener('change', aplicarFiltros
 }
 
 </style>
+
+<!-- Modal de confirmación ya incluido en header.php -->

@@ -14,6 +14,16 @@ use App\Models\Reporte;
 // Parámetros de filtro
 $periodo = $_GET['periodo'] ?? 'todos';
 $limite = (int)($_GET['limite'] ?? 10);
+$fechaDesde = $_GET['fecha_desde'] ?? null;
+$fechaHasta = $_GET['fecha_hasta'] ?? null;
+
+// Validar fechas
+$fechasInvalidas = false;
+if (!empty($fechaDesde) && !empty($fechaHasta)) {
+    if ($fechaHasta < $fechaDesde) {
+        $fechasInvalidas = true;
+    }
+}
 
 // Validar período
 $periodos_validos = ['semana', 'mes', 'año', 'todos'];
@@ -21,9 +31,13 @@ if (!in_array($periodo, $periodos_validos)) {
     $periodo = 'todos';
 }
 
-// Obtener datos usando el modelo Reporte
-$platos = Reporte::platosMasVendidos($periodo, $limite);
-$stats = Reporte::estadisticasPeriodo($periodo);
+// Obtener datos usando el modelo Reporte solo si las fechas son válidas
+$platos = [];
+$stats = [];
+if (!$fechasInvalidas) {
+    $platos = Reporte::platosMasVendidos($periodo, $limite, $fechaDesde, $fechaHasta);
+    $stats = Reporte::estadisticasPeriodo($periodo, $fechaDesde, $fechaHasta);
+}
 ?>
 
 <style>
@@ -249,9 +263,28 @@ main {
     box-shadow: 0 4px 12px rgba(161, 134, 111, 0.4);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+    /* Ajustar header en móviles */
+    .report-header {
+        padding: 1.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
     .report-header h1 {
         font-size: 1.8em;
+        margin: 0 0 8px 0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .report-header p {
+        font-size: 0.95em;
+        line-height: 1.4;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.85em !important;
+        margin-top: 8px !important;
     }
     
     .filters-section {
@@ -277,23 +310,73 @@ main {
         overflow-x: auto;
     }
 }
+
+@media (max-width: 576px) {
+    /* Ajustar header en móviles muy pequeños */
+    .report-header {
+        padding: 1.2rem 0.8rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.5em;
+        margin: 0 0 6px 0;
+    }
+    
+    .report-header p {
+        font-size: 0.9em;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.8em !important;
+        margin-top: 6px !important;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 <main>
     <div class="report-header">
         <h1>🍽️ Reporte de Platos Más Vendidos</h1>
         <p>Análisis de ventas por período de tiempo</p>
+        <?php if ($fechaDesde && $fechaHasta): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: del <?= htmlspecialchars($fechaDesde) ?> al <?= htmlspecialchars($fechaHasta) ?>
+            </p>
+        <?php elseif ($periodo !== 'todos'): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: <?= ucfirst($periodo) ?>
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <!-- Contenedor de alerta para fechas inválidas -->
+    <div id="alerta-fechas" 
+         style="display:<?= $fechasInvalidas ? 'block' : 'none' ?>; 
+                background:#f8d7da; 
+                color:#721c24; 
+                border:1px solid #f5c6cb; 
+                border-radius:6px; 
+                padding:10px; 
+                margin-bottom:1rem;">
+        ❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.
     </div>
 
     <div class="filters-section">
         <div class="filter-group">
-            <label for="periodo">Período:</label>
-            <select name="periodo" id="periodo" onchange="updateFilters()">
-                <option value="todos" <?= $periodo === 'todos' ? 'selected' : '' ?>>Todos los Períodos</option>
-                <option value="semana" <?= $periodo === 'semana' ? 'selected' : '' ?>>Última Semana</option>
-                <option value="mes" <?= $periodo === 'mes' ? 'selected' : '' ?>>Último Mes</option>
-                <option value="año" <?= $periodo === 'año' ? 'selected' : '' ?>>Último Año</option>
-            </select>
+            <label for="fecha_desde">Fecha Desde:</label>
+            <input type="date" name="fecha_desde" id="fecha_desde" 
+                   value="<?= htmlspecialchars($fechaDesde ?? '') ?>" 
+                   onchange="validarFechas()">
+        </div>
+        
+        <div class="filter-group">
+            <label for="fecha_hasta">Fecha Hasta:</label>
+            <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                   value="<?= htmlspecialchars($fechaHasta ?? '') ?>" 
+                   onchange="validarFechas()">
         </div>
         
         <div class="filter-group">
@@ -374,12 +457,49 @@ main {
 </main>
 
 <script>
+function validarFechas() {
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    const alerta = document.getElementById('alerta-fechas');
+    
+    if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+        alerta.style.display = 'block';
+        alerta.innerText = '❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.';
+        return false;
+    } else {
+        alerta.style.display = 'none';
+        return true;
+    }
+}
+
 function updateFilters() {
-    const periodo = document.getElementById('periodo').value;
+    // Validar fechas antes de proceder
+    if (!validarFechas()) {
+        return false;
+    }
+    
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
     const limite = document.getElementById('limite').value;
     
     const url = new URL(window.location);
-    url.searchParams.set('periodo', periodo);
+    
+    // Limpiar parámetros de período anterior
+    url.searchParams.delete('periodo');
+    
+    // Agregar nuevos parámetros
+    if (fechaDesde) {
+        url.searchParams.set('fecha_desde', fechaDesde);
+    } else {
+        url.searchParams.delete('fecha_desde');
+    }
+    
+    if (fechaHasta) {
+        url.searchParams.set('fecha_hasta', fechaHasta);
+    } else {
+        url.searchParams.delete('fecha_hasta');
+    }
+    
     url.searchParams.set('limite', limite);
     
     window.location.href = url.toString();

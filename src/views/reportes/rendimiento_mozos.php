@@ -9,6 +9,18 @@ $desde = $params['desde'] ?? date('Y-m-01');
 $hasta = $params['hasta'] ?? date('Y-m-d');
 $agrupar = $params['agrupar'] ?? 'ninguno';
 
+// Obtener fechas del GET para los filtros (usando los mismos nombres que platos más vendidos)
+$fechaDesde = !empty($_GET['fecha_desde']) ? $_GET['fecha_desde'] : $desde;
+$fechaHasta = !empty($_GET['fecha_hasta']) ? $_GET['fecha_hasta'] : $hasta;
+
+// Validar fechas
+$fechasInvalidas = false;
+if (!empty($fechaDesde) && !empty($fechaHasta)) {
+    if ($fechaHasta < $fechaDesde) {
+        $fechasInvalidas = true;
+    }
+}
+
 // Calcular totales generales
 $totalPedidos = array_sum(array_column($kpis, 'pedidos'));
 $totalPropinas = array_sum(array_column($kpis, 'propina_total'));
@@ -24,69 +36,103 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .report-header {
-    background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--secondary) 0%, #8b5e46 100%);
+    color: var(--text-light);
     padding: 30px;
     border-radius: 10px;
     margin-bottom: 30px;
     text-align: center;
+    box-shadow: 0 4px 15px rgba(161, 134, 111, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.report-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .report-header h1 {
     margin: 0 0 10px 0;
     font-size: 2.5em;
+    color: rgb(238, 224, 191);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
 }
 
 .report-header p {
     margin: 0;
-    opacity: 0.9;
+    opacity: 0.95;
     font-size: 1.1em;
+    position: relative;
+    z-index: 1;
 }
 
-.filters-section {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 30px;
+.filtros {
+    background: var(--surface);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
     display: flex;
-    gap: 20px;
     align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
+    gap: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.filtros-fechas {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 0.5rem;
 }
 
 .filter-group label {
-    font-weight: bold;
-    color: #495057;
+    font-weight: 600;
+    color: var(--secondary);
 }
 
-.filter-group select {
-    padding: 8px 12px;
-    border: 1px solid #ced4da;
+.filter-group select, .filter-group input {
+    padding: 0.5rem;
+    border: 1px solid var(--primary);
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 1rem;
 }
 
-.apply-btn {
-    background: var(--primary);
-    color: white;
+.apply-btn,
+.btn-aplicar {
+    background: var(--secondary);
+    color: var(--text-light);
     border: none;
-    padding: 10px 20px;
+    padding: 0.75rem 1.5rem;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: background 0.3s;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+    height: fit-content;
+    white-space: nowrap;
+    margin-left: 2.5rem;
 }
 
-.apply-btn:hover {
-    background-color: #d97817;
-    transform: translateY(-2px);
+.apply-btn:hover,
+.btn-aplicar:hover {
+    background-color: #8b5e46;
 }
 
 .clear-btn {
@@ -126,7 +172,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
 .stat-card h3 {
     margin: 0 0 10px 0;
-    color: #6c757d;
+    color: var(--secondary);
     font-size: 0.9em;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -135,7 +181,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 .stat-card .value {
     font-size: 2em;
     font-weight: bold;
-    color: #495057;
+    color: var(--secondary);
 }
 
 .mozos-table {
@@ -151,7 +197,7 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 .mozos-table th {
-    background: #495057;
+    background: var(--secondary);
     color: white;
     padding: 15px;
     text-align: left;
@@ -160,16 +206,39 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
 .mozos-table td {
     padding: 12px 15px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid rgba(144, 104, 76, 0.2);
 }
 
 .mozos-table tr:hover {
-    background: #f8f9fa;
+    background: rgba(144, 104, 76, 0.05);
 }
 
 .mozo-name {
     font-weight: 600;
-    color: #495057;
+    color: var(--secondary);
+}
+
+.card.mb-4.ranking-card .card-header,
+.ranking-card .card-header {
+    background: var(--background) !important;
+    background-color: var(--background) !important;
+    color: var(--secondary) !important;
+    border-bottom: 1px solid rgba(144, 104, 76, 0.2) !important;
+}
+
+.card.mb-4.ranking-card .card-header h5,
+.ranking-card .card-header h5,
+.ranking-card .card-header h5.mb-0 {
+    color: var(--secondary) !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+}
+
+/* Títulos de gráficos - aumento del 40% */
+.row .col-md-6 .card .card-header h5 {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    color: var(--secondary) !important;
 }
 
 .performance-badge {
@@ -217,12 +286,50 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 .no-data {
     text-align: center;
     padding: 40px;
-    color: #6c757d;
+    color: var(--secondary);
     font-style: italic;
 }
 
+/* Estilos para tablets */
+@media (max-width: 992px) and (min-width: 769px) {
+    .row .col-md-6 {
+        margin-bottom: 1.5rem;
+    }
+    
+    .card .card-body {
+        height: 320px !important;
+    }
+    
+    .row .card .card-header h5 {
+        font-size: 1.3rem !important;
+    }
+}
+
 @media (max-width: 768px) {
-    .filters-section {
+    /* Ajustar header en móviles */
+    .report-header {
+        padding: 1.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.8em;
+        margin: 0 0 8px 0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .report-header p {
+        font-size: 0.95em;
+        line-height: 1.4;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.85em !important;
+        margin-top: 8px !important;
+    }
+    
+    .filtros {
         flex-direction: column;
         align-items: stretch;
     }
@@ -236,62 +343,137 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     }
 
     /* Responsive para tabla de ranking */
-    .table-responsive {
+    .ranking-card {
         margin: 0 -15px;
-        padding: 0 15px;
+        border-radius: 0;
+        border-left: none !important;
+        border-right: none !important;
+    }
+    
+    .ranking-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin: 0 !important;
+        background: #fff;
+        position: relative;
+    }
+    
+    .ranking-table-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .ranking-table-container::-webkit-scrollbar-track {
+        background: rgba(144, 104, 76, 0.1);
+    }
+    
+    .ranking-table-container::-webkit-scrollbar-thumb {
+        background: var(--secondary);
+        border-radius: 4px;
+    }
+    
+    .ranking-table-container::-webkit-scrollbar-thumb:hover {
+        background: #8b5e46;
+    }
+
+    .mozos-table {
+        min-width: 700px;
+        margin-bottom: 0;
     }
 
     .mozos-table table {
         font-size: 0.875rem;
+        width: 100%;
     }
 
     .mozos-table th,
     .mozos-table td {
-        padding: 8px 10px;
+        padding: 10px 8px;
         white-space: nowrap;
     }
 
     .mozos-table th:first-child,
     .mozos-table td:first-child {
-        padding-left: 15px;
+        padding-left: 12px;
+        position: sticky;
+        left: 0;
+        background: var(--secondary);
+        z-index: 10;
+    }
+    
+    .mozos-table td:first-child {
+        background: white;
+    }
+    
+    .mozos-table tr:hover td:first-child {
+        background: rgba(144, 104, 76, 0.05);
     }
 
     .mozos-table th:last-child,
     .mozos-table td:last-child {
-        padding-right: 15px;
+        padding-right: 12px;
     }
 
     /* Ajustar columnas para móviles */
+    .mozos-table th:nth-child(1),
+    .mozos-table td:nth-child(1) { /* # */
+        min-width: 50px;
+        max-width: 50px;
+    }
+    
+    .mozos-table th:nth-child(2),
+    .mozos-table td:nth-child(2) { /* Mozo */
+        min-width: 120px;
+        max-width: 150px;
+    }
+    
+    .mozos-table th:nth-child(3),
+    .mozos-table td:nth-child(3) { /* Pedidos */
+        min-width: 70px;
+    }
+
     .mozos-table th:nth-child(4),
     .mozos-table td:nth-child(4) { /* Total Vendido */
-        min-width: 100px;
+        min-width: 110px;
     }
 
     .mozos-table th:nth-child(5),
     .mozos-table td:nth-child(5) { /* Total Propinas */
-        min-width: 100px;
+        min-width: 110px;
     }
 
     .mozos-table th:nth-child(6),
     .mozos-table td:nth-child(6) { /* Propina Promedio */
-        min-width: 100px;
+        min-width: 110px;
+    }
+    
+    .mozos-table th:nth-child(7),
+    .mozos-table td:nth-child(7) { /* Tasa Propina */
+        min-width: 90px;
     }
 
     .mozos-table th:nth-child(8),
     .mozos-table td:nth-child(8) { /* Rendimiento */
-        min-width: 120px;
+        min-width: 130px;
     }
 
     .rank-badge {
         font-size: 0.75rem;
-        padding: 2px 6px;
+        padding: 3px 8px;
+        display: inline-block;
     }
 
     .mozo-name {
-        max-width: 120px;
+        max-width: 140px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        display: inline-block;
+    }
+    
+    /* Badges más compactos en móviles */
+    .badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
     }
 
     .progress {
@@ -305,6 +487,25 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 }
 
 @media (max-width: 576px) {
+    /* Ajustar header en móviles muy pequeños */
+    .report-header {
+        padding: 1.2rem 0.8rem;
+    }
+    
+    .report-header h1 {
+        font-size: 1.5em;
+        margin: 0 0 6px 0;
+    }
+    
+    .report-header p {
+        font-size: 0.9em;
+    }
+    
+    .report-header p[style*="margin-top"] {
+        font-size: 0.8em !important;
+        margin-top: 6px !important;
+    }
+    
     .mozos-table {
         font-size: 0.8rem;
     }
@@ -324,6 +525,67 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     .mozos-table td:nth-child(8) { /* Rendimiento */
         display: none;
     }
+    
+    /* Ajustar anchos mínimos en móviles muy pequeños */
+    .mozos-table {
+        min-width: 550px !important;
+    }
+    
+    .mozos-table th:nth-child(1),
+    .mozos-table td:nth-child(1) {
+        min-width: 45px;
+        max-width: 45px;
+        padding-left: 8px;
+    }
+    
+    .mozos-table th:nth-child(2),
+    .mozos-table td:nth-child(2) {
+        min-width: 100px;
+        max-width: 120px;
+    }
+    
+    .mozos-table th:nth-child(3),
+    .mozos-table td:nth-child(3) {
+        min-width: 60px;
+    }
+    
+    .mozos-table th:nth-child(4),
+    .mozos-table td:nth-child(4) {
+        min-width: 90px;
+    }
+    
+    .mozos-table th:nth-child(5),
+    .mozos-table td:nth-child(5) {
+        min-width: 90px;
+    }
+    
+    .mozos-table th:nth-child(7),
+    .mozos-table td:nth-child(7) {
+        min-width: 80px;
+    }
+    
+    .mozo-name {
+        max-width: 100px;
+    }
+    
+    .rank-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+        padding: 3px 6px;
+    }
+    
+    .progress {
+        height: 14px;
+    }
+    
+    .progress-bar {
+        font-size: 0.65rem;
+        line-height: 14px;
+    }
 
     .table-responsive {
         overflow-x: scroll;
@@ -334,18 +596,68 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     .card-body {
         padding: 0.75rem;
     }
+    
+    /* Ajustar contenedores de gráficos en móviles */
+    .row .col-md-6 {
+        margin-bottom: 1rem;
+        width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .row .col-md-6:last-child {
+        margin-bottom: 0;
+    }
+    
+    /* Contenedores de gráficos */
+    .card .card-body {
+        position: relative;
+        height: 280px !important;
+        min-height: 250px;
+        padding: 1rem;
+    }
 
     canvas {
-        max-height: 250px !important;
+        max-width: 100% !important;
+        height: 100% !important;
+    }
+    
+    /* Ajustar títulos de gráficos en móviles */
+    .row .card .card-header h5 {
+        font-size: 1.2rem !important;
     }
 
     /* Ajustar botones en móviles */
-    .export-btn {
-        font-size: 0.8rem;
-        padding: 6px 12px;
-        float: none;
+    .btn-exportar {
+        font-size: 0.9rem;
+        padding: 0.6rem 1.2rem;
         width: 100%;
-        margin-top: 10px;
+        margin-top: 0.5rem;
+    }
+    
+    .filtros {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filtros-fechas {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filtros-fechas .filter-group,
+    .filtros-fechas .apply-btn {
+        width: 100%;
+    }
+    
+    .filtros-fechas .apply-btn {
+        margin-left: 0;
+    }
+    
+    .btn-exportar {
+        width: 100%;
+        margin-top: 0.5rem;
     }
 
     /* Títulos más pequeños */
@@ -362,41 +674,13 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
         font-size: 1.4em;
     }
 
-    /* Asegurar visibilidad del ranking */
-    .ranking-card {
-        margin: 0 -15px;
-        border-radius: 0;
-        border-left: none !important;
-        border-right: none !important;
-    }
-
-    .ranking-table-container {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        margin: 0 !important;
-        background: #fff;
-    }
-
+    /* Mejorar scrollbar en móviles */
     .ranking-table-container::-webkit-scrollbar {
-        height: 6px;
+        height: 8px;
     }
-
-    .ranking-table-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-
-    .ranking-table-container::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-    .ranking-table-container::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
-
+    
     .mozos-table {
-        min-width: 600px !important;
-        margin-bottom: 0 !important;
+        min-width: 700px !important;
     }
 
     /* Ajustar tarjetas en móvil */
@@ -423,11 +707,11 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
         content: "→ Desliza para ver más";
         display: block;
         text-align: center;
-        color: #6c757d;
+        color: var(--secondary);
         font-size: 0.75rem;
         padding: 8px;
-        background: #f8f9fa;
-        border-top: 1px solid #dee2e6;
+        background: rgba(144, 104, 76, 0.1);
+        border-top: 1px solid rgba(144, 104, 76, 0.3);
     }
 }
 
@@ -448,131 +732,127 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     color: var(--text-light);
 }
 
-.export-btn {
+.btn-exportar {
     background: #28a745;
-    color: white;
+    color: white !important;
     border: none;
-    padding: 8px 16px;
+    padding: 0.75rem 1.5rem;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: 600;
-    transition: all 0.3s;
-    float: right;
+    transition: background-color 0.2s ease;
+    height: fit-content;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
-.export-btn:hover {
+.btn-exportar:hover {
     background: #218838;
-    transform: translateY(-2px);
+    color: white !important;
 }
 </style>
 
-<!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h2 mb-0">📊 Rendimiento del Personal</h1>
-                <button class="export-btn" onclick="exportarCSV()">
+<div class="report-container">
+    <div class="report-header">
+        <h1>👥 Rendimiento del Personal</h1>
+        <p>Análisis de rendimiento y productividad del equipo</p>
+        <?php if ($fechaDesde && $fechaHasta): ?>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                📅 Período: del <?= htmlspecialchars($fechaDesde) ?> al <?= htmlspecialchars($fechaHasta) ?>
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <!-- Contenedor de alerta para fechas inválidas -->
+    <div id="alerta-fechas" 
+                 style="display:<?= $fechasInvalidas ? 'block' : 'none' ?>; 
+                        background:#f8d7da; 
+                        color:#721c24; 
+                        border:1px solid #f5c6cb; 
+                        border-radius:6px; 
+                        padding:10px; 
+                        margin-bottom:1rem;">
+                ❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros">
+                <div class="filtros-fechas">
+                    <div class="filter-group">
+                        <label for="fecha_desde">Fecha Desde:</label>
+                        <input type="date" name="fecha_desde" id="fecha_desde" 
+                               value="<?= htmlspecialchars($fechaDesde ?? '') ?>" 
+                               onchange="validarFechas()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="fecha_hasta">Fecha Hasta:</label>
+                        <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                               value="<?= htmlspecialchars($fechaHasta ?? '') ?>" 
+                               onchange="validarFechas()">
+                    </div>
+                    
+                    <button class="apply-btn" onclick="applyFilters()">Aplicar Filtros</button>
+                </div>
+                
+                <a href="?route=reportes/rendimiento-personal/exportar-csv&fecha_desde=<?= urlencode($fechaDesde ?? '') ?>&fecha_hasta=<?= urlencode($fechaHasta ?? '') ?>" 
+                   class="btn-exportar" 
+                   style="text-decoration: none; display: inline-block;">
                     📥 Exportar CSV
-                </button>
-            </div>
-            
-            <!-- Filtros -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form method="GET" action="" class="row g-3">
-                        <input type="hidden" name="route" value="reportes/rendimiento-personal">
-                        
-                        <div class="col-md-3">
-                            <label for="desde" class="form-label">Desde</label>
-                            <input type="text" class="form-control" id="desde" name="desde"
-                                   value="<?= date('d/m/Y', strtotime($desde)) ?>"
-                                   placeholder="DD/MM/YYYY"
-                                   pattern="\d{2}/\d{2}/\d{4}">
-                            <input type="hidden" id="desde_hidden" name="desde"
-                                   value="<?= htmlspecialchars($desde) ?>">
-                        </div>
-
-                        <div class="col-md-3">
-                            <label for="hasta" class="form-label">Hasta</label>
-                            <input type="text" class="form-control" id="hasta" name="hasta"
-                                   value="<?= date('d/m/Y', strtotime($hasta)) ?>"
-                                   placeholder="DD/MM/YYYY"
-                                   pattern="\d{2}/\d{2}/\d{4}">
-                            <input type="hidden" id="hasta_hidden" name="hasta"
-                                   value="<?= htmlspecialchars($hasta) ?>">
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <label for="agrupar" class="form-label">Agrupar por</label>
-                            <select class="form-select" id="agrupar" name="agrupar">
-                                <option value="ninguno" <?= $agrupar === 'ninguno' ? 'selected' : '' ?>>
-                                    Sin agrupar (Ranking)
-                                </option>
-                                <option value="dia" <?= $agrupar === 'dia' ? 'selected' : '' ?>>
-                                    Por día
-                                </option>
-                                <option value="mes" <?= $agrupar === 'mes' ? 'selected' : '' ?>>
-                                    Por mes
-                                </option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="apply-btn me-2">
-                                🔍 Filtrar
-                            </button>
-                            <a href="?route=reportes/rendimiento-personal" class="clear-btn">
-                                🔄 Limpiar
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            
-            <!-- Tarjetas de estadísticas -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <h3>Total Pedidos</h3>
-                        <div class="value"><?= number_format($totalPedidos) ?></div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <h3>Total Propinas</h3>
-                        <div class="value text-success">$<?= number_format($totalPropinas, 2) ?></div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <h3>Total Vendido</h3>
-                        <div class="value">$<?= number_format($totalVendido, 2) ?></div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card">
-                        <h3>Propina Promedio</h3>
-                        <div class="value text-info">$<?= number_format($promedioGeneral, 2) ?></div>
-                    </div>
-                </div>
-            </div>
+                </a>
+    </div>
+    
+    <!-- Tarjetas de estadísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Pedidos</h3>
+            <div class="value"><?= number_format($totalPedidos) ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Propinas</h3>
+            <div class="value text-success">$<?= number_format($totalPropinas, 2) ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>Total Vendido</h3>
+            <div class="value">$<?= number_format($totalVendido, 2) ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>Propina Promedio</h3>
+            <div class="value text-info">$<?= number_format($promedioGeneral, 2) ?></div>
+        </div>
+    </div>
             
             <?php if (empty($kpis)): ?>
-                <div class="alert alert-warning" role="alert">
-                    No se encontraron datos para el período seleccionado.
+                <div class="alert alert-warning" role="alert" style="background-color: #fff3cd; border: 2px solid #ffc107; padding: 20px; margin: 20px 0;">
+                    <h4 style="margin-top: 0; color: #856404;">⚠️ No se encontraron datos para el período seleccionado</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                        <strong style="color: #856404;">🔍 Debug de fechas:</strong><br><br>
+                        <strong>URL completa:</strong> <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'N/A') ?></code><br><br>
+                        <strong>Parámetros GET recibidos:</strong><br>
+                        - fecha_desde: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($_GET['fecha_desde'] ?? 'NO ENVIADO') ?></code><br>
+                        - fecha_hasta: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($_GET['fecha_hasta'] ?? 'NO ENVIADO') ?></code><br>
+                        - route: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($_GET['route'] ?? 'NO ENVIADO') ?></code><br><br>
+                        <strong>Fechas procesadas en la vista:</strong><br>
+                        - fechaDesde: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($fechaDesde ?? 'N/A') ?></code><br>
+                        - fechaHasta: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($fechaHasta ?? 'N/A') ?></code><br><br>
+                        <strong>Fechas procesadas en el controlador (desde params):</strong><br>
+                        - desde: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($desde ?? 'N/A') ?></code><br>
+                        - hasta: <code style="background: #f0f0f0; padding: 2px 5px;"><?= htmlspecialchars($hasta ?? 'N/A') ?></code><br><br>
+                        <strong>Total de KPIs encontrados:</strong> <code style="background: #f0f0f0; padding: 2px 5px;"><?= count($kpis) ?></code>
+                    </div>
                 </div>
             <?php else: ?>
                 
                 <?php if ($agrupar === 'ninguno'): ?>
                     <!-- Vista de Ranking -->
                     <div class="card mb-4 ranking-card">
-                        <div class="card-header">
-                            <h5 class="mb-0">🏆 Ranking de Rendimiento</h5>
+                        <div class="card-header" style="background: var(--background) !important; background-color: var(--background) !important; color: var(--secondary) !important;">
+                            <h5 class="mb-0" style="color: var(--secondary) !important; font-size: 1.5rem !important; font-weight: 600 !important;">🏆 Ranking de Rendimiento</h5>
                         </div>
                         <div class="card-body p-0">
                             <div class="ranking-table-container">
@@ -650,20 +930,20 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5 class="mb-0">📈 Propinas por Mozo</h5>
+                                    <h5 class="mb-0" style="font-size: 1.4rem !important; font-weight: 600 !important; color: var(--secondary) !important;">📈 Propinas por Mozo</h5>
                                 </div>
-                                <div class="card-body">
-                                    <canvas id="chartPropinas" height="300"></canvas>
+                                <div class="card-body" style="position: relative; height: 300px;">
+                                    <canvas id="chartPropinas"></canvas>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5 class="mb-0">📊 Pedidos por Mozo</h5>
+                                    <h5 class="mb-0" style="font-size: 1.4rem !important; font-weight: 600 !important; color: var(--secondary) !important;">📊 Pedidos por Mozo</h5>
                                 </div>
-                                <div class="card-body">
-                                    <canvas id="chartPedidos" height="300"></canvas>
+                                <div class="card-body" style="position: relative; height: 300px;">
+                                    <canvas id="chartPedidos"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -745,8 +1025,6 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
 
 <!-- Scripts necesarios -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script>
 <?php if (!empty($kpis) && $agrupar === 'ninguno'): ?>
     // Datos para gráficos de ranking
@@ -828,175 +1106,49 @@ $promedioGeneral = $totalPedidos > 0 ? $totalPropinas / $totalPedidos : 0;
     });
 <?php endif; ?>
 
-// Función para exportar a CSV
-function exportarCSV() {
-    // Crear CSV en cliente
-    let csv = 'Mozo,Pedidos,Total Vendido,Total Propinas,Propina Promedio,Tasa Propina\n';
+// Validación y aplicación de filtros (igual que en platos más vendidos)
+function validarFechas() {
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    const alerta = document.getElementById('alerta-fechas');
     
-    <?php if (!empty($kpis) && $agrupar === 'ninguno'): ?>
-        <?php foreach ($kpis as $kpi): ?>
-            csv += '<?= addslashes($kpi['mozo']) ?>,';
-            csv += '<?= $kpi['pedidos'] ?>,';
-            csv += '<?= $kpi['total_vendido'] ?>,';
-            csv += '<?= $kpi['propina_total'] ?>,';
-            csv += '<?= $kpi['propina_promedio_por_pedido'] ?>,';
-            csv += '<?= number_format($kpi['tasa_propina'] * 100, 2) ?>%\n';
-        <?php endforeach; ?>
-    <?php endif; ?>
+    if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+        alerta.style.display = 'block';
+        alerta.innerText = '❌ Fechas inválidas: la fecha hasta no puede ser anterior a la fecha desde.';
+        return false;
+    } else {
+        alerta.style.display = 'none';
+        return true;
+    }
+}
+
+function applyFilters() {
+    // Validar fechas antes de proceder
+    if (!validarFechas()) {
+        return false;
+    }
     
-    // Descargar archivo
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'rendimiento_mozos_<?= date('Y-m-d') ?>.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const fechaDesde = document.getElementById('fecha_desde').value;
+    const fechaHasta = document.getElementById('fecha_hasta').value;
+    
+    const url = new URL(window.location);
+    
+    // Agregar nuevos parámetros
+    if (fechaDesde) {
+        url.searchParams.set('fecha_desde', fechaDesde);
+    } else {
+        url.searchParams.delete('fecha_desde');
+    }
+    
+    if (fechaHasta) {
+        url.searchParams.set('fecha_hasta', fechaHasta);
+    } else {
+        url.searchParams.delete('fecha_hasta');
+    }
+    
+    // Mantener el parámetro route
+    url.searchParams.set('route', 'reportes/rendimiento-personal');
+    
+    window.location.href = url.toString();
 }
-
-// Función para convertir fecha de DD/MM/YYYY a YYYY-MM-DD
-function convertDate(dateStr) {
-    if (!dateStr) return '';
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return dateStr;
-    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-}
-
-// Función para convertir fecha de YYYY-MM-DD a DD/MM/YYYY
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return dateStr;
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-}
-
-// Validar y convertir fechas al enviar el formulario
-document.querySelector('form').addEventListener('submit', function(e) {
-    const desdeInput = document.getElementById('desde');
-    const hastaInput = document.getElementById('hasta');
-    const desdeHidden = document.getElementById('desde_hidden');
-    const hastaHidden = document.getElementById('hasta_hidden');
-
-    // Validar formato DD/MM/YYYY
-    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-
-    if (!dateRegex.test(desdeInput.value)) {
-        e.preventDefault();
-        alert('El formato de la fecha "Desde" debe ser DD/MM/YYYY');
-        desdeInput.focus();
-        return;
-    }
-
-    if (!dateRegex.test(hastaInput.value)) {
-        e.preventDefault();
-        alert('El formato de la fecha "Hasta" debe ser DD/MM/YYYY');
-        hastaInput.focus();
-        return;
-    }
-
-    // Convertir fechas al formato YYYY-MM-DD para el formulario
-    desdeHidden.value = convertDate(desdeInput.value);
-    hastaHidden.value = convertDate(hastaInput.value);
-});
-
-// Formatear fecha al salir del campo
-document.getElementById('desde').addEventListener('blur', function() {
-    const value = this.value;
-    if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
-        // Auto-formatear si el usuario ingresa ddmmyyyy
-        const clean = value.replace(/\D/g, '');
-        if (clean.length === 8) {
-            this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
-        }
-    }
-});
-
-document.getElementById('hasta').addEventListener('blur', function() {
-    const value = this.value;
-    if (value && /^\d{8}$/.test(value.replace(/\D/g, ''))) {
-        // Auto-formatear si el usuario ingresa ddmmyyyy
-        const clean = value.replace(/\D/g, '');
-        if (clean.length === 8) {
-            this.value = clean.substring(0, 2) + '/' + clean.substring(2, 4) + '/' + clean.substring(4, 8);
-        }
-    }
-});
-
-// Configuración en español para Flatpickr
-const spanishLocale = {
-    weekdays: {
-        shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-        longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-    },
-    months: {
-        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-    },
-    daysInMonth: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-    firstDayOfWeek: 1,
-    ordinal: function(nth) {
-        const s = nth % 100;
-        if (s > 3 && s < 21) return 'º';
-        switch (s % 10) {
-            case 1: return 'º';
-            case 2: return 'º';
-            case 3: return 'º';
-            default: return 'º';
-        }
-    },
-    rangeSeparator: ' a ',
-    weekAbbreviation: 'Sem',
-    scrollTitle: 'Desplázate para incrementar',
-    toggleTitle: 'Haz clic para alternar',
-    amPM: ['AM', 'PM'],
-    yearAriaLabel: 'Año',
-    monthAriaLabel: 'Mes',
-    hourAriaLabel: 'Hora',
-    minuteAriaLabel: 'Minuto',
-    time_24hr: true
-};
-
-// Inicializar Flatpickr para los campos de fecha
-flatpickr("#desde", {
-    locale: spanishLocale,
-    dateFormat: "d/m/Y",
-    altInput: true,
-    altFormat: "d \\de F \\de Y",
-    maxDate: new Date(),
-    onChange: function(selectedDates, dateStr, instance) {
-        // Actualizar el campo hidden cuando cambia la fecha
-        document.getElementById('desde_hidden').value =
-            selectedDates[0] ? selectedDates[0].toISOString().split('T')[0] : '';
-    }
-});
-
-flatpickr("#hasta", {
-    locale: spanishLocale,
-    dateFormat: "d/m/Y",
-    altInput: true,
-    altFormat: "d \\de F \\de Y",
-    maxDate: new Date(),
-    onChange: function(selectedDates, dateStr, instance) {
-        // Actualizar el campo hidden cuando cambia la fecha
-        document.getElementById('hasta_hidden').value =
-            selectedDates[0] ? selectedDates[0].toISOString().split('T')[0] : '';
-    }
-});
-
-// Sincronizar valores iniciales
-document.addEventListener('DOMContentLoaded', function() {
-    const desdeInput = document.getElementById('desde');
-    const hastaInput = document.getElementById('hasta');
-    const desdeHidden = document.getElementById('desde_hidden');
-    const hastaHidden = document.getElementById('hasta_hidden');
-
-    // Establecer valores iniciales en los campos hidden
-    desdeHidden.value = '<?= htmlspecialchars($desde) ?>';
-    hastaHidden.value = '<?= htmlspecialchars($hasta) ?>';
-});
 </script>

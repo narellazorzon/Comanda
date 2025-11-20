@@ -215,6 +215,9 @@ main {
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .report-card:hover {
@@ -259,8 +262,16 @@ main {
     font-size: 0.8em;
 }
 
+.report-card-header.categorias h3,
+.report-card-header.categorias p {
+    color: var(--secondary);
+}
+
 .report-card-body {
     padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .report-features {
@@ -288,10 +299,10 @@ main {
 }
 
 .access-btn {
-    display: inline-block;
+    display: block;
     background: var(--secondary);
     color: var(--text-light);
-    padding: 0.6rem 1.2rem;
+    padding: 0.8rem 0;
     border-radius: 4px;
     text-decoration: none;
     font-weight: 600;
@@ -301,6 +312,8 @@ main {
     border: none;
     cursor: pointer;
     font-size: 0.9rem;
+    margin-top: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .access-btn:hover {
@@ -428,10 +441,9 @@ main {
             <div class="report-card-body">
                 <ul class="report-features">
                     <li>Ranking de platos por cantidad vendida</li>
-                    <li>Análisis por período (semana, mes, año)</li>
                     <li>Ingresos generados por cada plato</li>
                     <li>Estadísticas de pedidos</li>
-                    <li>Filtros personalizables</li>
+                    <li>Filtros de fecha personalizables</li>
                 </ul>
                 <a href="<?= url('reportes/platos-mas-vendidos') ?>" class="access-btn">Ver Reporte</a>
             </div>
@@ -447,9 +459,7 @@ main {
                 <ul class="report-features">
                     <li>Análisis por categoría de productos</li>
                     <li>Porcentajes de participación</li>
-                    <li>Comparación de rendimiento</li>
-                    <li>Gráficos visuales de distribución</li>
-                    <li>Métricas de rentabilidad</li>
+                    <li>Estadísticas de ventas por categoría</li>
                 </ul>
                 <a href="<?= url('reportes/ventas-categoria') ?>" class="access-btn">Ver Reporte</a>
             </div>
@@ -464,10 +474,9 @@ main {
             <div class="report-card-body">
                 <ul class="report-features">
                     <li>Ranking del personal por ventas</li>
-                    <li>Análisis de productividad</li>
-                    <li>Promedio de pedidos por empleado</li>
-                    <li>Sistema de calificación</li>
-                    <li>Métricas de rendimiento</li>
+                    <li>Análisis de productividad y propinas</li>
+                    <li>Métricas de rendimiento por mozo</li>
+                    <li>Gráficos de propinas y pedidos</li>
                 </ul>
                 <a href="<?= url('reportes/rendimiento-personal') ?>" class="access-btn">Ver Reporte</a>
             </div>
@@ -479,7 +488,7 @@ main {
         <p>Nuestro sistema de reportes te permite analizar el rendimiento de tu restaurante desde múltiples perspectivas:</p>
         
         <ul>
-            <li><strong>Platos Más Vendidos:</strong> Identifica qué productos son más populares para optimizar tu menú y inventario.</li>
+            <li><strong>Platos Más Vendidos:</strong> Identifica qué productos son más populares para optimizar tu menú.</li>
             <li><strong>Ventas por Categoría:</strong> Analiza qué categorías de productos generan más ingresos para tomar decisiones estratégicas.</li>
             <li><strong>Rendimiento del Personal:</strong> Evalúa la productividad de tu equipo para reconocer el buen trabajo e identificar áreas de mejora.</li>
         </ul>
