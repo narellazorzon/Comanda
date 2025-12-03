@@ -1478,7 +1478,7 @@ button[onclick*="descargarSeleccionados"],
 
 <script>
 //<![CDATA[
-const baseUrl = 'http://192.168.1.23/Comanda/public';
+const baseUrl = '<?php echo htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8'); ?>';
 const mesas = <?php echo json_encode($mesas, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
 const TAKEAWAY_PRESETS = <?php echo json_encode($takeawayPresets, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
 
