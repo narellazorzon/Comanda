@@ -196,7 +196,6 @@ if ($user_rol === 'mozo') {
     <select id="estado-filtro" name="estado" onchange="this.form.submit()" style="padding: 0.5rem; border: 1px solid #ced4da; border-radius: 4px; background: white; font-size: 0.9rem; min-width: 150px;">
       <option value="pendiente" <?= $estado === 'pendiente' ? 'selected' : '' ?>>🟡 Pendientes</option>
       <option value="atendido" <?= $estado === 'atendido' ? 'selected' : '' ?>>🟢 Atendidos</option>
-      <option value="todos" <?= $estado === 'todos' ? 'selected' : '' ?>>📋 Todos</option>
     </select>
     <span style="color: #6c757d; font-size: 0.85rem;">
       Mostrando: <strong><?= count($llamados) ?></strong> llamados
